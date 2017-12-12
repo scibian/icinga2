@@ -1,4 +1,4 @@
-icinga2 (2.5.4-1~debmon8+4sci8u1) UNRELEASED; urgency=medium
+icinga2 (2.5.4-1~debmon8+4sci8u1) scibian8; urgency=medium
 
   * Scibian8 rebuild.
 
