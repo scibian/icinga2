@@ -1,7 +1,7 @@
 Source: icinga2
 Section: admin
 Priority: extra
-Maintainer: Debian Nagios Maintainer Group <pkg-nagios-devel@lists.alioth.debian.org>
+Maintainer: Scibian Project <packaging@scibian.org>
 Uploaders: Markus Frosch <lazyfrosch@debian.org>,
            Jan Wagner <waja@cyconet.org>,
            Alexander Wirt <formorer@debian.org>
@@ -29,8 +29,8 @@ Build-Depends: bash-completion,
                po-debconf
 Standards-Version: 3.9.8
 Homepage: http://www.icinga.org
-Vcs-Browser: https://anonscm.debian.org/cgit/pkg-nagios/pkg-icinga2.git
-Vcs-Git: https://anonscm.debian.org/git/pkg-nagios/pkg-icinga2.git
+Vcs-Browser: https://github.com/scibian/icinga2
+Vcs-Git: https://github.com/scibian/icinga2.git
 
 Package: icinga2
 Architecture: any
