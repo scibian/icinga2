@@ -1,3 +1,9 @@
+icinga2 (2.5.4-1~debmon8+4sci8u1) UNRELEASED; urgency=medium
+
+  * Scibian8 rebuild.
+
+ -- Thomas Hamel <thomas-externe.hamel@edf.fr>  Tue, 12 Dec 2017 14:58:29 +0100
+
 icinga2 (2.5.4-1~debmon8+4~calibre9+1) calibre9; urgency=medium
 
   * Backport to Calibre9.
