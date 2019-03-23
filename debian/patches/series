@@ -1,1 +1,3 @@
 21_config_changes
+postgres-checkcommand.patch
+comparepasswords_issafe.patch

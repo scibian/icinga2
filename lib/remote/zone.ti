@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -34,6 +34,9 @@ class Zone : ConfigObject
 
 	[config] array(name(Endpoint)) endpoints (EndpointsRaw);
 	[config] bool global;
+	[no_user_modify, no_storage] array(Value) all_parents {
+		get;
+	};
 };
 
 }

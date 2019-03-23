@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -21,8 +21,8 @@
 
 using namespace icinga;
 
-DbValue::DbValue(DbValueType type, const Value& value)
-	: m_Type(type), m_Value(value)
+DbValue::DbValue(DbValueType type, Value value)
+	: m_Type(type), m_Value(std::move(value))
 { }
 
 Value DbValue::FromTimestamp(const Value& ts)
@@ -31,11 +31,6 @@ Value DbValue::FromTimestamp(const Value& ts)
 		return Empty;
 
 	return new DbValue(DbValueTimestamp, ts);
-}
-
-Value DbValue::FromTimestampNow(void)
-{
-	return new DbValue(DbValueTimestampNow, Empty);
 }
 
 Value DbValue::FromValue(const Value& value)
@@ -57,15 +52,6 @@ bool DbValue::IsTimestamp(const Value& value)
 	return dbv->GetType() == DbValueTimestamp;
 }
 
-bool DbValue::IsTimestampNow(const Value& value)
-{
-	if (!value.IsObjectType<DbValue>())
-		return false;
-
-	DbValue::Ptr dbv = value;
-	return dbv->GetType() == DbValueTimestampNow;
-}
-
 bool DbValue::IsObjectInsertID(const Value& value)
 {
 	if (!value.IsObjectType<DbValue>())
@@ -84,12 +70,12 @@ Value DbValue::ExtractValue(const Value& value)
 	return dbv->GetValue();
 }
 
-DbValueType DbValue::GetType(void) const
+DbValueType DbValue::GetType() const
 {
 	return m_Type;
 }
 
-Value DbValue::GetValue(void) const
+Value DbValue::GetValue() const
 {
 	return m_Value;
 }

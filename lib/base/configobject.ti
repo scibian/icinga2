@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -32,10 +32,10 @@ enum HAMode
 	HARunEverywhere
 };
 
-class I2_BASE_API NameComposer
+class NameComposer
 {
 public:
-	virtual ~NameComposer(void);
+	virtual ~NameComposer();
 
 	virtual String MakeName(const String& shortName, const Object::Ptr& context) const = 0;
 	virtual Dictionary::Ptr ParseName(const String& name) const = 0;
@@ -46,10 +46,10 @@ abstract class ConfigObjectBase
 { };
 
 code {{{
-class I2_BASE_API ConfigObjectBase : public ObjectImpl<ConfigObjectBase>
+class ConfigObjectBase : public ObjectImpl<ConfigObjectBase>
 {
 public:
-	inline DebugInfo GetDebugInfo(void) const
+	inline DebugInfo GetDebugInfo() const
 	{
 		return m_DebugInfo;
 	}
@@ -59,10 +59,10 @@ public:
 		m_DebugInfo = di;
 	}
 
-	inline virtual void Start(bool runtimeCreated)
+	inline virtual void Start(bool /* runtimeCreated */)
 	{ }
 
-	inline virtual void Stop(bool runtimeRemoved)
+	inline virtual void Stop(bool /* runtimeRemoved */)
 	{ }
 
 private:
@@ -82,9 +82,12 @@ abstract class ConfigObject : ConfigObjectBase < ConfigType
 				return m_ShortName;
 		}}}
 	};
-	[config] name(Zone) zone (ZoneName);
+	[config, no_user_modify] name(Zone) zone (ZoneName);
 	[config, no_user_modify] String package;
 	[config, get_protected, no_user_modify] Array::Ptr templates;
+	[config, no_storage, no_user_modify] Dictionary::Ptr source_location {
+		get;
+	};
 	[get_protected, no_user_modify] bool active;
 	[get_protected, no_user_modify] bool paused {
 		default {{{ return true; }}}

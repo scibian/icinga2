@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -31,16 +31,16 @@ static String JsonEncodeShim(const Value& value)
 	return JsonEncode(value);
 }
 
-static void InitializeJsonObj(void)
-{
-	Dictionary::Ptr jsonObj = new Dictionary();
+INITIALIZE_ONCE([]() {
+	auto jsonNSBehavior = new ConstNamespaceBehavior();
+	Namespace::Ptr jsonNS = new Namespace(jsonNSBehavior);
 
 	/* Methods */
-	jsonObj->Set("encode", new Function("Json#encode", WrapFunction(JsonEncodeShim), true));
-	jsonObj->Set("decode", new Function("Json#decode", WrapFunction(JsonDecode), true));
+	jsonNS->Set("encode", new Function("Json#encode", JsonEncodeShim, { "value" }, true));
+	jsonNS->Set("decode", new Function("Json#decode", JsonDecode, { "value" }, true));
 
-	ScriptGlobal::Set("Json", jsonObj);
-}
+	jsonNSBehavior->Freeze();
 
-INITIALIZE_ONCE(InitializeJsonObj);
-
+	Namespace::Ptr systemNS = ScriptGlobal::Get("System");
+	systemNS->SetAttribute("Json", std::make_shared<ConstEmbeddedNamespaceValue>(jsonNS));
+});

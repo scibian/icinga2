@@ -6,7 +6,7 @@
 set -e
 
 PACKAGE_VERSION="$(dpkg-parsechangelog -S Version |sed -ne 's/^\(\([0-9]\+\):\)\?\(.*\)-.*/\3/p' )"
-ICINGA_VERSION="$(icinga2 --version | head -n1 | sed -e 's/.*version: r\([0-9.]\+\).*$/\1/')"
+ICINGA_VERSION="$(icinga2 --version | grep version: | head -n1 | sed -e 's/.*version: r\([0-9.]\+\).*$/\1/')"
 
 if [ "$ICINGA_VERSION" = "$PACKAGE_VERSION" ]
 then

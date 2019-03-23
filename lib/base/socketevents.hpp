@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -22,7 +22,9 @@
 
 #include "base/i2-base.hpp"
 #include "base/socket.hpp"
-#include <boost/thread.hpp>
+#include "base/stream.hpp"
+#include <boost/thread/condition_variable.hpp>
+#include <thread>
 
 #ifndef _WIN32
 #	include <poll.h>
@@ -36,24 +38,26 @@ namespace icinga
  *
  * @ingroup base
  */
-class I2_BASE_API SocketEvents
+class SocketEvents : public Stream
 {
 public:
-	~SocketEvents(void);
+	DECLARE_PTR_TYPEDEFS(SocketEvents);
+
+	~SocketEvents();
 
 	virtual void OnEvent(int revents);
 
-	void Unregister(void);
+	void Unregister();
 
 	void ChangeEvents(int events);
 
-	bool IsHandlingEvents(void) const;
+	bool IsHandlingEvents() const;
 
-	void *GetEnginePrivate(void) const;
+	void *GetEnginePrivate() const;
 	void SetEnginePrivate(void *priv);
 
 protected:
-	SocketEvents(const Socket::Ptr& socket, Object *lifesupportObject);
+	SocketEvents(const Socket::Ptr& socket);
 
 private:
 	int m_ID;
@@ -63,11 +67,11 @@ private:
 
 	static int m_NextID;
 
-	static void InitializeEngine(void);
+	static void InitializeEngine();
 
 	void WakeUpThread(bool wait = false);
 
-	void Register(Object *lifesupportObject);
+	void Register();
 
 	friend class SocketEventEnginePoll;
 	friend class SocketEventEngineEpoll;
@@ -77,26 +81,20 @@ private:
 
 struct SocketEventDescriptor
 {
-	int Events;
-	SocketEvents *EventInterface;
-	Object *LifesupportObject;
-
-	SocketEventDescriptor(void)
-		: Events(POLLIN), EventInterface(NULL), LifesupportObject(NULL)
-	{ }
+	int Events{POLLIN};
+	SocketEvents::Ptr EventInterface;
 };
 
 struct EventDescription
 {
 	int REvents;
 	SocketEventDescriptor Descriptor;
-	Object::Ptr LifesupportReference;
 };
 
-class I2_BASE_API SocketEventEngine
+class SocketEventEngine
 {
 public:
-	void Start(void);
+	void Start();
 
 	void WakeUpThread(int sid, bool wait);
 
@@ -105,11 +103,11 @@ public:
 protected:
 	virtual void InitializeThread(int tid) = 0;
 	virtual void ThreadProc(int tid) = 0;
-	virtual void Register(SocketEvents *se, Object *lifesupportObject) = 0;
+	virtual void Register(SocketEvents *se) = 0;
 	virtual void Unregister(SocketEvents *se) = 0;
 	virtual void ChangeEvents(SocketEvents *se, int events) = 0;
 
-	boost::thread m_Threads[SOCKET_IOTHREADS];
+	std::thread m_Threads[SOCKET_IOTHREADS];
 	SOCKET m_EventFDs[SOCKET_IOTHREADS][2];
 	bool m_FDChanged[SOCKET_IOTHREADS];
 	boost::mutex m_EventMutex[SOCKET_IOTHREADS];
@@ -119,23 +117,23 @@ protected:
 	friend class SocketEvents;
 };
 
-class I2_BASE_API SocketEventEnginePoll : public SocketEventEngine
+class SocketEventEnginePoll final : public SocketEventEngine
 {
 public:
-	virtual void Register(SocketEvents *se, Object *lifesupportObject);
-	virtual void Unregister(SocketEvents *se);
-	virtual void ChangeEvents(SocketEvents *se, int events);
+	void Register(SocketEvents *se) override;
+	void Unregister(SocketEvents *se) override;
+	void ChangeEvents(SocketEvents *se, int events) override;
 
 protected:
-	virtual void InitializeThread(int tid);
-	virtual void ThreadProc(int tid);
+	void InitializeThread(int tid) override;
+	void ThreadProc(int tid) override;
 };
 
 #ifdef __linux__
-class I2_BASE_API SocketEventEngineEpoll : public SocketEventEngine
+class SocketEventEngineEpoll : public SocketEventEngine
 {
 public:
-	virtual void Register(SocketEvents *se, Object *lifesupportObject);
+	virtual void Register(SocketEvents *se);
 	virtual void Unregister(SocketEvents *se);
 	virtual void ChangeEvents(SocketEvents *se, int events);
 

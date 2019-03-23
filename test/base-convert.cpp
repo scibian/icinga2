@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -19,7 +19,7 @@
 
 #include "base/convert.hpp"
 #include "base/object.hpp"
-#include <boost/test/unit_test.hpp>
+#include <BoostTestTargetConfig.h>
 #include <iostream>
 
 using namespace icinga;
@@ -33,6 +33,8 @@ BOOST_AUTO_TEST_CASE(tolong)
 	BOOST_CHECK_THROW(Convert::ToLong("7a"), boost::exception);
 
 	BOOST_CHECK(Convert::ToLong(Value(-7)) == -7);
+
+	BOOST_CHECK(Convert::ToLong(3.141386593) == 3);
 }
 
 BOOST_AUTO_TEST_CASE(todouble)

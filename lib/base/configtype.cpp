@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -23,17 +23,17 @@
 
 using namespace icinga;
 
-ConfigType::~ConfigType(void)
+ConfigType::~ConfigType()
 { }
 
 ConfigObject::Ptr ConfigType::GetObject(const String& name) const
 {
 	boost::mutex::scoped_lock lock(m_Mutex);
 
-	ConfigType::ObjectMap::const_iterator nt = m_ObjectMap.find(name);
+	auto nt = m_ObjectMap.find(name);
 
 	if (nt == m_ObjectMap.end())
-		return ConfigObject::Ptr();
+		return nullptr;
 
 	return nt->second;
 }
@@ -45,17 +45,17 @@ void ConfigType::RegisterObject(const ConfigObject::Ptr& object)
 	{
 		boost::mutex::scoped_lock lock(m_Mutex);
 
-		ObjectMap::iterator it = m_ObjectMap.find(name);
+		auto it = m_ObjectMap.find(name);
 
 		if (it != m_ObjectMap.end()) {
 			if (it->second == object)
 				return;
 
-			Type *type = dynamic_cast<Type *>(this);
+			auto *type = dynamic_cast<Type *>(this);
 
 			BOOST_THROW_EXCEPTION(ScriptError("An object with type '" + type->GetName() + "' and name '" + name + "' already exists (" +
-			    Convert::ToString(it->second->GetDebugInfo()) + "), new declaration: " + Convert::ToString(object->GetDebugInfo()),
-			    object->GetDebugInfo()));
+				Convert::ToString(it->second->GetDebugInfo()) + "), new declaration: " + Convert::ToString(object->GetDebugInfo()),
+				object->GetDebugInfo()));
 		}
 
 		m_ObjectMap[name] = object;
@@ -75,7 +75,7 @@ void ConfigType::UnregisterObject(const ConfigObject::Ptr& object)
 	}
 }
 
-std::vector<ConfigObject::Ptr> ConfigType::GetObjects(void) const
+std::vector<ConfigObject::Ptr> ConfigType::GetObjects() const
 {
 	boost::mutex::scoped_lock lock(m_Mutex);
 	return m_ObjectVector;
@@ -86,7 +86,7 @@ std::vector<ConfigObject::Ptr> ConfigType::GetObjectsHelper(Type *type)
 	return static_cast<TypeImpl<ConfigObject> *>(type)->GetObjects();
 }
 
-int ConfigType::GetObjectCount(void) const
+int ConfigType::GetObjectCount() const
 {
 	boost::mutex::scoped_lock lock(m_Mutex);
 	return m_ObjectVector.size();

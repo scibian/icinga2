@@ -1,0 +1,16 @@
+Description: Use check_postgres path as provided by check-postgres package.
+Author: Jens Holzkämper <jens@zbmath.org>
+Forwarded: not-needed
+Bug-Debian: https://bugs.debian.org/898833
+
+--- a/itl/plugins-contrib.d/databases.conf
++++ b/itl/plugins-contrib.d/databases.conf
+@@ -525,7 +525,7 @@ object CheckCommand "oracle_health" {
+ object CheckCommand "postgres" {
+ 	import "ipv4-or-ipv6"
+ 
+-	command = [ PluginContribDir + "/check_postgres.pl" ]
++	command = [ "/usr/bin/check_postgres" ]
+ 
+ 	arguments = {
+ 		"-H" = {

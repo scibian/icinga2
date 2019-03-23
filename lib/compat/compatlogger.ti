@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -27,8 +27,10 @@ namespace icinga
 
 class CompatLogger : ConfigObject
 {
+	activation_priority 100;
+
 	[config] String log_dir {
-		default {{{ return Application::GetLocalStateDir() + "/log/icinga2/compat"; }}}
+		default {{{ return Configuration::LogDir + "/compat"; }}}
 	};
 	[config] String rotation_method {
 		default {{{ return "HOURLY"; }}}

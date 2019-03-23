@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -33,29 +33,34 @@ namespace icinga
 /**
  * @ingroup base
  */
-class I2_BASE_API ScriptUtils
+class ScriptUtils
 {
 public:
+	static void StaticInitialize();
 	static String CastString(const Value& value);
 	static double CastNumber(const Value& value);
 	static bool CastBool(const Value& value);
-	static bool Regex(const String& pattern, const String& text);
+	static bool Regex(const std::vector<Value>& args);
+	static bool Match(const std::vector<Value>& args);
+	static bool CidrMatch(const std::vector<Value>& args);
 	static double Len(const Value& value);
 	static Array::Ptr Union(const std::vector<Value>& arguments);
 	static Array::Ptr Intersection(const std::vector<Value>& arguments);
 	static void Log(const std::vector<Value>& arguments);
 	static Array::Ptr Range(const std::vector<Value>& arguments);
 	static Type::Ptr TypeOf(const Value& value);
-	static Array::Ptr Keys(const Dictionary::Ptr& dict);
+	static Array::Ptr Keys(const Object::Ptr& obj);
 	static ConfigObject::Ptr GetObject(const Value& type, const String& name);
 	static Array::Ptr GetObjects(const Type::Ptr& type);
 	static void Assert(const Value& arg);
 	static String MsiGetComponentPathShim(const String& component);
 	static Array::Ptr TrackParents(const Object::Ptr& parent);
 	static double Ptr(const Object::Ptr& object);
+	static Value Glob(const std::vector<Value>& args);
+	static Value GlobRecursive(const std::vector<Value>& args);
 
 private:
-	ScriptUtils(void);
+	ScriptUtils();
 };
 
 }

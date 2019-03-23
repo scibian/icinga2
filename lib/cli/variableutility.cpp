@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -31,7 +31,7 @@ using namespace icinga;
 
 Value VariableUtility::GetVariable(const String& name)
 {
-	String varsfile = Application::GetVarsPath();
+	String varsfile = Configuration::VarsPath;
 
 	std::fstream fp;
 	fp.open(varsfile.CStr(), std::ios_base::in);
@@ -61,7 +61,7 @@ Value VariableUtility::GetVariable(const String& name)
 
 void VariableUtility::PrintVariables(std::ostream& outfp)
 {
-	String varsfile = Application::GetVarsPath();
+	String varsfile = Configuration::VarsPath;
 
 	std::fstream fp;
 	fp.open(varsfile.CStr(), std::ios_base::in);
@@ -89,5 +89,5 @@ void VariableUtility::PrintVariables(std::ostream& outfp)
 	fp.close();
 
 	Log(LogNotice, "cli")
-	    << "Parsed " << variables_count << " variables.";
+		<< "Parsed " << variables_count << " variables.";
 }

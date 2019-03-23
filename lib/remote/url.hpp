@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -36,27 +36,27 @@ namespace icinga
  *
  * @ingroup base
  */
-class I2_REMOTE_API Url : public Object
+class Url final : public Object
 {
 public:
 	DECLARE_PTR_TYPEDEFS(Url);
 
-	Url();
+	Url() = default;
 	Url(const String& url);
 
-	String Format(bool print_credentials = false) const;
+	String Format(bool onlyPathAndQuery = false, bool printCredentials = false) const;
 
-	String GetScheme(void) const;
-	String GetAuthority(void) const;
-	String GetUsername(void) const;
-	String GetPassword(void) const;
-	String GetHost(void) const;
-	String GetPort(void) const;
-	const std::vector<String>& GetPath(void) const;
-	const std::map<String, std::vector<String> >& GetQuery(void) const;
+	String GetScheme() const;
+	String GetAuthority() const;
+	String GetUsername() const;
+	String GetPassword() const;
+	String GetHost() const;
+	String GetPort() const;
+	const std::vector<String>& GetPath() const;
+	const std::map<String, std::vector<String> >& GetQuery() const;
 	String GetQueryElement(const String& name) const;
 	const std::vector<String>& GetQueryElements(const String& name) const;
-	String GetFragment(void) const;
+	String GetFragment() const;
 
 	void SetScheme(const String& scheme);
 	void SetUsername(const String& username);
@@ -65,6 +65,7 @@ public:
 	void SetPort(const String& port);
 	void SetPath(const std::vector<String>& path);
 	void SetQuery(const std::map<String, std::vector<String> >& query);
+	void SetArrayFormatUseBrackets(bool useBrackets = true);
 
 	void AddQueryElement(const String& name, const String& query);
 	void SetQueryElements(const String& name, const std::vector<String>& query);
@@ -78,6 +79,7 @@ private:
 	String m_Port;
 	std::vector<String> m_Path;
 	std::map<String, std::vector<String> > m_Query;
+	bool m_ArrayFormatUseBrackets;
 	String m_Fragment;
 
 	bool ParseScheme(const String& scheme);

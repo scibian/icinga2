@@ -1,6 +1,6 @@
-# <a id="language-reference"></a> Language Reference
+# Language Reference <a id="language-reference"></a>
 
-## <a id="object-definition"></a> Object Definition
+## Object Definition <a id="object-definition"></a>
 
 Icinga 2 features an object-based configuration format. You can define new
 objects using the `object` keyword:
@@ -9,7 +9,7 @@ objects using the `object` keyword:
       display_name = "host1"
 
       address = "192.168.0.1"
-      address6 = "::1"
+      address6 = "2001:db8:1234::42"
     }
 
 In general you need to write each statement on a new line. Expressions started
@@ -22,7 +22,7 @@ them with a semicolon:
     object Host "host1.example.org" {
       display_name = "host1"
 
-      address = "192.168.0.1"; address6 = "::1"
+      address = "192.168.0.1"; address6 = "2001:db8:1234::42"
     }
 
 Each object is uniquely identified by its type (`Host`) and name
@@ -43,11 +43,11 @@ Attribute            | Description
 name                 | The name of the object. This attribute can be modified in the object definition to override the name specified with the `object` directive.
 type                 | The type of the object.
 
-## <a id="expressions"></a> Expressions
+## Expressions <a id="expressions"></a>
 
 The following expressions can be used on the right-hand side of assignments.
 
-### <a id="numeric-literals"></a> Numeric Literals
+### Numeric Literals <a id="numeric-literals"></a>
 
 A floating-point number.
 
@@ -55,7 +55,7 @@ Example:
 
     27.3
 
-### <a id="duration-literals"></a> Duration Literals
+### Duration Literals <a id="duration-literals"></a>
 
 Similar to floating-point numbers except for the fact that they support
 suffixes to help with specifying time durations.
@@ -70,13 +70,15 @@ h (hours) and d (days).
 Duration literals are converted to seconds by the config parser and
 are treated like numeric literals.
 
-### <a id="string-literals"></a> String Literals
+### String Literals <a id="string-literals"></a>
 
 A string.
 
 Example:
 
     "Hello World!"
+
+#### String Literals Escape Sequences <a id="string-literals-escape-sequences"></a>
 
 Certain characters need to be escaped. The following escape sequences
 are supported:
@@ -95,7 +97,7 @@ In addition to these pre-defined escape sequences you can specify
 arbitrary ASCII characters using the backslash character (\\) followed
 by an ASCII character in octal encoding.
 
-### <a id="multiline-string-literals"></a> Multi-line String Literals
+### Multi-line String Literals <a id="multiline-string-literals"></a>
 
 Strings spanning multiple lines can be specified by enclosing them in
 {{{ and }}}.
@@ -110,15 +112,15 @@ Example:
 Unlike in ordinary strings special characters do not have to be escaped
 in multi-line string literals.
 
-### <a id="boolean-literals"></a> Boolean Literals
+### Boolean Literals <a id="boolean-literals"></a>
 
 The keywords `true` and `false` are used to denote truth values.
 
-### <a id="null-value"></a> Null Value
+### Null Value <a id="null-value"></a>
 
 The `null` keyword can be used to specify an empty value.
 
-### <a id="dictionary"></a> Dictionary
+### Dictionary <a id="dictionary"></a>
 
 An unordered list of key-value pairs. Keys must be unique and are
 compared in a case-sensitive manner.
@@ -138,7 +140,7 @@ with certain characters (e.g. digits). If you want to use a dictionary
 key that is not a valid identifier, you can enclose the key in double
 quotes.
 
-### <a id="array"></a> Array
+### Array <a id="array"></a>
 
 An ordered list of values.
 
@@ -152,44 +154,89 @@ Example:
 An array may simultaneously contain values of different types, such as
 strings and numbers.
 
-### <a id="expression-operators"></a> Operators
+### Operators <a id="expression-operators"></a>
 
-The following operators are supported in expressions. The operators are by descending precedence.
+The following operators are supported in expressions. The operators are sorted by descending precedence.
 
 Operator | Precedence | Examples (Result)                             | Description
 ---------|------------|-----------------------------------------------|--------------------------------
-()       | 1          | (3 + 3) * 5                                   | Groups sub-expressions
-()       | 1          | Math.random()                                 | Calls a function
-[]       | 1          | a[3]                                          | Array subscript
-.        | 1          | a.b                                           | Element access
-!        | 2          | !"Hello" (false), !false (true)               | Logical negation of the operand
-~        | 2          | ~true (false)                                 | Bitwise negation of the operand
-+        | 2          | +3                                            | Unary plus
--        | 2          | -3                                            | Unary minus
-*        | 3          | 5m * 10 (3000)                                | Multiplies two numbers
-/        | 3          | 5m / 5 (60)                                   | Divides two numbers
-%        | 3          | 17 % 12 (5)                                   | Remainder after division
-+        | 4          | 1 + 3 (4), "hello " + "world" ("hello world") | Adds two numbers; concatenates strings
--        | 4          | 3 - 1 (2)                                     | Subtracts two numbers
-<<       | 5          | 4 << 8 (1024)                                 | Left shift
->>       | 5          | 1024 >> 4 (64)                                | Right shift
-<        | 6         | 3 < 5 (true)                                  | Less than
->        | 6         | 3 > 5 (false)                                 | Greater than
-<=       | 6         | 3 <= 3 (true)                                 | Less than or equal
->=       | 6         | 3 >= 3 (true)                                 | Greater than or equal
-in       | 7          | "foo" in [ "foo", "bar" ] (true)              | Element contained in array
-!in      | 7          | "foo" !in [ "bar", "baz" ] (true)             | Element not contained in array
-==       | 8         | "hello" == "hello" (true), 3 == 5 (false)     | Equal to
-!=       | 8         | "hello" != "world" (true), 3 != 3 (false)     | Not equal to
-&        | 9          | 7 & 3 (3)                                     | Binary AND
-^        | 10          | 17 ^ 12 (29)                                  | Bitwise XOR
-&#124;   | 11          | 2 &#124; 3 (3)                                | Binary OR
-&&       | 13         | true && false (false), 3 && 7 (7), 0 && 7 (0) | Logical AND
-&#124;&#124; | 14     | true &#124;&#124; false (true), 0 &#124;&#124; 7 (7)| Logical OR
-=        | 12         | a = 3                                         | Assignment
-=>       | 15         | x => x * x (function with arg x)              | Lambda, for loop
+`()`       | 1          | (3 + 3) * 5                                   | Groups sub-expressions
+`()`       | 1          | Math.random()                                 | Calls a function
+`[]`       | 1          | a[3]                                          | Array subscript
+`.`       | 1          | a.b                                           | Element access
+`!`        | 2          | !"Hello" (false), !false (true)               | Logical negation of the operand
+`~`        | 2          | ~true (false)                                 | Bitwise negation of the operand
+`+`        | 2          | +3                                            | Unary plus
+`-`        | 2          | -3                                            | Unary minus
+`&`        | 2          | &var (reference to 'var')                     | Reference operator
+`*`        | 2          | *var                                          | Indirection operator
+`*`        | 3          | 5m * 10 (3000)                                | Multiplies two numbers
+`/`        | 3          | 5m / 5 (60)                                   | Divides two numbers
+`%`        | 3          | 17 % 12 (5)                                   | Remainder after division
+`+`        | 4          | 1 + 3 (4), "hello " + "world" ("hello world") | Adds two numbers; concatenates strings
+`-`        | 4          | 3 - 1 (2)                                     | Subtracts two numbers
+`<<`       | 5          | 4 << 8 (1024)                                 | Left shift
+`>>`       | 5          | 1024 >> 4 (64)                                | Right shift
+`<`        | 6         | 3 < 5 (true)                                  | Less than
+`>`        | 6         | 3 > 5 (false)                                 | Greater than
+`<=`       | 6         | 3 <= 3 (true)                                 | Less than or equal
+`>=`       | 6         | 3 >= 3 (true)                                 | Greater than or equal
+`in`       | 7          | "foo" in [ "foo", "bar" ] (true)              | Element contained in array
+`!in`      | 7          | "foo" !in [ "bar", "baz" ] (true)             | Element not contained in array
+`==`       | 8         | "hello" == "hello" (true), 3 == 5 (false)     | Equal to
+`!=`       | 8         | "hello" != "world" (true), 3 != 3 (false)     | Not equal to
+`&`        | 9          | 7 & 3 (3)                                     | Binary AND
+`^`        | 10          | 17 ^ 12 (29)                                  | Bitwise XOR
+<code>&#124;</code>    | 11          | 2 &#124; 3 (3)                                | Binary OR
+<code>&#124;&#124;</code>  | 12     | true &#124;&#124; false (true), 0 &#124;&#124; 7 (7)| Logical OR
+`&&`       | 13         | true && false (false), 3 && 7 (7), 0 && 7 (0) | Logical AND
+`=`        | 14         | a = 3                                         | Assignment
+`=>`       | 15         | x => x * x (function with arg x)              | Lambda, for loop
 
-### <a id="function-calls"></a> Function Calls
+### References <a id="references"></a>
+
+A reference to a value can be obtained using the `&` operator. The `*` operator can be used
+to dereference a reference:
+
+    var value = "Hello!"
+    var p = &value /* p refers to value */
+    *p = "Hi!"
+    log(value) // Prints "Hi!" because the variable was changed
+
+### Namespaces <a id="namespaces"></a>
+
+Namespaces can be used to organize variables and functions. They are used to avoid name conflicts. The `namespace`
+keyword is used to create a new namespace:
+
+    namespace Utils {
+        function calculate() {
+            return 2 + 2
+        }
+    }
+
+The namespace is made available as a global variable which has the namespace's name (e.g. `Utils`):
+
+    Utils.calculate()
+
+The `using` keyword can be used to make all attributes in a namespace available to a script without having to
+explicitly specify the namespace's name for each access:
+
+    using Utils
+    calculate()
+
+The `using` keyword only has an effect for the current file and only for code that follows the keyword:
+
+    calculate() // This will not work.
+    using Utils
+
+The following namespaces are automatically imported as if by using the `using` keyword:
+
+* System
+* System.Configuration
+* Types
+* Icinga
+
+### Function Calls <a id="function-calls"></a>
 
 Functions can be called using the `()` operator:
 
@@ -201,13 +248,13 @@ Functions can be called using the `()` operator:
 
 A list of available functions is available in the [Library Reference](18-library-reference.md#library-reference) chapter.
 
-## <a id="dictionary-operators"></a> Assignments
+## Assignments <a id="dictionary-operators"></a>
 
 In addition to the `=` operator shown above a number of other operators
 to manipulate attributes are supported. Here's a list of all
 available operators:
 
-### <a id="operator-assignment"></a> Operator =
+### Operator = <a id="operator-assignment"></a>
 
 Sets an attribute to the specified value.
 
@@ -220,7 +267,7 @@ Example:
 
 In this example `a` has the value `7` after both instructions are executed.
 
-### <a id="operator-additive-assignment"></a> Operator +=
+### Operator += <a id="operator-additive-assignment"></a>
 
 The += operator is a shortcut. The following expression:
 
@@ -236,7 +283,7 @@ is equivalent to:
       a = a + [ "world" ]
     }
 
-### <a id="operator-substractive-assignment"></a> Operator -=
+### Operator -= <a id="operator-substractive-assignment"></a>
 
 The -= operator is a shortcut. The following expression:
 
@@ -252,7 +299,7 @@ is equivalent to:
       a = a - 5
     }
 
-### <a id="operator-multiply-assignment"></a> Operator \*=
+### Operator \*= <a id="operator-multiply-assignment"></a>
 
 The *= operator is a shortcut. The following expression:
 
@@ -268,7 +315,7 @@ is equivalent to:
       a = a * 5
     }
 
-### <a id="operator-dividing-assignment"></a> Operator /=
+### Operator /= <a id="operator-dividing-assignment"></a>
 
 The /= operator is a shortcut. The following expression:
 
@@ -284,7 +331,7 @@ is equivalent to:
       a = a / 5
     }
 
-## <a id="indexer"></a> Indexer
+## Indexer <a id="indexer"></a>
 
 The indexer syntax provides a convenient way to set dictionary elements.
 
@@ -310,7 +357,7 @@ This is equivalent to writing:
 
 If the `hello` attribute does not already have a value, it is automatically initialized to an empty dictionary.
 
-## <a id="template-imports"></a> Template Imports
+## Template Imports <a id="template-imports"></a>
 
 Objects can import attributes from other objects.
 
@@ -344,7 +391,20 @@ custom attributes and the custom attribute `colour` has the value `"blue"`.
 Parent objects are resolved in the order they're specified using the
 `import` keyword.
 
-## <a id="constants"></a> Constants
+Default templates which are automatically imported into all object definitions
+can be specified using the `default` keyword:
+
+    template CheckCommand "plugin-check-command" default {
+      // ...
+    }
+
+Default templates are imported before any other user-specified statement in an
+object definition is evaluated.
+
+If there are multiple default templates the order in which they are imported
+is unspecified.
+
+## Constants <a id="constants"></a>
 
 Global constants can be set using the `const` keyword:
 
@@ -353,35 +413,91 @@ Global constants can be set using the `const` keyword:
 Once defined a constant can be accessed from any file. Constants cannot be changed
 once they are set.
 
-Icinga 2 provides a number of special global constants. Some of them can be overridden using the `--define` command line parameter:
+> **Tip**
+>
+> Best practice is to manage constants in the [constants.conf](04-configuring-icinga-2.md#constants-conf) file.
+
+### Icinga 2 Specific Constants <a id="icinga-constants"></a>
+
+Icinga 2 provides a number of special global constants. These include directory paths, global configuration
+and runtime parameters for the application version and (build) platform.
+
+Directory paths:
+
+Constant            | Description
+--------------------|-------------------
+ConfigDir           |**Read-only.** Main configuration directory. Usually set to `/etc/icinga2`.
+DataDir             |**Read-only.** Runtime data for the Icinga daemon. Usually set to `/var/lib/icinga2`.
+LogDir              |**Read-only.** Logfiles from the daemon. Usually set to `/var/log/icinga2`.
+CacheDir            |**Read-only.** Cached status information of the daemon. Usually set to `/var/cache/icinga2`.
+SpoolDir            |**Read-only.** Spool directory for certain data outputs. Usually set to `/var/spool/icinga2`.
+InitRunDir          |**Read-only.** Directory for PID files and sockets in daemon mode. Usually set to `/run/icinga2`.
+ZonesDir            |**Read-only.** Contains the path of the zones.d directory. Defaults to `ConfigDir + "/zones.d"`.
+
+Global configuration:
+
+Constant            | Description
+--------------------|-------------------
+Vars                |**Read-write.** Contains a dictionary with global custom attributes. Not set by default.
+NodeName            |**Read-write.** Contains the cluster node name. Set to the local hostname by default.
+Environment         |**Read-write.** The name of the Icinga environment. Included in the SNI host name for outbound connections. Not set by default.
+RunAsUser           |**Read-write.** Defines the user the Icinga 2 daemon is running as. Set in the Icinga 2 sysconfig.
+RunAsGroup          |**Read-write.** Defines the group the Icinga 2 daemon is running as. Set in the Icinga 2 sysconfig.
+MaxConcurrentChecks |**Read-write.** The number of max checks run simultaneously. Defaults to `512`.
+ApiBindHost         |**Read-write.** Overrides the default value for the ApiListener `bind_host` attribute. Not set by default.
+ApiBindPort         |**Read-write.** Overrides the default value for the ApiListener `bind_port` attribute. Not set by default.
+
+Application runtime details:
+
+Constant            | Description
+--------------------|-------------------
+PlatformName        |**Read-only.** The name of the operating system, e.g. `Ubuntu`.
+PlatformVersion     |**Read-only.** The version of the operating system, e.g. `14.04.3 LTS`.
+PlatformKernel      |**Read-only.** The name of the operating system kernel, e.g. `Linux`.
+PlatformKernelVersion|**Read-only.** The version of the operating system kernel, e.g. `3.13.0-63-generic`.
+BuildCompilerName   |**Read-only.** The name of the compiler Icinga was built with, e.g. `Clang`.
+BuildCompilerVersion|**Read-only.** The version of the compiler Icinga was built with, e.g. `7.3.0.7030031`.
+BuildHostName       |**Read-only.** The name of the host Icinga was built on, e.g. `acheron`.
+ApplicationVersion  |**Read-only.** The application version, e.g. `2.9.0`.
+
+Writable constants can be specified on the CLI using the `--define/-D` parameter.
+
+> **Note for v2.10+**
+>
+> Default paths which include `/etc` and `/var` as base directory continue to work
+> based on the `SysconfDir` and `LocalStateDir` constants respectively.
+
+In addition to that, the constants below are used to define specific file paths. You should never need
+to change them, as they are pre-compiled based on the constants above.
 
 Variable            |Description
 --------------------|-------------------
-PrefixDir           |**Read-only.** Contains the installation prefix that was specified with cmake -DCMAKE_INSTALL_PREFIX. Defaults to "/usr/local".
-SysconfDir          |**Read-only.** Contains the path of the sysconf directory. Defaults to PrefixDir + "/etc".
-ZonesDir            |**Read-only.** Contains the path of the zones.d directory. Defaults to SysconfDir + "/zones.d".
-LocalStateDir       |**Read-only.** Contains the path of the local state directory. Defaults to PrefixDir + "/var".
-RunDir              |**Read-only.** Contains the path of the run directory. Defaults to LocalStateDir + "/run".
-PkgDataDir          |**Read-only.** Contains the path of the package data directory. Defaults to PrefixDir + "/share/icinga2".
-StatePath           |**Read-write.** Contains the path of the Icinga 2 state file. Defaults to LocalStateDir + "/lib/icinga2/icinga2.state".
-ObjectsPath         |**Read-write.** Contains the path of the Icinga 2 objects file. Defaults to LocalStateDir + "/cache/icinga2/icinga2.debug".
-PidPath             |**Read-write.** Contains the path of the Icinga 2 PID file. Defaults to RunDir + "/icinga2/icinga2.pid".
-Vars                |**Read-write.** Contains a dictionary with global custom attributes. Not set by default.
-NodeName            |**Read-write.** Contains the cluster node name. Set to the local hostname by default.
-UseVfork            |**Read-write.** Whether to use vfork(). Only available on *NIX. Defaults to true.
-EventEngine         |**Read-write.** The name of the socket event engine, can be "poll" or "epoll". The epoll interface is only supported on Linux.
-AttachDebugger      |**Read-write.** Whether to attach a debugger when Icinga 2 crashes. Defaults to false.
-RunAsUser           |**Read-write.** Defines the user the Icinga 2 daemon is running as. Used in the `init.conf` configuration file.
-RunAsGroup          |**Read-write.** Defines the group the Icinga 2 daemon is running as. Used in the `init.conf` configuration file.
-PlatformName        |**Read-only.** The name of the operating system, e.g. "Ubuntu".
-PlatformVersion     |**Read-only.** The version of the operating system, e.g. "14.04.3 LTS".
-PlatformKernel      |**Read-only.** The name of the operating system kernel, e.g. "Linux".
-PlatformKernelVersion|**Read-only.** The version of the operating system kernel, e.g. "3.13.0-63-generic".
-BuildCompilerName   |**Read-only.** The name of the compiler Icinga was built with, e.g. "Clang".
-BuildCompilerVersion|**Read-only.** The version of the compiler Icinga was built with, e.g. "7.3.0.7030031".
-BuildHostName       |**Read-only.** The name of the host Icinga was built on, e.g. "acheron".
+StatePath           |**Read-write.** Contains the path of the Icinga 2 state file. Defaults to `DataDir + "/icinga2.state"`.
+ObjectsPath         |**Read-write.** Contains the path of the Icinga 2 objects file. Defaults to `CacheDir + "/icinga2.debug"`.
+PidPath             |**Read-write.** Contains the path of the Icinga 2 PID file. Defaults to `InitRunDir + "/icinga2.pid"`.
+PkgDataDir          |**Read-only.** Contains the path of the package data directory. Defaults to `PrefixDir + "/share/icinga2"`.
 
-## <a id="apply"></a> Apply
+The constants below have been used until Icinga v2.10, and are still intact. You don't need them
+for future builds and configuration based on the newly available constants above.
+
+Variable            |Description
+--------------------|-------------------
+PrefixDir           |**Read-only.** Contains the installation prefix that was specified with `cmake -DCMAKE_INSTALL_PREFIX`. `Defaults to "/usr/local"`.
+SysconfDir          |**Read-only.** Contains the path of the sysconf directory. Defaults to `PrefixDir + "/etc"`.
+LocalStateDir       |**Read-only.** Contains the path of the local state directory. Defaults to `PrefixDir + "/var"`.
+RunDir              |**Read-only.** Contains the path of the run directory. Defaults to `LocalStateDir + "/run"`.
+
+Advanced runtime constants. Please only use them if advised by support or developers.
+
+Variable                   | Description
+---------------------------|-------------------
+EventEngine                |**Read-write.** The name of the socket event engine, can be `poll` or `epoll`. The epoll interface is only supported on Linux.
+AttachDebugger             |**Read-write.** Whether to attach a debugger when Icinga 2 crashes. Defaults to `false`.
+ICINGA2\_RLIMIT\_FILES     |**Read-write.** Defines the resource limit for RLIMIT_NOFILE that should be set at start-up. Value cannot be set lower than the default `16 * 1024`. 0 disables the setting. Set in Icinga 2 sysconfig.
+ICINGA2\_RLIMIT\_PROCESSES |**Read-write.** Defines the resource limit for RLIMIT_NPROC that should be set at start-up. Value cannot be set lower than the default `16 * 1024`. 0 disables the setting. Set in Icinga 2 sysconfig.
+ICINGA2\_RLIMIT\_STACK     |**Read-write.** Defines the resource limit for RLIMIT_STACK that should be set at start-up. Value cannot be set lower than the default `256 * 1024`. 0 disables the setting. Set in Icinga 2 sysconfig.
+
+## Apply <a id="apply"></a>
 
 The `apply` keyword can be used to create new objects which are associated with
 another group of objects.
@@ -419,10 +535,10 @@ Any valid config attribute can be accessed using the `host` and `service`
 variables. For example, `host.address` would return the value of the host's
 "address" attribute -- or null if that attribute isn't set.
 
-More usage examples are documented in the [monitoring basics](3-monitoring-basics.md#using-apply-expressions)
+More usage examples are documented in the [monitoring basics](03-monitoring-basics.md#using-apply-expressions)
 chapter.
 
-## <a id="apply-for"></a> Apply For
+## Apply For <a id="apply-for"></a>
 
 [Apply](17-language-reference.md#apply) rules can be extended with the
 [for loop](17-language-reference.md#for-loops) keyword.
@@ -452,10 +568,10 @@ and afterwards the `assign where` and `ignore where` conditions are evaluated.
 It is not necessary to check attributes referenced in the `for loop` expression
 for their existance using an additional `assign where` condition.
 
-More usage examples are documented in the [monitoring basics](3-monitoring-basics.md#using-apply-for)
+More usage examples are documented in the [monitoring basics](03-monitoring-basics.md#using-apply-for)
 chapter.
 
-## <a id="group-assign"></a> Group Assign
+## Group Assign <a id="group-assign"></a>
 
 Group objects can be assigned to specific member objects using the `assign where`
 and `ignore where` conditions.
@@ -479,7 +595,7 @@ ServiceGroup      | host, service
 UserGroup         | user
 
 
-## <a id="boolean-values"></a> Boolean Values
+## Boolean Values <a id="boolean-values"></a>
 
 The `assign where`, `ignore where`, `if` and `while`  statements, the `!` operator as
 well as the `bool()` function convert their arguments to a boolean value based on the
@@ -500,7 +616,7 @@ Non-empty dictionary | { key = "value" } | true
 For a list of supported expression operators for `assign where` and `ignore where`
 statements, see [expression operators](17-language-reference.md#expression-operators).
 
-## <a id="comments"></a> Comments
+## Comments <a id="comments"></a>
 
 The Icinga 2 configuration format supports C/C++-style and shell-style comments.
 
@@ -514,7 +630,7 @@ Example:
       retry_interval = 15 # yet another comment
     }
 
-## <a id="includes"></a> Includes
+## Includes <a id="includes"></a>
 
 Other configuration files can be included using the `include` directive.
 Paths must be relative to the configuration file that contains the
@@ -540,7 +656,7 @@ paths. Additional include search paths can be added using
 
 Wildcards are not permitted when using angle brackets.
 
-## <a id="recursive-includes"></a> Recursive Includes
+## Recursive Includes <a id="recursive-includes"></a>
 
 The `include_recursive` directive can be used to recursively include all
 files in a directory which match a certain pattern.
@@ -556,7 +672,7 @@ recursively included.
 The file names need to match the pattern given in the second parameter.
 When no pattern is specified the default pattern "*.conf" is used.
 
-## <a id="zone-includes"></a> Zone Includes
+## Zone Includes <a id="zone-includes"></a>
 
 The `include_zones` recursively includes all subdirectories for the
 given path.
@@ -579,17 +695,13 @@ The second parameter specifies the directory which contains the subdirectories.
 The file names need to match the pattern given in the third parameter.
 When no pattern is specified the default pattern "*.conf" is used.
 
-## <a id="library"></a> Library directive
+## Library directive <a id="library"></a>
 
-The `library` directive can be used to manually load additional
-libraries. Libraries can be used to provide additional object types and
-functions.
+The `library` directive was used to manually load additional
+libraries. Starting with version 2.9 it is no longer necessary to explicitly load
+libraries and this directive has no effect.
 
-Example:
-
-    library "snmphelper"
-
-## <a id="functions"></a> Functions
+## Functions <a id="functions"></a>
 
 Functions can be defined using the `function` keyword.
 
@@ -625,7 +737,7 @@ resulting function object can be used like any other value:
 
     fn() /* Returns 3 */
 
-## <a id="lambdas"></a> Lambda Expressions
+## Lambda Expressions <a id="lambdas"></a>
 
 Functions can also be declared using the alternative lambda syntax.
 
@@ -646,7 +758,7 @@ For lambdas which take exactly one argument the braces around the arguments can 
 
     f = x => x * x
 
-## <a id="nullary-lambdas"></a> Abbreviated Lambda Syntax
+## Abbreviated Lambda Syntax <a id="nullary-lambdas"></a>
 
 Lambdas which take no arguments can also be written using the abbreviated lambda syntax.
 
@@ -656,7 +768,7 @@ Example:
 
 This creates a new function which returns the value 3.
 
-## <a id="variable-scopes"></a> Variable Scopes
+## Variable Scopes <a id="variable-scopes"></a>
 
 When setting a variable Icinga checks the following scopes in this order whether the variable
 already exists there:
@@ -693,12 +805,12 @@ You can explicitly access the `this` scope using the `this` keyword:
 
     object Host "localhost" {
       var check_interval = 5m
-  
+
       /* This explicitly specifies that the attribute should be set
        * for the host, if we had omitted `this.` the (poorly named)
        * local variable `check_interval` would have been modified instead.
        */
-      this.check_interval = 1m 
+      this.check_interval = 1m
   }
 
 Similarly the keywords `locals` and `globals` are available to access the local and global scope.
@@ -708,7 +820,7 @@ a function is set to whichever object was used to invoke the function. Here's an
 
      hm = {
        h_word = null
- 
+
        function init(word) {
          h_word = word
        }
@@ -720,7 +832,7 @@ a function is set to whichever object was used to invoke the function. Here's an
 We're using `hm.init` to invoke the function which causes the value of `hm` to become the `this`
 scope for this function call.
 
-## <a id="closures"></a> Closures
+## Closures <a id="closures"></a>
 
 By default `function`s, `object`s and `apply` rules do not have access to variables declared
 outside of their scope (except for global variables).
@@ -744,7 +856,7 @@ Alternatively a different value for the inner variable can be specified:
       }
     }
 
-## <a id="conditional-statements"></a> Conditional Statements
+## Conditional Statements <a id="conditional-statements"></a>
 
 Sometimes it can be desirable to only evaluate statements when certain conditions are met. The if/else
 construct can be used to accomplish this.
@@ -776,7 +888,7 @@ This example prints the log message "Taking the 'true' branch" and the `a` varia
 
 The value of an if/else construct is null if the condition evaluates to false and no else branch is given.
 
-## <a id="while-loops"></a> While Loops
+## While Loops <a id="while-loops"></a>
 
 The `while` statement checks a condition and executes the loop body when the condition evaluates to `true`.
 This is repeated until the condition is no longer true.
@@ -794,7 +906,7 @@ The `continue` and `break` keywords can be used to control how the loop is execu
 skips over the remaining expressions for the loop body and begins the next loop evaluation. The `break` keyword
 breaks out of the loop.
 
-## <a id="for-loops"></a> For Loops
+## For Loops <a id="for-loops"></a>
 
 The `for` statement can be used to iterate over arrays and dictionaries.
 
@@ -802,7 +914,7 @@ Example:
 
     var list = [ "a", "b", "c" ]
 
-    for (item in list) {
+    for (var item in list) {
       log("Item: " + item)
     }
 
@@ -813,7 +925,7 @@ Iterating over dictionaries can be accomplished in a similar manner:
 
     var dict = { a = 3, b = 7 }
 
-    for (key => value in dict) {
+    for (var key => var value in dict) {
       log("Key: " + key + ", Value: " + value)
     }
 
@@ -821,7 +933,10 @@ The `continue` and `break` keywords can be used to control how the loop is execu
 skips over the remaining expressions for the loop body and begins the next loop evaluation. The `break` keyword
 breaks out of the loop.
 
-## <a id="constructor"></a> Constructors
+The `var` keyword is optional when declaring variables in the loop's header. Variables declared without the `var`
+keyword are nonetheless local to the function.
+
+## Constructors <a id="constructor"></a>
 
 In order to create a new value of a specific type constructor calls may be used.
 
@@ -837,7 +952,7 @@ Example:
 
     var s = String(3) /* Sets s to "3". */
 
-## <a id="throw"></a> Exceptions
+## Throwing Exceptions <a id="throw"></a>
 
 Built-in commands may throw exceptions to signal errors such as invalid arguments. User scripts can throw exceptions
 using the `throw` keyword.
@@ -846,15 +961,28 @@ Example:
 
     throw "An error occurred."
 
-There is currently no way for scripts to catch exceptions.
+## Handling Exceptions <a id="try-except"></a>
 
-## <a id="breakpoints"></a> Breakpoints
+Exceptions can be handled using the `try` and `except` keywords. When an exception occurs while executing code in the
+`try` clause no further statements in the `try` clause are evaluated and the `except` clause is executed instead.
+
+Example:
+
+    try {
+        throw "Test"
+
+        log("This statement won't get executed.")
+    } except {
+        log("An error occurred in the try clause.")
+    }
+
+## Breakpoints <a id="breakpoints"></a>
 
 The `debugger` keyword can be used to insert a breakpoint. It may be used at any place where an assignment would also be a valid expression.
 
 By default breakpoints have no effect unless Icinga is started with the `--script-debugger` command-line option. When the script debugger is enabled Icinga stops execution of the script when it encounters a breakpoint and spawns a console which lets the user inspect the current state of the execution environment.
 
-## <a id="types"></a> Types
+## Types <a id="types"></a>
 
 All values have a static type. The `typeof` function can be used to determine the type of a value:
 
@@ -871,7 +999,7 @@ Array      | [ "a", "b" ]      | An array.
 Dictionary | { a = 3 }         | A dictionary.
 
 Depending on which libraries are loaded additional types may become available. The `icinga`
-library implements a whole bunch of other [object types](9-object-types.md#object-types),
+library implements a whole bunch of other [object types](09-object-types.md#object-types),
 e.g. Host, Service, CheckCommand, etc.
 
 Each type has an associated type object which describes the type's semantics. These
@@ -889,7 +1017,7 @@ supports:
 Additional documentation on type methods is available in the
 [library reference](18-library-reference.md#library-reference).
 
-## <a id="location-information"></a> Location Information
+## Location Information <a id="location-information"></a>
 
 The location of the currently executing script can be obtained using the
 `current_filename` and `current_line` keywords.
@@ -898,7 +1026,7 @@ Example:
 
     log("Hello from '" + current_filename + "' in line " + current_line)
 
-## <a id="reserved-keywords"></a> Reserved Keywords
+## Reserved Keywords <a id="reserved-keywords"></a>
 
 These keywords are reserved and must not be used as constants or custom attributes.
 
@@ -906,7 +1034,7 @@ These keywords are reserved and must not be used as constants or custom attribut
     template
     include
     include_recursive
-    ignore_on_error
+    include_zones
     library
     null
     true
@@ -914,7 +1042,13 @@ These keywords are reserved and must not be used as constants or custom attribut
     const
     var
     this
+    globals
+    locals
     use
+    default
+    ignore_on_error
+    current_filename
+    current_line
     apply
     to
     where
@@ -923,12 +1057,18 @@ These keywords are reserved and must not be used as constants or custom attribut
     ignore
     function
     return
+    break
+    continue
     for
     if
     else
+    while
+    throw
+    try
+    except
     in
-    current_filename
-    current_line
+    using
+    namespace
 
 You can escape reserved keywords using the `@` character. The following example
 tries to set `vars.include` which references a reserved keyword and generates
@@ -958,4 +1098,3 @@ You can escape the `include` keyword by prefixing it with an additional `@` char
 
       vars.@include = "some cmdb export field"
     }
-

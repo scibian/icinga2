@@ -1,18 +1,61 @@
-# <a id="addons"></a> Icinga 2 Addons
+# Icinga 2 Addons <a id="addons"></a>
 
-## <a id="addons-graphing"></a> Graphing
+## Graphing <a id="addons-graphing"></a>
 
-### <a id="addons-graphing-pnp"></a> PNP
+### Graphite <a id="addons-graphing-graphite"></a>
 
-[PNP](http://www.pnp4nagios.org) is a graphing addon.
+[Graphite](https://graphite.readthedocs.org/en/latest/) is a time-series database
+storing collected metrics and making them available through restful apis
+and web interfaces.
 
-[PNP](http://www.pnp4nagios.org) is an addon which adds a graphical representation of the performance data collected
+Graphite consists of 3 software components:
+
+* carbon -- a Twisted daemon that listens for time-series data
+* whisper -- a simple database library for storing time-series data (similar in design to RRD)
+* graphite webapp -- a Django webapp that renders graphs on-demand using Cairo
+
+You need to install Graphite first, then proceed with configuring it in Icinga 2.
+
+Use the [GraphiteWriter](14-features.md#graphite-carbon-cache-writer) feature
+for sending real-time metrics from Icinga 2 to Graphite.
+
+    # icinga2 feature enable graphite
+
+A popular alternative frontend for Graphite is for example [Grafana](https://grafana.org).
+
+Integration in Icinga Web 2 is possible by installing the official [graphite module](https://icinga.com/docs/graphite/latest/).
+
+![Icinga Web 2 Detail View with Graphite](images/addons/icingaweb2_graphite.png)
+
+
+### InfluxDB <a id="addons-graphing-influxdb"></a>
+
+[InfluxDB](https://influxdb.com) is a time series, metrics, and analytics database.
+It’s written in Go and has no external dependencies.
+
+Use the [InfluxdbWriter](14-features.md#influxdb-writer) feature
+for sending real-time metrics from Icinga 2 to InfluxDB.
+
+    # icinga2 feature enable influxdb
+
+A popular frontend for InfluxDB is for example [Grafana](https://grafana.org).
+
+Integration in Icinga Web 2 is possible by installing the community [Grafana module](https://github.com/Mikesch-mp/icingaweb2-module-grafana).
+
+![Icinga Web 2 Detail View with Grafana](images/addons/icingaweb2_grafana.png)
+
+
+### PNP <a id="addons-graphing-pnp"></a>
+
+[PNP](https://www.pnp4nagios.org) is a graphing addon.
+
+[PNP](https://www.pnp4nagios.org) is an addon which adds a graphical representation of the performance data collected
 by the monitoring plugins. The data is stored as rrd (round robin database) files.
 
 Use your distribution's package manager to install the `pnp4nagios` package.
 
 If you're planning to use it, configure it to use the
-[bulk mode with npcd and npcdmod](http://docs.pnp4nagios.org/pnp-0.6/modes#bulk_mode_with_npcd_and_npcdmod)
+[bulk mode with npcd and npcdmod](https://docs.pnp4nagios.org/pnp-0.6/modes#bulk_mode_with_npcd_and_npcdmod)
 in combination with Icinga 2's [PerfdataWriter](14-features.md#performance-data). NPCD collects the performance
 data files which Icinga 2 generates.
 
@@ -27,57 +70,53 @@ Configure npcd to use the performance data created by Icinga 2:
 Set `perfdata_spool_dir = /var/spool/icinga2/perfdata` and restart the `npcd` daemon.
 
 There's also an Icinga Web 2 module for direct PNP graph integration
-available at [Icinga Exchange](https://exchange.icinga.org/icinga/PNP).
+available at [Icinga Exchange](https://exchange.icinga.com/icinga/PNP).
 
 More information on [action_url as attribute](13-addons.md#addons-graphing-pnp-action-url)
 and [graph template names](13-addons.md#addons-graphing-pnp-custom-templates).
 
 
-### <a id="addons-graphing-graphite"></a> Graphite
+## Visualization <a id="addons-visualization"></a>
 
-[Graphite](http://graphite.readthedocs.org/en/latest/) is a time-series database
-storing collected metrics and making them available through restful apis
-and web interfaces.
+### Maps <a id="addons-visualization-maps"></a>
 
-Graphite consists of 3 software components:
+This community module displays host objects as markers on openstreetmap in Icinga Web 2.
+It uses the data provided by the monitoring module and as such the [DB IDO](14-features.md#db-ido)
+from Icinga 2.
 
-* carbon -- a Twisted daemon that listens for time-series data
-* whisper -- a simple database library for storing time-series data (similar in design to RRD)
-* graphite webapp -- a Django webapp that renders graphs on-demand using Cairo
+If you configure multiple hosts with the same coordinates, i.e. servers in a datacenter, a clustered view is rendered.
 
-Use the [GraphiteWriter](14-features.md#graphite-carbon-cache-writer) feature
-for sending real-time metrics from Icinga 2 to Graphite.
+Check the  [Map module docs](https://github.com/nbuchwitz/icingaweb2-module-map) for more details on
+installation, configuration and integration.
 
-    # icinga2 feature enable graphite
+![Icinga Web 2 Maps](images/addons/icingaweb2_maps.png)
 
-There are Graphite addons available for collecting the performance data files too (e.g. `Graphios`).
+### Dashing Dashboard <a id="addons-visualization-dashing-dashboard"></a>
 
-A popular alternative frontend for Graphite is for example [Grafana](http://grafana.org).
+The [Icinga 2 dashboard](https://github.com/dnsmichi/dashing-icinga2) is built
+on top of Dashing and uses the [REST API](12-icinga2-api.md#icinga2-api) to visualize what's going
+on with your monitoring. It combines several popular widgets and provides development
+instructions for your own implementation.
 
-### <a id="addons-graphing-influxdb"></a> InfluxDB
+The dashboard also allows to embed the [Icinga Web 2](https://icinga.com/products/icinga-web-2/)
+host and service problem lists as Iframe.
 
-[InfluxDB](https://influxdb.com) is a time series, metrics, and analytics database.
-It’s written in Go and has no external dependencies.
+![Dashing dashboard](images/addons/dashing_icinga2.png)
 
-Use the [InfluxdbWriter](14-features.md#influxdb-writer) feature
-for sending real-time metrics from Icinga 2 to InfluxDB.
+### Business Process <a id="addons-business-process"></a>
 
-    # icinga2 feature enable influxdb
+Create top-level views of your applications in a graphical editor.
+Rules express dependencies between existing hosts and services and
+let you alert on application level. Business processes are displayed
+in a tree or list overview and can be added to any dashboard.
 
-A popular frontend for InfluxDB is for example [Grafana](http://grafana.org).
+![Icinga Web 2 Business Process](images/addons/icingaweb2_businessprocess.png)
 
-## <a id="addons-visualization"></a> Visualization
+### NagVis <a id="addons-visualization-nagvis"></a>
 
-### <a id="addons-visualization-reporting"></a> Icinga Reporting
-
-By enabling the [DB IDO](14-features.md#db-ido) feature you can use the
-[Icinga Reporting package](https://wiki.icinga.org/display/howtos/Setting+up+Icinga+with+Reporting).
-
-### <a id="addons-visualization-nagvis"></a> NagVis
-
-By using either [Livestatus](14-features.md#setting-up-livestatus) or
-[DB IDO](14-features.md#db-ido) as a backend you can create your own network maps
-based on your monitoring configuration and status data using [NagVis](http://www.nagvis.org).
+By using the [DB IDO](14-features.md#db-ido) feature
+you can create your own network maps
+based on your monitoring configuration and status data using [NagVis](https://www.nagvis.org).
 
 The configuration in nagvis.ini.php should look like this for Livestatus for example:
 
@@ -87,12 +126,17 @@ The configuration in nagvis.ini.php should look like this for Livestatus for exa
 
 If you are planning an integration into Icinga Web 2, look at [this module](https://github.com/Icinga/icingaweb2-module-nagvis).
 
-### <a id="addons-visualization-thruk"></a> Thruk
+### Icinga Reporting <a id="addons-visualization-reporting"></a>
 
-[Thruk](http://www.thruk.org) is an alternative web interface which can be used with Icinga 2
+By enabling the [DB IDO](14-features.md#db-ido) feature you can use the
+[Icinga Reporting package](https://icinga.com/docs/icinga1/latest/en/reporting.html).
+
+### Thruk <a id="addons-visualization-thruk"></a>
+
+[Thruk](https://www.thruk.org) is an alternative web interface which can be used with Icinga 2
 and the [Livestatus](14-features.md#setting-up-livestatus) feature.
 
-## <a id="log-monitoring"></a> Log Monitoring
+## Log Monitoring <a id="log-monitoring"></a>
 
 Using [Logstash](https://www.elastic.co/guide/en/logstash/current/introduction.html) or
 [Graylog](https://www.graylog.org) in your infrastructure and correlate events with your monitoring
@@ -102,13 +146,13 @@ is even simpler these days.
 * Configure the logstash `nagios` output to send passive traps to Icinga 2 using the external command pipe.
 * Execute a plugin to check Graylog alert streams.
 
-More details can be found in [this blog post](https://www.icinga.org/2014/12/02/team-icinga-at-osmc-2014/).
+More details can be found in [this blog post](https://icinga.com/2014/12/02/team-icinga-at-osmc-2014/).
 
-## <a id="notification-scripts-interfaces"></a> Notification Scripts and Interfaces
+## Notification Scripts and Interfaces <a id="notification-scripts-interfaces"></a>
 
 There's a variety of resources available, for example different notification scripts such as:
 
-* E-Mail ([examples](3-monitoring-basics.md#notifications) provided)
+* E-Mail ([examples](03-monitoring-basics.md#alert-notifications) provided)
 * SMS
 * Pager (XMPP, etc.)
 * Twitter
@@ -116,23 +160,22 @@ There's a variety of resources available, for example different notification scr
 * Ticket systems
 * etc.
 
-Additionally external services can be [integrated with Icinga 2](https://www.icinga.org/icinga/integration/):
+Additionally external services can be [integrated with Icinga 2](https://icinga.com/products/integrations/):
 
-* [Pagerduty](https://www.icinga.org/partners/pagerduty/)
-* [VictorOps](https://www.icinga.org/partners/victorops/)
-* [StackStorm](https://www.icinga.org/partners/stackstorm/)
+* [Pagerduty](https://icinga.com/products/integrations/pagerduty/)
+* [VictorOps](https://icinga.com/products/integrations/victorops/)
+* [StackStorm](https://icinga.com/products/integrations/stackstorm/)
 
-More information can be found on the [Icinga Website](https://www.icinga.org/)
-and the [Icinga Wiki](https://wiki.icinga.org/display/howtos/Home).
+More information can be found on the [Icinga Website](https://icinga.com/).
 
-## <a id="configuration-tools"></a> Configuration Management Tools
+## Configuration Management Tools <a id="configuration-tools"></a>
 
 If you require your favourite configuration tool to export the Icinga 2 configuration, please get in
 touch with their developers. The Icinga project does not provide a configuration web interface
-yet. Follow the [Icinga Blog](https://www.icinga.org/blog/) for updates on this topic.
+yet. Follow the [Icinga Blog](https://icinga.com/blog/) for updates on this topic.
 
 If you're looking for puppet manifests, chef cookbooks, ansible recipes, etc. -- we're happy
-to integrate them upstream, so please get in touch with the [Icinga team](https://www.icinga.org/community/get-involved/).
+to integrate them upstream, so please get in touch with the [Icinga team](https://icinga.com/community/).
 
 These tools are currently in development and require feedback and tests:
 
@@ -140,14 +183,14 @@ These tools are currently in development and require feedback and tests:
 * [Puppet Module](https://github.com/Icinga/puppet-icinga2)
 * [Chef Cookbook](https://github.com/Icinga/chef-icinga2)
 
-## <a id="addon-integration-hints"></a> More Addon Integration Hints
+## More Addon Integration Hints <a id="addon-integration-hints"></a>
 
-### <a id="addons-graphing-pnp-action-url"></a> PNP Action Url
+### PNP Action Url <a id="addons-graphing-pnp-action-url"></a>
 
 They work in a similar fashion for Icinga 2 and are used for 1.x web interfaces (Icinga Web 2 doesn't require
 the action url attribute in its own module).
 
-    template Service "pnp-hst" {
+    template Host "pnp-hst" {
       action_url = "/pnp4nagios/graph?host=$HOSTNAME$"
     }
 
@@ -155,7 +198,7 @@ the action url attribute in its own module).
       action_url = "/pnp4nagios/graph?host=$HOSTNAME$&srv=$SERVICEDESC$"
     }
 
-### <a id="addons-graphing-pnp-custom-templates"></a> PNP Custom Templates with Icinga 2
+### PNP Custom Templates with Icinga 2 <a id="addons-graphing-pnp-custom-templates"></a>
 
 PNP automatically determines the graph template from the check command name (or the argument's name).
 This behavior changed in Icinga 2 compared to Icinga 1.x. Though there are certain possibilities to

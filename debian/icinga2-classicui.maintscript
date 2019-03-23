@@ -1,0 +1,2 @@
+mv_conffile /etc/icinga2/classicui/apache2.conf /etc/icinga2-classicui/apache2.conf 2.2.0-1~
+mv_conffile /etc/icinga2/classicui/cgi.cfg /etc/icinga2-classicui/cgi.cfg 2.2.0-1~ 

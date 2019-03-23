@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -30,7 +30,6 @@ namespace icinga
 enum DbValueType
 {
 	DbValueTimestamp,
-	DbValueTimestampNow,
 	DbValueObjectInsertID
 };
 
@@ -39,27 +38,25 @@ enum DbValueType
  *
  * @ingroup ido
  */
-struct I2_DB_IDO_API DbValue : public Object
+struct DbValue final : public Object
 {
 public:
 	DECLARE_PTR_TYPEDEFS(DbValue);
 
-	DbValue(DbValueType type, const Value& value);
+	DbValue(DbValueType type, Value value);
 
 	static Value FromTimestamp(const Value& ts);
-	static Value FromTimestampNow(void);
 	static Value FromValue(const Value& value);
 	static Value FromObjectInsertID(const Value& value);
 
 	static bool IsTimestamp(const Value& value);
-	static bool IsTimestampNow(const Value& value);
 	static bool IsObjectInsertID(const Value& value);
 
 	static Value ExtractValue(const Value& value);
 
-	DbValueType GetType(void) const;
+	DbValueType GetType() const;
 
-	Value GetValue(void) const;
+	Value GetValue() const;
 	void SetValue(const Value& value);
 
 private:

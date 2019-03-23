@@ -1,38 +1,616 @@
-# <a id="library-reference"></a> Library Reference
+# Library Reference <a id="library-reference"></a>
 
-## <a id="global-functions"></a> Global functions
+## Global functions <a id="global-functions"></a>
 
-Function                        | Description
---------------------------------|-----------------------
-regex(pattern, text)            | Returns true if the regex pattern matches the text, false otherwise.
-match(pattern, text)            | Returns true if the wildcard pattern matches the text, false otherwise.
-cidr_match(pattern, ip)         | Returns true if the CIDR pattern matches the IP address, false otherwise. IPv4 addresses are converted to IPv4-mapped IPv6 addresses before being matched against the pattern.
-len(value)                      | Returns the length of the value, i.e. the number of elements for an array or dictionary, or the length of the string in bytes.
-union(array, array, ...)        | Returns an array containing all unique elements from the specified arrays.
-intersection(array, array, ...) | Returns an array containing all unique elements which are common to all specified arrays.
-keys(dict)                      | Returns an array containing the dictionary's keys.
-string(value)                   | Converts the value to a string.
-number(value)                   | Converts the value to a number.
-bool(value)                     | Converts the value to a bool.
-random()                        | Returns a random value between 0 and RAND_MAX (as defined in stdlib.h).
-log(value)                      | Writes a message to the log. Non-string values are converted to a JSON string.
-log(severity, facility, value)  | Writes a message to the log. `severity` can be one of `LogDebug`, `LogNotice`, `LogInformation`, `LogWarning`, and `LogCritical`. Non-string values are converted to a JSON string.
-typeof(value)                   | Returns the [Type](18-library-reference.md#type-type) object for a value.
-get_time()                      | Returns the current UNIX timestamp.
-parse_performance_data(pd)      | Parses a performance data string and returns an array describing the values.
-dirname(path)                   | Returns the directory portion of the specified path.
-basename(path)                  | Returns the filename portion of the specified path.
-escape\_shell\_arg(text)        | Escapes a string for use as a single shell argument.
-escape\_shell\_cmd(text)        | Escapes shell meta characters in a string.
-escape\_create\_process\_arg(text)| (Windows only) Escapes a string for use as an argument for CreateProcess().
-exit(integer)                   | Terminates the application.
-sleep(interval)                 | Sleeps for the specified amount of time (in seconds).
+These functions are globally available in [assign/ignore where expressions](03-monitoring-basics.md#using-apply-expressions),
+[functions](17-language-reference.md#functions), [API filters](12-icinga2-api.md#icinga2-api-filters)
+and the [Icinga 2 debug console](11-cli-commands.md#cli-command-console).
 
-## <a id="object-accessor-functions"></a> Object Accessor Functions
+You can use the [Icinga 2 debug console](11-cli-commands.md#cli-command-console)
+as a sandbox to test these functions before implementing
+them in your scenarios.
+
+### regex <a id="global-functions-regex"></a>
+
+Signature:
+
+    function regex(pattern, value, mode)
+
+Returns true if the regular expression `pattern` matches the `value`, false otherwise.
+The `value` can be of the type [String](18-library-reference.md#string-type) or [Array](18-library-reference.md#array-type) (which
+contains string elements).
+
+The `mode` argument is optional and can be either `MatchAll` (in which case all elements
+for an array have to match) or `MatchAny` (in which case at least one element has to match).
+The default mode is `MatchAll`.
+
+**Tip**: In case you are looking for regular expression tests try [regex101](https://regex101.com).
+
+Example for string values:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => host.vars.os_type = "Linux/Unix"
+    null
+    <2> => regex("^Linux", host.vars.os_type)
+    true
+    <3> => regex("^Linux$", host.vars.os_type)
+    false
+
+Example for an array of string values:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => host.vars.databases = [ "db-prod1", "db-prod2", "db-dev" ]
+    null
+    <2> => regex("^db-prod\\d+", host.vars.databases, MatchAny)
+    true
+    <3> => regex("^db-prod\\d+", host.vars.databases, MatchAll)
+    false
+
+
+### match <a id="global-functions-match"></a>
+
+Signature:
+
+    function match(pattern, text, mode)
+
+Returns true if the wildcard (`?*`) `pattern` matches the `value`, false otherwise.
+The `value` can be of the type [String](18-library-reference.md#string-type) or [Array](18-library-reference.md#array-type) (which
+contains string elements).
+
+The `mode` argument is optional and can be either `MatchAll` (in which case all elements
+for an array have to match) or `MatchAny` (in which case at least one element has to match).
+The default mode is `MatchAll`.
+
+Example for string values:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => var name = "db-prod-sfo-657"
+    null
+    <2> => match("*prod-sfo*", name)
+    true
+    <3> => match("*-dev-*", name)
+    false
+
+Example for an array of string values:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0-28)
+    <1> => host.vars.application_types = [ "web-wp", "web-rt", "db-local" ]
+    null
+    <2> => match("web-*", host.vars.application_types, MatchAll)
+    false
+    <3> => match("web-*", host.vars.application_types, MatchAny)
+    true
+
+
+### cidr_match <a id="global-functions-cidr_match"></a>
+
+Signature:
+
+    function cidr_match(pattern, ip, mode)
+
+Returns true if the CIDR pattern matches the IP address, false otherwise.
+
+IPv4 addresses are converted to IPv4-mapped IPv6 addresses before being
+matched against the pattern. The `mode` argument is optional and can be
+either `MatchAll` (in which case all elements for an array have to match) or `MatchAny`
+(in which case at least one element has to match). The default mode is `MatchAll`.
+
+
+Example for a single IP address:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => host.address = "192.168.56.101"
+    null
+    <2> => cidr_match("192.168.56.0/24", host.address)
+    true
+    <3> => cidr_match("192.168.56.0/26", host.address)
+    false
+
+Example for an array of IP addresses:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => host.vars.vhost_ips = [ "192.168.56.101", "192.168.56.102", "10.0.10.99" ]
+    null
+    <2> => cidr_match("192.168.56.0/24", host.vars.vhost_ips, MatchAll)
+    false
+    <3> => cidr_match("192.168.56.0/24", host.vars.vhost_ips, MatchAny)
+    true
+
+### range <a id="global-functions-range"></a>
+
+Signature:
+
+    function range(end)
+    function range(start, end)
+    function range(start, end, increment)
+
+Returns an array of numbers in the specified range.
+If you specify one parameter, the first element starts at `0`.
+The following array numbers are incremented by `1` and stop before
+the specified end.
+If you specify the start and end numbers, the returned array
+number are incremented by `1`. They start at the specified start
+number and stop before the end number.
+Optionally you can specify the incremented step between numbers
+as third parameter.
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => range(5)
+    [ 0.000000, 1.000000, 2.000000, 3.000000, 4.000000 ]
+    <2> => range(2,4)
+    [ 2.000000, 3.000000 ]
+    <3> => range(2,10,2)
+    [ 2.000000, 4.000000, 6.000000, 8.000000 ]
+
+### len <a id="global-functions-len"></a>
+
+Signature:
+
+    function len(value)
+
+Returns the length of the value, i.e. the number of elements for an array
+or dictionary, or the length of the string in bytes.
+
+**Note**: Instead of using this global function you are advised to use the type's
+prototype method: [Array#len](18-library-reference.md#array-len), [Dictionary#len](18-library-reference.md#dictionary-len) and
+[String#len](18-library-reference.md#string-len).
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => host.groups = [ "linux-servers", "db-servers" ]
+    null
+    <2> => host.groups.len()
+    2.000000
+    <3> => host.vars.disks["/"] = {}
+    null
+    <4> => host.vars.disks["/var"] = {}
+    null
+    <5> => host.vars.disks.len()
+    2.000000
+    <6> => host.vars.os_type = "Linux/Unix"
+    null
+    <7> => host.vars.os_type.len()
+    10.000000
+
+
+### union <a id="global-functions-union"></a>
+
+Signature:
+
+    function union(array, array, ...)
+
+Returns an array containing all unique elements from the specified arrays.
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => var dev_notification_groups = [ "devs", "slack" ]
+    null
+    <2> => var host_notification_groups = [ "slack", "noc" ]
+    null
+    <3> => union(dev_notification_groups, host_notification_groups)
+    [ "devs", "noc", "slack" ]
+
+### intersection <a id="global-functions-intersection"></a>
+
+Signature:
+
+    function intersection(array, array, ...)
+
+Returns an array containing all unique elements which are common to all
+specified arrays.
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => var dev_notification_groups = [ "devs", "slack" ]
+    null
+    <2> => var host_notification_groups = [ "slack", "noc" ]
+    null
+    <3> => intersection(dev_notification_groups, host_notification_groups)
+    [ "slack" ]
+
+### keys <a id="global-functions-keys"></a>
+
+Signature:
+
+    function keys(dict)
+
+Returns an array containing the dictionary's keys.
+
+**Note**: Instead of using this global function you are advised to use the type's
+prototype method: [Dictionary#keys](18-library-reference.md#dictionary-keys).
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => host.vars.disks["/"] = {}
+    null
+    <2> => host.vars.disks["/var"] = {}
+    null
+    <3> => host.vars.disks.keys()
+    [ "/", "/var" ]
+
+### string <a id="global-functions-string"></a>
+
+Signature:
+
+    function string(value)
+
+Converts the value to a string.
+
+**Note**: Instead of using this global function you are advised to use the type's
+prototype method:
+
+* [Number#to_string](18-library-reference.md#number-to_string)
+* [Boolean#to_string](18-library-reference.md#boolean-to_string)
+* [String#to_string](18-library-reference.md#string-to_string)
+* [Object#to_string](18-library-reference.md#object-to-string) for Array and Dictionary types
+* [DateTime#to_string](18-library-reference.md#datetime-tostring)
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => 5.to_string()
+    "5"
+    <2> => false.to_string()
+    "false"
+    <3> => "abc".to_string()
+    "abc"
+    <4> => [ "dev", "slack" ].to_string()
+    "[ \"dev\", \"slack\" ]"
+    <5> => { "/" = {}, "/var" = {} }.to_string()
+    "{\n\t\"/\" = {\n\t}\n\t\"/var\" = {\n\t}\n}"
+    <6> => DateTime(2016, 11, 25).to_string()
+    "2016-11-25 00:00:00 +0100"
+
+### number <a id="global-functions-number"></a>
+
+Signature:
+
+    function number(value)
+
+Converts the value to a number.
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => number(false)
+    0.000000
+    <2> => number("78")
+    78.000000
+
+### bool <a id="global-functions-bool"></a>
+
+Signature:
+
+    function bool(value)
+
+Converts the value to a bool.
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => bool(1)
+    true
+    <2> => bool(0)
+    false
+
+### random <a id="global-functions-random"></a>
+
+Signature:
+
+    function random()
+
+Returns a random value between 0 and RAND\_MAX (as defined in stdlib.h).
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => random()
+    1263171996.000000
+    <2> => random()
+    108402530.000000
+
+### log <a id="global-functions-log"></a>
+
+Signature:
+
+    function log(value)
+
+Writes a message to the log. Non-string values are converted to a JSON string.
+
+Signature:
+
+    function log(severity, facility, value)
+
+Writes a message to the log. `severity` can be one of `LogDebug`, `LogNotice`,
+`LogInformation`, `LogWarning`, and `LogCritical`.
+
+Non-string values are converted to a JSON string.
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => log(LogCritical, "Console", "First line")
+    critical/Console: First line
+    null
+    <2> => var groups = [ "devs", "slack" ]
+    null
+    <3> => log(LogCritical, "Console", groups)
+    critical/Console: ["devs","slack"]
+    null
+
+### typeof <a id="global-functions-typeof"></a>
+
+Signature:
+
+    function typeof(value)
+
+Returns the [Type](18-library-reference.md#type-type) object for a value.
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => typeof(3) == Number
+    true
+    <2> => typeof("str") == String
+    true
+    <3> => typeof(true) == Boolean
+    true
+    <4> => typeof([ 1, 2, 3]) == Array
+    true
+    <5> => typeof({ a = 2, b = 3 }) == Dictionary
+    true
+
+### get_time <a id="global-functions-get_time"></a>
+
+Signature:
+
+    function get_time()
+
+Returns the current UNIX timestamp as floating point number.
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => get_time()
+    1480072135.633008
+    <2> => get_time()
+    1480072140.401207
+
+### parse_performance_data <a id="global-functions-parse_performance_data"></a>
+
+Signature:
+
+    function parse_performance_data(pd)
+
+Parses a performance data string and returns an array describing the values.
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => var pd = "'time'=1480074205.197363;;;"
+    null
+    <2> => parse_performance_data(pd)
+    {
+    	counter = false
+    	crit = null
+    	label = "time"
+    	max = null
+    	min = null
+    	type = "PerfdataValue"
+    	unit = ""
+    	value = 1480074205.197363
+    	warn = null
+    }
+
+### dirname <a id="global-functions-dirname"></a>
+
+Signature:
+
+    function dirname(path)
+
+Returns the directory portion of the specified path.
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => var path = "/etc/icinga2/scripts/xmpp-notification.pl"
+    null
+    <2> => dirname(path)
+    "/etc/icinga2/scripts"
+
+### basename <a id="global-functions-basename"></a>
+
+Signature:
+
+    function basename(path)
+
+Returns the filename portion of the specified path.
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => var path = "/etc/icinga2/scripts/xmpp-notification.pl"
+    null
+    <2> => basename(path)
+    "xmpp-notification.pl"
+
+### path\_exists <a id="global-functions-path-exists"></a>
+
+Signature:
+
+    function path_exists(path)
+
+Returns true if the specified path exists, false otherwise.
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => var path = "/etc/icinga2/scripts/xmpp-notification.pl"
+    null
+    <2> => path_exists(path)
+    true
+
+### glob <a id="global-functions-glob"></a>
+
+Signature:
+
+    function glob(pathSpec, type)
+
+Returns an array containing all paths which match the
+`pathSpec` argument.
+
+The `type` argument is optional and specifies which types
+of paths are matched. This can be a combination of the `GlobFile`
+and `GlobDirectory` constants. The default value is `GlobFile | GlobDirectory`.
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => var pathSpec = "/etc/icinga2/conf.d/*.conf"
+    null
+    <2> => glob(pathSpec)
+    [ "/etc/icinga2/conf.d/app.conf", "/etc/icinga2/conf.d/commands.conf", ... ]
+
+### glob\_recursive <a id="global-functions-glob-recursive"></a>
+
+Signature:
+
+    function glob_recursive(path, pattern, type)
+
+Recursively descends into the specified directory and returns an array containing
+all paths which match the `pattern` argument.
+
+The `type` argument is optional and specifies which types
+of paths are matched. This can be a combination of the `GlobFile`
+and `GlobDirectory` constants. The default value is `GlobFile | GlobDirectory`.
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => var path = "/etc/icinga2/zones.d/"
+    null
+    <2> => var pattern = "*.conf"
+    null
+    <3> => glob_recursive(path, pattern)
+    [ "/etc/icinga2/zones.d/global-templates/templates.conf", "/etc/icinga2/zones.d/master/hosts.conf", ... ]
+
+### escape_shell_arg <a id="global-functions-escape_shell_arg"></a>
+
+Signature:
+
+    function escape_shell_arg(text)
+
+Escapes a string for use as a single shell argument.
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => escape_shell_arg("'$host.name$' '$service.name$'")
+    "''\\''$host.name$'\\'' '\\''$service.name$'\\'''"
+
+### escape_shell_cmd <a id="global-functions-escape_shell_cmd"></a>
+
+Signature:
+
+    function escape_shell_cmd(text)
+
+Escapes shell meta characters in a string.
+
+Example:
+
+    $ icinga2 console
+    Icinga 2 (version: v2.7.0)
+    <1> => escape_shell_cmd("/bin/echo 'shell test' $ENV")
+    "/bin/echo 'shell test' \\$ENV"
+
+### escape_create_process_arg <a id="global-functions-escape_create_process_arg"></a>
+
+Signature:
+
+    function escape_create_process_arg(text)
+
+Escapes a string for use as an argument for CreateProcess(). Windows only.
+
+### sleep <a id="global-functions-sleep"></a>
+
+Signature:
+
+    function sleep(interval)
+
+Sleeps for the specified amount of time (in seconds).
+
+
+## Scoped Functions <a id="scoped-functions"></a>
+
+This chapter describes functions which are only available
+in a specific scope.
+
+### macro <a id="scoped-functions-macro"></a>
+
+Signature:
+
+```
+function macro("$macro_name$")
+```
+
+The `macro` function can be used to resolve [runtime macro](03-monitoring-basics.md#runtime-macros)
+strings into their values.
+The returned value depends on the attribute value which is resolved
+from the specified runtime macro.
+
+This function is only available in runtime evaluated functions, e.g.
+for [custom attributes](03-monitoring-basics.md#custom-attributes-functions) which
+use the [abbreviated lambda syntax](17-language-reference.md#nullary-lambdas).
+
+This example sets the `snmp_address` custom attribute
+based on `$address$` and `$address6$`.
+
+```
+  vars.snmp_address = {{
+    var addr_v4 = macro("$address$")
+    var addr_v6 = macro("$address6$")
+
+    if (addr_v4) {
+    	return addr_v4
+    } else {
+    	return "udp6:[" + addr_v6 + "]"
+    }
+  }}
+```
+
+More reference examples are available inside the [Icinga Template Library](10-icinga-template-library.md#icinga-template-library)
+and the [object accessors chapter](08-advanced-topics.md#access-object-attributes-at-runtime).
+
+## Object Accessor Functions <a id="object-accessor-functions"></a>
 
 These functions can be used to retrieve a reference to another object by name.
 
-### <a id="objref-get_check_command"></a> get_check_command
+### get_check_command <a id="objref-get_check_command"></a>
 
 Signature:
 
@@ -40,7 +618,7 @@ Signature:
 
 Returns the CheckCommand object with the specified name, or `null` if no such CheckCommand object exists.
 
-### <a id="objref-get_event_command"></a> get_event_command
+### get_event_command <a id="objref-get_event_command"></a>
 
 Signature:
 
@@ -48,7 +626,7 @@ Signature:
 
 Returns the EventCommand object with the specified name, or `null` if no such EventCommand object exists.
 
-### <a id="objref-get_notification_command"></a> get_notification_command
+### get_notification_command <a id="objref-get_notification_command"></a>
 
 Signature:
 
@@ -56,7 +634,7 @@ Signature:
 
 Returns the NotificationCommand object with the specified name, or `null` if no such NotificationCommand object exists.
 
-### <a id="objref-get_host"></a> get_host
+### get_host <a id="objref-get_host"></a>
 
 Signature:
 
@@ -65,16 +643,64 @@ Signature:
 Returns the Host object with the specified name, or `null` if no such Host object exists.
 
 
-### <a id="objref-get_service"></a> get_service
+### get_service <a id="objref-get_service"></a>
 
 Signature:
 
     function get_service(host_name, service_name);
+    function get_service(host, service_name);
 
-Returns the Service object with the specified name, or `null` if no such Service object exists.
+Returns the Service object with the specified host name or object and service name pair,
+or `null` if no such Service object exists.
 
+Example in the [debug console](11-cli-commands.md#cli-command-console)
+which fetches the `disk` service object from the current Icinga 2 node:
 
-### <a id="objref-get_user"></a> get_user
+```
+$ ICINGA2_API_PASSWORD=icinga icinga2 console --connect 'https://root@localhost:5665/'
+Icinga 2 (version: v2.7.0)
+
+<1> => get_service(NodeName, "disk")
+<2> => get_service(NodeName, "disk").__name
+"icinga2-master1.localdomain!disk"
+
+<3> => get_service(get_host(NodeName), "disk").__name
+"icinga2-master1.localdomain!disk"
+```
+
+### get_services <a id="objref-get_services"></a>
+
+Signature:
+
+    function get_services(host_name);
+    function get_services(host);
+
+Returns an [array](17-language-reference.md#array) of service objects for the specified host name or object,
+or `null` if no such host object exists.
+
+Example in the [debug console](11-cli-commands.md#cli-command-console)
+which fetches all service objects from the current Icinga 2 node:
+
+```
+$ ICINGA2_API_PASSWORD=icinga icinga2 console --connect 'https://root@localhost:5665/'
+Icinga 2 (version: v2.7.0)
+
+<1> => get_services(NodeName).map(s => s.name)
+[ "disk", "disk /", "http", "icinga", "load", "ping4", "ping6", "procs", "ssh", "users" ]
+```
+
+Note: [map](18-library-reference.md#array-map) takes a [lambda function](17-language-reference.md#lambdas) as argument. In this example
+we only want to collect and print the `name` attribute with `s => s.name`.
+
+This works in a similar fashion for a host object where you can extract all service states
+in using the [map](18-library-reference.md#array-map) functionality:
+
+```
+<2> => get_services(get_host(NodeName)).map(s => s.state)
+[ 2.000000, 2.000000, 2.000000, 0.000000, 0.000000, 0.000000, 2.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000 ]
+```
+
+### get_user <a id="objref-get_user"></a>
 
 Signature:
 
@@ -82,7 +708,7 @@ Signature:
 
 Returns the User object with the specified name, or `null` if no such User object exists.
 
-### <a id="objref-get_host_group"></a> get_host_group
+### get_host_group <a id="objref-get_host_group"></a>
 
 Signature:
 
@@ -91,7 +717,7 @@ Signature:
 Returns the HostGroup object with the specified name, or `null` if no such HostGroup object exists.
 
 
-### <a id="objref-get_service_group"></a> get_service_group
+### get_service_group <a id="objref-get_service_group"></a>
 
 Signature:
 
@@ -99,7 +725,7 @@ Signature:
 
 Returns the ServiceGroup object with the specified name, or `null` if no such ServiceGroup object exists.
 
-### <a id="objref-get_user_group"></a> get_user_group
+### get_user_group <a id="objref-get_user_group"></a>
 
 Signature:
 
@@ -108,7 +734,7 @@ Signature:
 Returns the UserGroup object with the specified name, or `null` if no such UserGroup object exists.
 
 
-### <a id="objref-get_time_period"></a> get_time_period
+### get_time_period <a id="objref-get_time_period"></a>
 
 Signature:
 
@@ -117,7 +743,7 @@ Signature:
 Returns the TimePeriod object with the specified name, or `null` if no such TimePeriod object exists.
 
 
-### <a id="objref-get_object"></a> get_object
+### get_object <a id="objref-get_object"></a>
 
 Signature:
 
@@ -127,7 +753,7 @@ Returns the object with the specified type and name, or `null` if no such object
 to a type object.
 
 
-### <a id="objref-get_objects"></a> get_objects
+### get_objects <a id="objref-get_objects"></a>
 
 Signature:
 
@@ -137,40 +763,40 @@ Returns an array of objects whose type matches the specified type. `type` must r
 to a type object.
 
 
-## <a id="math-object"></a> Math object
+## Math object <a id="math-object"></a>
 
 The global `Math` object can be used to access a number of mathematical constants
 and functions.
 
-### <a id="math-e"></a> Math.E
+### Math.E <a id="math-e"></a>
 
 Euler's constant.
 
-### <a id="math-ln2"></a> Math.LN2
+### Math.LN2 <a id="math-ln2"></a>
 
 Natural logarithm of 2.
 
-### <a id="math-ln10"></a> Math.LN10
+### Math.LN10 <a id="math-ln10"></a>
 
 Natural logarithm of 10.
 
-### <a id="math-log2e"></a> Math.LOG2E
+### Math.LOG2E <a id="math-log2e"></a>
 
 Base 2 logarithm of E.
 
-### <a id="math-pi"></a> Math.PI
+### Math.PI <a id="math-pi"></a>
 
 The mathematical constant Pi.
 
-### <a id="math-sqrt1_2"></a> Math.SQRT1_2
+### Math.SQRT1_2 <a id="math-sqrt1_2"></a>
 
 Square root of 1/2.
 
-### <a id="math-sqrt2"></a> Math.SQRT2
+### Math.SQRT2 <a id="math-sqrt2"></a>
 
 Square root of 2.
 
-### <a id="math-abs"></a> Math.abs
+### Math.abs <a id="math-abs"></a>
 
 Signature:
 
@@ -178,7 +804,7 @@ Signature:
 
 Returns the absolute value of `x`.
 
-### <a id="math-acos"></a> Math.acos
+### Math.acos <a id="math-acos"></a>
 
 Signature:
 
@@ -186,7 +812,7 @@ Signature:
 
 Returns the arccosine of `x`.
 
-### <a id="math-asin"></a> Math.asin
+### Math.asin <a id="math-asin"></a>
 
 Signature:
 
@@ -194,7 +820,7 @@ Signature:
 
 Returns the arcsine of `x`.
 
-### <a id="math-atan"></a> Math.atan
+### Math.atan <a id="math-atan"></a>
 
 Signature:
 
@@ -202,7 +828,7 @@ Signature:
 
 Returns the arctangent of `x`.
 
-### <a id="math-atan2"></a> Math.atan2
+### Math.atan2 <a id="math-atan2"></a>
 
 Signature:
 
@@ -210,7 +836,7 @@ Signature:
 
 Returns the arctangent of the quotient of `y` and `x`.
 
-### <a id="math-ceil"></a> Math.ceil
+### Math.ceil <a id="math-ceil"></a>
 
 Signature:
 
@@ -218,7 +844,7 @@ Signature:
 
 Returns the smallest integer value not less than `x`.
 
-### <a id="math-cos"></a> Math.cos
+### Math.cos <a id="math-cos"></a>
 
 Signature:
 
@@ -226,7 +852,7 @@ Signature:
 
 Returns the cosine of `x`.
 
-### <a id="math-exp"></a> Math.exp
+### Math.exp <a id="math-exp"></a>
 
 Signature:
 
@@ -234,7 +860,7 @@ Signature:
 
 Returns E raised to the `x`th power.
 
-### <a id="math-floor"></a> Math.floor
+### Math.floor <a id="math-floor"></a>
 
 Signature:
 
@@ -242,7 +868,7 @@ Signature:
 
 Returns the largest integer value not greater than `x`.
 
-### <a id="math-isinf"></a> Math.isinf
+### Math.isinf <a id="math-isinf"></a>
 
 Signature:
 
@@ -250,7 +876,7 @@ Signature:
 
 Returns whether `x` is infinite.
 
-### <a id="math-isnan"></a> Math.isnan
+### Math.isnan <a id="math-isnan"></a>
 
 Signature:
 
@@ -258,7 +884,7 @@ Signature:
 
 Returns whether `x` is NaN (not-a-number).
 
-### <a id="math-log"></a> Math.log
+### Math.log <a id="math-log"></a>
 
 Signature:
 
@@ -266,7 +892,7 @@ Signature:
 
 Returns the natural logarithm of `x`.
 
-### <a id="math-max"></a> Math.max
+### Math.max <a id="math-max"></a>
 
 Signature:
 
@@ -275,7 +901,7 @@ Signature:
 Returns the largest argument. A variable number of arguments can be specified.
 If no arguments are given, -Infinity is returned.
 
-### <a id="math-min"></a> Math.min
+### Math.min <a id="math-min"></a>
 
 Signature:
 
@@ -284,7 +910,7 @@ Signature:
 Returns the smallest argument. A variable number of arguments can be specified.
 If no arguments are given, +Infinity is returned.
 
-### <a id="math-pow"></a> Math.pow
+### Math.pow <a id="math-pow"></a>
 
 Signature:
 
@@ -292,7 +918,7 @@ Signature:
 
 Returns `x` raised to the `y`th power.
 
-### <a id="math-random"></a> Math.random
+### Math.random <a id="math-random"></a>
 
 Signature:
 
@@ -300,7 +926,7 @@ Signature:
 
 Returns a pseudo-random number between 0 and 1.
 
-### <a id="math-round"></a> Math.round
+### Math.round <a id="math-round"></a>
 
 Signature:
 
@@ -308,7 +934,7 @@ Signature:
 
 Returns `x` rounded to the nearest integer value.
 
-### <a id="math-sign"></a> Math.sign
+### Math.sign <a id="math-sign"></a>
 
 Signature:
 
@@ -317,7 +943,7 @@ Signature:
 Returns -1 if `x` is negative, 1 if `x` is positive
 and 0 if `x` is 0.
 
-### <a id="math-sin"></a> Math.sin
+### Math.sin <a id="math-sin"></a>
 
 Signature:
 
@@ -325,7 +951,7 @@ Signature:
 
 Returns the sine of `x`.
 
-### <a id="math-sqrt"></a> Math.sqrt
+### Math.sqrt <a id="math-sqrt"></a>
 
 Signature:
 
@@ -333,7 +959,7 @@ Signature:
 
 Returns the square root of `x`.
 
-### <a id="math-tan"></a> Math.tan
+### Math.tan <a id="math-tan"></a>
 
 Signature:
 
@@ -341,11 +967,11 @@ Signature:
 
 Returns the tangent of `x`.
 
-## <a id="json-object"></a> Json object
+## Json object <a id="json-object"></a>
 
 The global `Json` object can be used to encode and decode JSON.
 
-### <a id="json-encode"></a> Json.encode
+### Json.encode <a id="json-encode"></a>
 
 Signature:
 
@@ -353,7 +979,7 @@ Signature:
 
 Encodes an arbitrary value into JSON.
 
-### <a id="json-decode"></a> Json.decode
+### Json.decode <a id="json-decode"></a>
 
 Signature:
 
@@ -361,9 +987,9 @@ Signature:
 
 Decodes a JSON string.
 
-## <a id="number-type"></a> Number type
+## Number type <a id="number-type"></a>
 
-### <a id="number-to_string"></a> Number#to_string
+### Number#to_string <a id="number-to_string"></a>
 
 Signature:
 
@@ -376,9 +1002,9 @@ Example:
     var example = 7
 	example.to_string() /* Returns "7" */
 
-## <a id="boolean-type"></a> Boolean type
+## Boolean type <a id="boolean-type"></a>
 
-### <a id="boolean-to_string"></a> Boolean#to_string
+### Boolean#to_string <a id="boolean-to_string"></a>
 
 Signature:
 
@@ -391,9 +1017,9 @@ Example:
     var example = true
 	example.to_string() /* Returns "true" */
 
-## <a id="string-type"></a> String type
+## String type <a id="string-type"></a>
 
-### <a id="string-find"></a> String#find
+### String#find <a id="string-find"></a>
 
 Signature:
 
@@ -407,7 +1033,7 @@ Example:
 
     "Hello World".find("World") /* Returns 6 */
 
-### <a id="string-contains"></a> String#contains
+### String#contains <a id="string-contains"></a>
 
 Signature:
 
@@ -421,7 +1047,7 @@ Example:
 
     "Hello World".contains("World") /* Returns true */
 
-### <a id="string-len"></a> String#len
+### String#len <a id="string-len"></a>
 
 Signature
 
@@ -434,7 +1060,7 @@ Example:
 
     "Hello World".len() /* Returns 11 */
 
-### <a id="string-lower"></a> String#lower
+### String#lower <a id="string-lower"></a>
 
 Signature:
 
@@ -446,7 +1072,7 @@ Example:
 
     "Hello World".lower() /* Returns "hello world" */
 
-### <a id="string-upper"></a> String#upper
+### String#upper <a id="string-upper"></a>
 
 Signature:
 
@@ -458,7 +1084,7 @@ Example:
 
     "Hello World".upper() /* Returns "HELLO WORLD" */
 
-### <a id="string-replace"></a> String#replace
+### String#replace <a id="string-replace"></a>
 
 Signature:
 
@@ -467,7 +1093,7 @@ Signature:
 Returns a copy of the string with all occurences of the string specified in `search` replaced
 with the string specified in `replacement`.
 
-### <a id="string-split"></a> String#split
+### String#split <a id="string-split"></a>
 
 Signature:
 
@@ -480,7 +1106,7 @@ Example:
 
     "x-7,y".split("-,") /* Returns [ "x", "7", "y" ] */
 
-### <a id="string-substr"></a> String#substr
+### String#substr <a id="string-substr"></a>
 
 Signature:
 
@@ -493,7 +1119,7 @@ Example:
 
     "Hello World".substr(6) /* Returns "World" */
 
-### <a id="string-to_string"></a> String#to_string
+### String#to_string <a id="string-to_string"></a>
 
 Signature:
 
@@ -501,7 +1127,7 @@ Signature:
 
 Returns a copy of the string.
 
-### <a id="string-reverse"></a> String#reverse
+### String#reverse <a id="string-reverse"></a>
 
 Signature:
 
@@ -509,7 +1135,7 @@ Signature:
 
 Returns a copy of the string in reverse order.
 
-### <a id="string-trim"></a> String#trim
+### String#trim <a id="string-trim"></a>
 
 Signature:
 
@@ -517,11 +1143,11 @@ Signature:
 
 Removes trailing whitespaces and returns the string.
 
-## <a id="object-type"></a> Object type
+## Object type <a id="object-type"></a>
 
 This is the base type for all types in the Icinga application.
 
-### <a id="object-clone"></a> Object#clone
+### Object#clone <a id="object-clone"></a>
 
 Signature:
 
@@ -531,7 +1157,7 @@ Returns a copy of the object. Note that for object elements which are
 reference values (e.g. objects such as arrays or dictionaries) the entire
 object is recursively copied.
 
-### <a id="object-to-string"></a> Object#to_string
+### Object#to_string <a id="object-to-string"></a>
 
 Signature:
 
@@ -545,7 +1171,7 @@ Example:
 
     [ 3, true ].to_string() /* Returns "[ 3.000000, true ]" */
 
-### <a id="object-type-field"></a> Object#type
+### Object#type <a id="object-type-field"></a>
 
 Signature:
 
@@ -557,7 +1183,7 @@ Example:
 
     get_host("localhost").type /* Returns "Host" */
 
-## <a id="type-type"></a> Type type
+## Type type <a id="type-type"></a>
 
 Inherits methods from the [Object type](18-library-reference.md#object-type).
 
@@ -565,7 +1191,7 @@ The `Type` type provides information about the underlying type of an object or s
 
 All types are registered as global variables. For example, in order to obtain a reference to the `String` type the global variable `String` can be used.
 
-### <a id="type-base"></a> Type#base
+### Type#base <a id="type-base"></a>
 
 Signature:
 
@@ -577,7 +1203,7 @@ Example:
 
     Dictionary.base == Object /* Returns true, because the Dictionary type inherits directly from the Object type. */
 
-### <a id="type-name"></a> Type#name
+### Type#name <a id="type-name"></a>
 
 Signature:
 
@@ -585,7 +1211,7 @@ Signature:
 
 Returns the name of the type.
 
-### <a id="type-prototype"></a> Type#prototype
+### Type#prototype <a id="type-prototype"></a>
 
 Signature:
 
@@ -599,11 +1225,11 @@ Example:
 
     3.to_string() /* Even though '3' does not have a to_string property the Number type's prototype object does. */
 
-## <a id="array-type"></a> Array type
+## Array type <a id="array-type"></a>
 
 Inherits methods from the [Object type](18-library-reference.md#object-type).
 
-### <a id="array-add"></a> Array#add
+### Array#add <a id="array-add"></a>
 
 Signature:
 
@@ -611,7 +1237,7 @@ Signature:
 
 Adds a new value after the last element in the array.
 
-### <a id="array-clear"></a> Array#clear
+### Array#clear <a id="array-clear"></a>
 
 Signature:
 
@@ -619,14 +1245,14 @@ Signature:
 
 Removes all elements from the array.
 
-### <a id="array-shallow-clone"></a> Array#shallow_clone
+### Array#shallow_clone <a id="array-shallow-clone"></a>
 
     function shallow_clone();
 
 Returns a copy of the array. Note that for elements which are reference values (e.g. objects such
 as arrays and dictionaries) only the references are copied.
 
-### <a id="array-contains"></a> Array#contains
+### Array#contains <a id="array-contains"></a>
 
 Signature:
 
@@ -634,7 +1260,15 @@ Signature:
 
 Returns true if the array contains the specified value, false otherwise.
 
-### <a id="array-len"></a> Array#len
+### Array#freeze <a id="array-freeze"></a>
+
+Signature:
+
+    function freeze()
+
+Disallows further modifications to this array. Trying to modify the array will result in an exception.
+
+### Array#len <a id="array-len"></a>
 
 Signature:
 
@@ -642,7 +1276,7 @@ Signature:
 
 Returns the number of elements contained in the array.
 
-### <a id="array-remove"></a> Array#remove
+### Array#remove <a id="array-remove"></a>
 
 Signature:
 
@@ -650,7 +1284,7 @@ Signature:
 
 Removes the element at the specified zero-based index.
 
-### <a id="array-set"></a> Array#set
+### Array#set <a id="array-set"></a>
 
 Signature:
 
@@ -659,7 +1293,7 @@ Signature:
 Sets the element at the zero-based index to the specified value. The `index` must refer to an element
 which already exists in the array.
 
-### <a id="array-get"></a> Array#get
+### Array#get <a id="array-get"></a>
 
 Signature:
 
@@ -667,7 +1301,7 @@ Signature:
 
 Retrieves the element at the specified zero-based index.
 
-### <a id="array-sort"></a> Array#sort
+### Array#sort <a id="array-sort"></a>
 
 Signature:
 
@@ -677,7 +1311,7 @@ Returns a copy of the array where all items are sorted. The items are
 compared using the `<` (less-than) operator. A custom comparator function
 can be specified with the `less_cmp` argument.
 
-### <a id="array-join"></a> Array#join
+### Array#join <a id="array-join"></a>
 
 Signature:
 
@@ -685,7 +1319,7 @@ Signature:
 
 Joins all elements of the array using the specified separator.
 
-### <a id="array-reverse"></a> Array#reverse
+### Array#reverse <a id="array-reverse"></a>
 
 Signature:
 
@@ -693,7 +1327,7 @@ Signature:
 
 Returns a new array with all elements of the current array in reverse order.
 
-### <a id="array-map"></a> Array#map
+### Array#map <a id="array-map"></a>
 
 Signature:
 
@@ -702,7 +1336,7 @@ Signature:
 Calls `func(element)` for each of the elements in the array and returns
 a new array containing the return values of these function calls.
 
-### <a id="array-reduce"></a> Array#reduce
+### Array#reduce <a id="array-reduce"></a>
 
 Signature:
 
@@ -712,7 +1346,7 @@ Reduces the elements of the array into a single value by calling the provided
 function `func` as `func(a, b)` repeatedly where `a` and `b` are elements of the array
 or results from previous function calls.
 
-### <a id="array-filter"></a> Array#filter
+### Array#filter <a id="array-filter"></a>
 
 Signature:
 
@@ -721,7 +1355,25 @@ Signature:
 Returns a copy of the array containing only the elements for which `func(element)`
 is true.
 
-### <a id="array-unique"></a> Array#unique
+### Array#any <a id="array-any"></a>
+
+Signature:
+
+    function any(func);
+
+Returns true if the array contains at least one element for which `func(element)`
+is true, false otherwise.
+
+### Array#all <a id="array-all"></a>
+
+Signature:
+
+    function all(func);
+
+Returns true if the array contains only elements for which `func(element)`
+is true, false otherwise.
+
+### Array#unique <a id="array-unique"></a>
 
 Signature:
 
@@ -730,11 +1382,11 @@ Signature:
 Returns a copy of the array with all duplicate elements removed. The original order
 of the array is not preserved.
 
-## <a id="dictionary-type"></a> Dictionary type
+## Dictionary type <a id="dictionary-type"></a>
 
 Inherits methods from the [Object type](18-library-reference.md#object-type).
 
-### <a id="dictionary-shallow-clone"></a> Dictionary#shallow_clone
+### Dictionary#shallow_clone <a id="dictionary-shallow-clone"></a>
 
 Signature:
 
@@ -743,7 +1395,7 @@ Signature:
 Returns a copy of the dictionary. Note that for elements which are reference values (e.g. objects such
 as arrays and dictionaries) only the references are copied.
 
-### <a id="dictionary-contains"></a> Dictionary#contains
+### Dictionary#contains <a id="dictionary-contains"></a>
 
 Signature:
 
@@ -751,7 +1403,15 @@ Signature:
 
 Returns true if a dictionary item with the specified `key` exists, false otherwise.
 
-### <a id="dictionary-len"></a> Dictionary#len
+### Dictionary#freeze <a id="dictionary-freeze"></a>
+
+Signature:
+
+    function freeze()
+
+Disallows further modifications to this dictionary. Trying to modify the dictionary will result in an exception.
+
+### Dictionary#len <a id="dictionary-len"></a>
 
 Signature:
 
@@ -759,7 +1419,7 @@ Signature:
 
 Returns the number of items contained in the dictionary.
 
-### <a id="dictionary-remove"></a> Dictionary#remove
+### Dictionary#remove <a id="dictionary-remove"></a>
 
 Signature:
 
@@ -768,7 +1428,15 @@ Signature:
 Removes the item with the specified `key`. Trying to remove an item which does not exist
 is a no-op.
 
-### <a id="dictionary-set"></a> Dictionary#set
+### Dictionary#clear <a id="dictionary-clear"></a>
+
+Signature:
+
+    function clear();
+
+Removes all items from the dictionary.
+
+### Dictionary#set <a id="dictionary-set"></a>
 
 Signature:
 
@@ -776,7 +1444,7 @@ Signature:
 
 Creates or updates an item with the specified `key` and `value`.
 
-### <a id="dictionary-get"></a> Dictionary#get
+### Dictionary#get <a id="dictionary-get"></a>
 
 Signature:
 
@@ -785,7 +1453,7 @@ Signature:
 Retrieves the value for the specified `key`. Returns `null` if they `key` does not exist
 in the dictionary.
 
-### <a id="dictionary-keys"></a> Dictionary#keys
+### Dictionary#keys <a id="dictionary-keys"></a>
 
 Signature:
 
@@ -793,11 +1461,19 @@ Signature:
 
 Returns a list of keys for all items that are currently in the dictionary.
 
-## <a id="scriptfunction-type"></a> Function type
+### Dictionary#values <a id="dictionary-values"></a>
+
+Signature:
+
+    function values();
+
+Returns a list of values for all items that are currently in the dictionary.
+
+## Function type <a id="scriptfunction-type"></a>
 
 Inherits methods from the [Object type](18-library-reference.md#object-type).
 
-### <a id="scriptfunction-call"></a> Function#call
+### Function#call <a id="scriptfunction-call"></a>
 
 Signature:
 
@@ -816,7 +1492,7 @@ Example:
 	
 	set_x.call(dict, 7) /* Invokes set_x using `dict` as `this` */
 
-### <a id="scriptfunction-callv"></a> Function#callv
+### Function#callv <a id="scriptfunction-callv"></a>
 
 Signature:
 
@@ -837,11 +1513,11 @@ Example:
 
 	set_x.callv(dict, args) /* Invokes set_x using `dict` as `this` */
 
-## <a id="datetime-type"></a> DateTime type
+## DateTime type <a id="datetime-type"></a>
 
 Inherits methods from the [Object type](18-library-reference.md#object-type).
 
-### <a id="datetime-ctor"></a> DateTime constructor
+### DateTime constructor <a id="datetime-ctor"></a>
 
 Signature:
 
@@ -858,7 +1534,7 @@ Example:
     var d1 = DateTime() /* current time */
     var d2 = DateTime(2016, 5, 21) /* midnight April 21st, 2016 (local time) */
 
-### <a id="datetime-arithmetic"></a> DateTime arithmetic
+### DateTime arithmetic <a id="datetime-arithmetic"></a>
 
 Subtracting two DateTime objects yields the interval between them, in seconds.
 
@@ -878,7 +1554,7 @@ Example:
 
     var dt = DateTime() + 24 * 60 60 /* Current time plus 24 hours */
 
-### <a id="datetime-format"></a> DateTime#format
+### DateTime#format <a id="datetime-format"></a>
 
 Signature:
 
@@ -891,7 +1567,7 @@ Example:
 
     var s = DateTime(2016, 4, 21).format("%A") /* Sets s to "Thursday". */
 
-### <a id="datetime-tostring"></a> DateTime#to_string
+### DateTime#to_string <a id="datetime-tostring"></a>
 
 Signature:
 

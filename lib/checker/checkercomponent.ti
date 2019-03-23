@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -26,9 +26,17 @@ namespace icinga
 
 class CheckerComponent : ConfigObject
 {
-	[config] int concurrent_checks {
+	activation_priority 100;
+
+	[config, no_storage] int concurrent_checks {
+		get {{{
+			return Application::GetMaxConcurrentChecks();
+		}}}
+		set {{{
+			Application::SetMaxConcurrentChecks(value);
+		}}}
 		default {{{
-			return 512;
+			return Application::GetDefaultMaxConcurrentChecks();
 		}}}
 	};
 };

@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -18,7 +18,7 @@
  ******************************************************************************/
 
 #include "base/streamlogger.hpp"
-#include "base/streamlogger.tcpp"
+#include "base/streamlogger-ti.cpp"
 #include "base/utility.hpp"
 #include "base/objectlock.hpp"
 #include "base/console.hpp"
@@ -29,13 +29,6 @@ using namespace icinga;
 REGISTER_TYPE(StreamLogger);
 
 boost::mutex StreamLogger::m_Mutex;
-
-/**
- * Constructor for the StreamLogger class.
- */
-StreamLogger::StreamLogger(void)
-	: m_Stream(NULL), m_OwnsStream(false)
-{ }
 
 void StreamLogger::Stop(bool runtimeRemoved)
 {
@@ -49,21 +42,21 @@ void StreamLogger::Stop(bool runtimeRemoved)
 /**
  * Destructor for the StreamLogger class.
  */
-StreamLogger::~StreamLogger(void)
+StreamLogger::~StreamLogger()
 {
 	if (m_FlushLogTimer)
 		m_FlushLogTimer->Stop();
 
-	if (m_OwnsStream)
+	if (m_Stream && m_OwnsStream)
 		delete m_Stream;
 }
 
-void StreamLogger::FlushLogTimerHandler(void)
+void StreamLogger::FlushLogTimerHandler()
 {
 	Flush();
 }
 
-void StreamLogger::Flush(void)
+void StreamLogger::Flush()
 {
 	if (m_Stream)
 		m_Stream->flush();
@@ -73,7 +66,7 @@ void StreamLogger::BindStream(std::ostream *stream, bool ownsStream)
 {
 	ObjectLock olock(this);
 
-	if (m_OwnsStream)
+	if (m_Stream && m_OwnsStream)
 		delete m_Stream;
 
 	m_Stream = stream;
@@ -81,7 +74,7 @@ void StreamLogger::BindStream(std::ostream *stream, bool ownsStream)
 
 	m_FlushLogTimer = new Timer();
 	m_FlushLogTimer->SetInterval(1);
-	m_FlushLogTimer->OnTimerExpired.connect(boost::bind(&StreamLogger::FlushLogTimerHandler, this));
+	m_FlushLogTimer->OnTimerExpired.connect(std::bind(&StreamLogger::FlushLogTimerHandler, this));
 	m_FlushLogTimer->Start();
 }
 

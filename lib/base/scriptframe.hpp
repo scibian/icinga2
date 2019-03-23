@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -29,35 +29,29 @@
 namespace icinga
 {
 
-struct I2_BASE_API ScriptFrame
+struct ScriptFrame
 {
 	Dictionary::Ptr Locals;
 	Value Self;
 	bool Sandboxed;
 	int Depth;
 
-	ScriptFrame(void);
-	ScriptFrame(const Value& self);
-	~ScriptFrame(void);
+	ScriptFrame(bool allocLocals);
+	ScriptFrame(bool allocLocals, Value self);
+	~ScriptFrame();
 
-	static void StaticInitialize(void);
+	void IncreaseStackDepth();
+	void DecreaseStackDepth();
 
-	void IncreaseStackDepth(void);
-	void DecreaseStackDepth(void);
-
-	static ScriptFrame *GetCurrentFrame(void);
-
-	static Array::Ptr GetImports(void);
-	static void AddImport(const Object::Ptr& import);
+	static ScriptFrame *GetCurrentFrame();
 
 private:
 	static boost::thread_specific_ptr<std::stack<ScriptFrame *> > m_ScriptFrames;
-	static Array::Ptr m_Imports;
 
-	inline static void PushFrame(ScriptFrame *frame);
-	inline static ScriptFrame *PopFrame(void);
+	static void PushFrame(ScriptFrame *frame);
+	static ScriptFrame *PopFrame();
 
-	void InitializeFrame(void);
+	void InitializeFrame();
 };
 
 }

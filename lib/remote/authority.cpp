@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -21,16 +21,10 @@
 #include "remote/apilistener.hpp"
 #include "base/configtype.hpp"
 #include "base/utility.hpp"
-#include <boost/foreach.hpp>
 
 using namespace icinga;
 
-static bool ObjectNameLessComparer(const ConfigObject::Ptr& a, const ConfigObject::Ptr& b)
-{
-	return a->GetName() < b->GetName();
-}
-
-void ApiListener::UpdateObjectAuthority(void)
+void ApiListener::UpdateObjectAuthority()
 {
 	Zone::Ptr my_zone = Zone::GetLocalZone();
 
@@ -42,7 +36,7 @@ void ApiListener::UpdateObjectAuthority(void)
 
 		int num_total = 0;
 
-		BOOST_FOREACH(const Endpoint::Ptr& endpoint, my_zone->GetEndpoints()) {
+		for (const Endpoint::Ptr& endpoint : my_zone->GetEndpoints()) {
 			num_total++;
 
 			if (endpoint != my_endpoint && !endpoint->GetConnected())
@@ -56,16 +50,20 @@ void ApiListener::UpdateObjectAuthority(void)
 		if (num_total > 1 && endpoints.size() <= 1 && (mainTime == 0 || Utility::GetTime() - mainTime < 60))
 			return;
 
-		std::sort(endpoints.begin(), endpoints.end(), ObjectNameLessComparer);
+		std::sort(endpoints.begin(), endpoints.end(),
+			[](const ConfigObject::Ptr& a, const ConfigObject::Ptr& b) {
+				return a->GetName() < b->GetName();
+			}
+		);
 	}
 
-	BOOST_FOREACH(const Type::Ptr& type, Type::GetAllTypes()) {
-		ConfigType *dtype = dynamic_cast<ConfigType *>(type.get());
+	for (const Type::Ptr& type : Type::GetAllTypes()) {
+		auto *dtype = dynamic_cast<ConfigType *>(type.get());
 
 		if (!dtype)
 			continue;
 
-		BOOST_FOREACH(const ConfigObject::Ptr& object, dtype->GetObjects()) {
+		for (const ConfigObject::Ptr& object : dtype->GetObjects()) {
 			if (!object->IsActive() || object->GetHAMode() != HARunOnce)
 				continue;
 

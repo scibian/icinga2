@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Icinga 2
-# Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)
+# Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,7 +21,7 @@ import sys
 import re
 
 if len(sys.argv) < 2:
-    print "Syntax: %s <md-files>"
+    print "Syntax: %s <md-files>" % sys.argv[0]
     print ""
     print "Updates inter-chapter links in the specified Markdown files."
     sys.exit(1)

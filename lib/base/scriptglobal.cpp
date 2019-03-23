@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -26,13 +26,12 @@
 #include "base/convert.hpp"
 #include "base/objectlock.hpp"
 #include "base/exception.hpp"
-#include <boost/foreach.hpp>
-#include <boost/algorithm/string/split.hpp>
+#include "base/namespace.hpp"
 #include <fstream>
 
 using namespace icinga;
 
-Dictionary::Ptr ScriptGlobal::m_Globals = new Dictionary();
+Namespace::Ptr ScriptGlobal::m_Globals = new Namespace();
 
 Value ScriptGlobal::Get(const String& name, const Value *defaultValue)
 {
@@ -48,10 +47,9 @@ Value ScriptGlobal::Get(const String& name, const Value *defaultValue)
 	return result;
 }
 
-void ScriptGlobal::Set(const String& name, const Value& value)
+void ScriptGlobal::Set(const String& name, const Value& value, bool overrideFrozen)
 {
-	std::vector<String> tokens;
-	boost::algorithm::split(tokens, name, boost::is_any_of("."));
+	std::vector<String> tokens = name.Split(".");
 
 	if (tokens.empty())
 		BOOST_THROW_EXCEPTION(std::invalid_argument("Name must not be empty"));
@@ -59,7 +57,7 @@ void ScriptGlobal::Set(const String& name, const Value& value)
 	{
 		ObjectLock olock(m_Globals);
 
-		Dictionary::Ptr parent = m_Globals;
+		Namespace::Ptr parent = m_Globals;
 
 		for (std::vector<String>::size_type i = 0; i < tokens.size(); i++) {
 			const String& token = tokens[i];
@@ -68,7 +66,7 @@ void ScriptGlobal::Set(const String& name, const Value& value)
 				Value vparent;
 
 				if (!parent->Get(token, &vparent)) {
-					Dictionary::Ptr dict = new Dictionary();
+					Namespace::Ptr dict = new Namespace();
 					parent->Set(token, dict);
 					parent = dict;
 				} else {
@@ -77,8 +75,13 @@ void ScriptGlobal::Set(const String& name, const Value& value)
 			}
 		}
 
-		parent->Set(tokens[tokens.size() - 1], value);
+		parent->SetFieldByName(tokens[tokens.size() - 1], value, overrideFrozen, DebugInfo());
 	}
+}
+
+void ScriptGlobal::SetConst(const String& name, const Value& value)
+{
+	GetGlobals()->SetAttribute(name, std::make_shared<ConstEmbeddedNamespaceValue>(value));
 }
 
 bool ScriptGlobal::Exists(const String& name)
@@ -86,7 +89,7 @@ bool ScriptGlobal::Exists(const String& name)
 	return m_Globals->Contains(name);
 }
 
-Dictionary::Ptr ScriptGlobal::GetGlobals(void)
+Namespace::Ptr ScriptGlobal::GetGlobals()
 {
 	return m_Globals;
 }
@@ -105,17 +108,16 @@ void ScriptGlobal::WriteToFile(const String& filename)
 	StdioStream::Ptr sfp = new StdioStream(&fp, false);
 
 	ObjectLock olock(m_Globals);
-	BOOST_FOREACH(const Dictionary::Pair& kv, m_Globals) {
-		Dictionary::Ptr persistentVariable = new Dictionary();
-
-		persistentVariable->Set("name", kv.first);
-
-		Value value = kv.second;
+	for (const Namespace::Pair& kv : m_Globals) {
+		Value value = kv.second->Get();
 
 		if (value.IsObject())
 			value = Convert::ToString(value);
 
-		persistentVariable->Set("value", value);
+		Dictionary::Ptr persistentVariable = new Dictionary({
+			{ "name", kv.first },
+			{ "value", value }
+		});
 
 		String json = JsonEncode(persistentVariable);
 

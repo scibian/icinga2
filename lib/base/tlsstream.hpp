@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -43,38 +43,38 @@ enum TlsAction
  *
  * @ingroup base
  */
-class I2_BASE_API TlsStream : public Stream, private SocketEvents
+class TlsStream final : public SocketEvents
 {
 public:
 	DECLARE_PTR_TYPEDEFS(TlsStream);
 
-	TlsStream(const Socket::Ptr& socket, const String& hostname, ConnectionRole role, const boost::shared_ptr<SSL_CTX>& sslContext = MakeSSLContext());
-	~TlsStream(void);
+	TlsStream(const Socket::Ptr& socket, const String& hostname, ConnectionRole role, const std::shared_ptr<SSL_CTX>& sslContext = MakeSSLContext());
+	~TlsStream() override;
 
-	Socket::Ptr GetSocket(void) const;
+	Socket::Ptr GetSocket() const;
 
-	boost::shared_ptr<X509> GetClientCertificate(void) const;
-	boost::shared_ptr<X509> GetPeerCertificate(void) const;
+	std::shared_ptr<X509> GetClientCertificate() const;
+	std::shared_ptr<X509> GetPeerCertificate() const;
 
-	void Handshake(void);
+	void Handshake();
 
-	virtual void Close(void) override;
-	virtual void Shutdown(void) override;
+	void Close() override;
+	void Shutdown() override;
 
-	virtual size_t Peek(void *buffer, size_t count, bool allow_partial = false) override;
-	virtual size_t Read(void *buffer, size_t count, bool allow_partial = false) override;
-	virtual void Write(const void *buffer, size_t count) override;
+	size_t Peek(void *buffer, size_t count, bool allow_partial = false) override;
+	size_t Read(void *buffer, size_t count, bool allow_partial = false) override;
+	void Write(const void *buffer, size_t count) override;
 
-	virtual bool IsEof(void) const override;
+	bool IsEof() const override;
 
-	virtual bool SupportsWaiting(void) const override;
-	virtual bool IsDataAvailable(void) const override;
+	bool SupportsWaiting() const override;
+	bool IsDataAvailable() const override;
 
-	bool IsVerifyOK(void) const;
-	String GetVerifyError(void) const;
+	bool IsVerifyOK() const;
+	String GetVerifyError() const;
 
 private:
-	boost::shared_ptr<SSL> m_SSL;
+	std::shared_ptr<SSL> m_SSL;
 	bool m_Eof;
 	mutable boost::mutex m_Mutex;
 	mutable boost::condition_variable m_CV;
@@ -97,9 +97,9 @@ private:
 	static int m_SSLIndex;
 	static bool m_SSLIndexInitialized;
 
-	virtual void OnEvent(int revents) override;
+	void OnEvent(int revents) override;
 
-	void HandleError(void) const;
+	void HandleError() const;
 
 	static int ValidateCertificate(int preverify_ok, X509_STORE_CTX *ctx);
 	static void NullCertificateDeleter(X509 *certificate);

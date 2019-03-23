@@ -1,20 +1,271 @@
-icinga2 (2.5.4-1~debmon8+4) debmon-jessie; urgency=medium
+icinga2 (2.10.3-2~bpo9+1) stretch-backports; urgency=medium
 
-  * [5b5f888] Disable unity builds for arm
+  * Rebuild for stretch-backports.
 
- -- Alexander Wirt <formorer@debian.org>  Wed, 07 Sep 2016 07:59:29 +0200
+ -- Chris Boot <bootc@debian.org>  Sat, 23 Mar 2019 20:47:07 +0000
 
-icinga2 (2.5.4-1~debmon8+3) debmon-jessie; urgency=medium
+icinga2 (2.10.3-2) unstable; urgency=medium
 
-  * Update deps for jessie 
+  * Team upload.
+  * Add patch to fix comparepasswords_issafe test failure on i386.
+  * Set CTEST_OUTPUT_ON_FAILURE environment variable.
 
- -- Alexander Wirt <formorer@debian.org>  Tue, 06 Sep 2016 09:12:29 +0200
+ -- Bas Couwenberg <sebastic@debian.org>  Fri, 01 Mar 2019 12:18:30 +0100
 
-icinga2 (2.5.4-1~debmon8+2) debmon-jessie; urgency=medium
+icinga2 (2.10.3-1) unstable; urgency=medium
 
-  * Rebuild for debmon-jessie.
+  * Team upload.
+  * New upstream release.
+  * Bump Standards-Version to 4.3.0, no changes.
+  * Use .maintscript files instead of dpkg-maintscript-helper directly.
+  * Add lintian overrides for file-references-package-build-path.
 
- -- Alexander Wirt <formorer@debian.org>  Thu, 19 May 2016 14:17:01 +0200
+ -- Bas Couwenberg <sebastic@debian.org>  Fri, 01 Mar 2019 06:52:34 +0100
+
+icinga2 (2.10.2-1~bpo9+1) stretch-backports; urgency=medium
+
+  * Rebuild for stretch-backports.
+
+ -- Chris Boot <bootc@debian.org>  Sun, 06 Jan 2019 16:27:02 +0000
+
+icinga2 (2.10.2-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Drop 42_mips_boost_bind_workaround patch, applied upstream.
+
+ -- Bas Couwenberg <sebastic@debian.org>  Mon, 19 Nov 2018 18:20:51 +0100
+
+icinga2 (2.10.1-3~bpo9+1) stretch-backports; urgency=medium
+
+  * Rebuild for stretch-backports.
+
+ -- Chris Boot <bootc@debian.org>  Sun, 04 Nov 2018 12:15:49 +0000
+
+icinga2 (2.10.1-3) unstable; urgency=medium
+
+  * Team upload.
+  * Move init script & systemd service from -common to -bin package.
+    (closes: #912599)
+
+ -- Bas Couwenberg <sebastic@debian.org>  Thu, 01 Nov 2018 20:29:09 +0100
+
+icinga2 (2.10.1-2~bpo9+1) stretch-backports; urgency=medium
+
+  * Rebuild for stretch-backports.
+
+ -- Chris Boot <bootc@debian.org>  Wed, 24 Oct 2018 21:44:08 +0100
+
+icinga2 (2.10.1-2) unstable; urgency=medium
+
+  * Team upload.
+  * Enable USE_SYSTEMD option & change icinga2.service to notify type.
+    (closes: #911672)
+
+ -- Bas Couwenberg <sebastic@debian.org>  Tue, 23 Oct 2018 16:47:09 +0200
+
+icinga2 (2.10.1-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Update www.icinga.com URLs to icinga.com, and dev.icinga.com to GitHub.
+  * Drop spelling-errors.patch, applied upstream.
+  * Move from experimental to unstable.
+
+ -- Bas Couwenberg <sebastic@debian.org>  Sat, 20 Oct 2018 18:03:58 +0200
+
+icinga2 (2.10.0-1~exp1) experimental; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Add patch to fix spelling errors.
+
+ -- Bas Couwenberg <sebastic@debian.org>  Mon, 15 Oct 2018 07:59:08 +0200
+
+icinga2 (2.9.2-1~bpo9+1) stretch-backports; urgency=medium
+
+  * Rebuild for stretch-backports.
+  * Add myself to Uploaders for this backport.
+  * Update the branch name in Vcs-Git field and gbp.conf.
+
+ -- Chris Boot <bootc@debian.org>  Wed, 03 Oct 2018 10:23:31 +0100
+
+icinga2 (2.9.2-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Bump Standards-Version to 4.2.1, no changes.
+
+ -- Bas Couwenberg <sebastic@debian.org>  Fri, 28 Sep 2018 07:32:37 +0200
+
+icinga2 (2.9.1-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Drop spelling-errors.patch, applied upstream.
+
+ -- Bas Couwenberg <sebastic@debian.org>  Wed, 25 Jul 2018 06:22:55 +0200
+
+icinga2 (2.9.0-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * Add patch by Jens Holzkämper to use check_postgres path as
+    provided by check-postgres package.
+    (closes: #898833)
+  * Apply patch by Dmitry Bogatov to also compress 01-about.md.
+    (closes: #898701)
+  * Bump Standards-Version to 4.1.5, no changes.
+  * Update license & copyright for mail notification scripts.
+  * Bump minimum required cmake version to 2.8.8.
+  * Refresh patches.
+  * Drop icinga2-studio package, removed upstream.
+  * Update ido install files for shim libraries.
+  * Drop libicinga2 package, libraries no longer built.
+  * Update spelling-errors.patch for "doesn't" typo.
+
+ -- Bas Couwenberg <sebastic@debian.org>  Sat, 21 Jul 2018 09:05:20 +0200
+
+icinga2 (2.8.4-2) unstable; urgency=medium
+
+  * Team upload.
+  * Fix version autopkgtest.
+
+ -- Bas Couwenberg <sebastic@debian.org>  Tue, 08 May 2018 08:18:35 +0200
+
+icinga2 (2.8.4-1) unstable; urgency=medium
+
+  * Team upload.
+  * Fix jQuery usage in icinga2-classicui.
+    (closes: #867884, #875686)
+  * Update Swedish debconf translation. Thanks to Jonatan Nyberg.
+    (closes: #873009)
+  * Change libreadline6 Recommends to libreadline7.
+    (closes: #880488)
+  * Add upstream metadata.
+  * Move from experimental to unstable.
+
+ -- Bas Couwenberg <sebastic@debian.org>  Sat, 05 May 2018 16:29:11 +0200
+
+icinga2 (2.8.4-1~exp1) experimental; urgency=medium
+
+  * Team upload.
+
+  [ Bas Couwenberg ]
+  * New upstream release.
+    - CVEs fixes in 2.8.2:
+      CVE-2017-16933, CVE-2018-6532, CVE-2018-6533,
+      CVE-2018-6534,  CVE-2018-6535, CVE-2018-6536
+    (closes: #897301, #891333, #883247)
+  * Add gbp.conf to use pristine-tar by default.
+  * Update copyright file, changes:
+    - Update copyright years for Icinga Development Team.
+    - Use stand-alone license paragraphs
+    - Add license & copyright for socketpair
+  * Restructure control file with cme.
+  * Change priority from extra to optional.
+  * Sort (build) dependencies.
+  * Drop obsolete dbg package.
+  * Update Vcs-* URLs for Salsa.
+  * Update copyright format URL to use HTTPS.
+  * Update various debian.org & icinga.com URLs to use HTTPS.
+  * Bump Standards-Version to 4.1.4, changes: priority, copyright format.
+  * Enable parallel globally.
+  * Simplify 'disable unity builds' rules.
+  * Drop obsolete dh-systemd build dependency.
+  * Use DEB_BUILD_ARCH instead of DEB_HOST_ARCH, and not unconditionally.
+  * Drop obsolete mysql (build) dependency alternatives.
+  * Strip trailing whitespace from changelog.
+  * Enable all hardening buildflags.
+  * Add patch to fix spelling errors.
+  * Move spelling-error-in-binary override from icinga2-bin to libicinga2.
+  * Drop unused overrides for apache2-deprecated-auth-config.
+  * Move rm_conffile from prerm to postrm.
+  * Update systemd service file, changes:
+    - Remove obsolete syslog.target
+    - Add Documentation key
+  * Add lintian overrides for hardening-no-fortify-functions.
+  * Override dh_missing to use --list-missing.
+  * Sort rules in order of execution.
+  * Reorder and align install files.
+  * Install IDO SQL files from debian/tmp.
+  * Explicitly remove files not included in any package.
+
+  [ Dimitri John Ledkov ]
+  * Make sure icinga2-common has /etc/icinga2/pki folder, which appears to
+    still be in use.
+
+ -- Bas Couwenberg <sebastic@debian.org>  Tue, 01 May 2018 20:38:14 +0200
+
+icinga2 (2.7.0-1) unstable; urgency=medium
+
+  * [3f2f6e0] New upstream version 2.7.0
+  * [8861bd7] Improve systemd unit file
+  * [f25990d] fix linebreak
+  * [98b7e3f] Update debhelper dependency (Closes: #854349)
+  * [8c35696] Update swedish translation (Closes: #855364)
+  * [6f58b41] Install nsca_api plugin
+
+ -- Alexander Wirt <formorer@debian.org>  Wed, 02 Aug 2017 22:24:35 +0200
+
+icinga2 (2.6.3-1) experimental; urgency=medium
+
+  * [83b389e] New upstream version 2.6.3
+
+ -- Alexander Wirt <formorer@debian.org>  Wed, 29 Mar 2017 23:45:01 +0200
+
+icinga2 (2.6.2-1~exp1) experimental; urgency=medium
+
+  * [16eb968] Depend on network.target and fix typo in service deps
+  * [7eee479] New upstream version 2.6.2
+
+ -- Alexander Wirt <alexander.wirt@credativ.de>  Mon, 13 Feb 2017 20:50:38 +0100
+
+icinga2 (2.6.1-1~exp1) experimental; urgency=medium
+
+  * [8cc068c] New upstream version 2.6.1
+  * [509d654] Allow mysqlclient-dev dependency to be backwards compatible
+  * [8cc068c] New upstream version 2.6.1
+  * [95aa4c2] Remove obsolete patch 41_ido_mysql57
+
+ -- Markus Frosch <lazyfrosch@debian.org>  Tue, 31 Jan 2017 17:23:26 +0100
+
+icinga2 (2.6.0-2) unstable; urgency=medium
+
+  * [e0f34e4] Add patch 41_ido_mysql57 - for compatibility with MySQL 5.7
+  * [6512d11] Remove obsolete patch 30_use_libmysql (empty)
+  * [16e341b] Recommend default-mysql-{server,client}
+  * [749f1fa] Adding missing dependency on lsb-base
+  * [4ed1e10] Update initscript to ignore SIGPIPE in daemon
+  * [5c10b76] Add patch 42_mips_boost_bind_workaround
+  * [86a23e5] makeshlibs: no scripts, we don't export shared libraries
+
+ -- Markus Frosch <lazyfrosch@debian.org>  Mon, 19 Dec 2016 16:13:45 +0100
+
+icinga2 (2.6.0-1) unstable; urgency=medium
+
+  [ Alexander Wirt ]
+  * [4e44b28] New upstream version 2.6.0
+    - Fix unittests (Closes: #838358)
+
+  [ Gunnar Beutner ]
+  * [de73edf] Add support for versioned private libraries
+
+ -- Alexander Wirt <formorer@debian.org>  Tue, 13 Dec 2016 13:11:05 +0100
+
+icinga2 (2.5.4-3) unstable; urgency=medium
+
+  * [e09f7d4] Link against libmysqlclient (Closes: #825079)
+
+ -- Alexander Wirt <formorer@debian.org>  Sat, 26 Nov 2016 17:00:09 +0100
+
+icinga2 (2.5.4-2) unstable; urgency=medium
+
+  * [f749f15] Disable unity builds for arm
+  * [33face7] Disable unity builds for mips and mipsel
+    (Closes: #836589)
+
+ -- Alexander Wirt <formorer@debian.org>  Fri, 09 Sep 2016 08:59:57 +0200
 
 icinga2 (2.5.4-1) unstable; urgency=medium
 
@@ -95,30 +346,12 @@ icinga2 (2.4.3-1) unstable; urgency=medium
 
  -- Markus Frosch <lazyfrosch@debian.org>  Wed, 24 Feb 2016 16:13:18 +0100
 
-icinga2 (2.4.2-1~debmon8+1) debmon-jessie; urgency=medium
-
-  * Rebuild for debmon-jessie.
-
- -- Markus Frosch <lazyfrosch@debian.org>  Tue, 23 Feb 2016 16:58:16 +0100
-
 icinga2 (2.4.2-1) unstable; urgency=medium
 
   * [3584c36] Imported Upstream version 2.4.2
   * [89ee45e] Bump standards version to 3.9.7
 
  -- Markus Frosch <lazyfrosch@debian.org>  Tue, 23 Feb 2016 16:30:32 +0100
-
-icinga2 (2.4.1-2~debmon8+2) debmon-jessie; urgency=medium
-
-  * Rebuild against jessie 
-
- -- Alexander Wirt <formorer@debian.org>  Fri, 05 Feb 2016 16:11:33 +0100
-
-icinga2 (2.4.1-2~debmon8+1) debmon-jessie; urgency=medium
-
-  * Rebuild for debmon-jessie.
-
- -- Markus Frosch <lazyfrosch@debian.org>  Fri, 05 Feb 2016 13:57:38 +0100
 
 icinga2 (2.4.1-2) unstable; urgency=medium
 
@@ -139,12 +372,6 @@ icinga2 (2.4.1-2) unstable; urgency=medium
   * [ccb8bbe] Enable verbose cmake output for build log validation
 
  -- Markus Frosch <lazyfrosch@debian.org>  Thu, 04 Feb 2016 16:55:46 +0100
-
-icinga2 (2.4.1-1~debmon80+1) debmon-jessie; urgency=medium
-
-  * Rebuild for debmon-jessie.
-
- -- Alexander Wirt <formorer@debian.org>  Thu, 26 Nov 2015 15:19:28 +0100
 
 icinga2 (2.4.1-1) unstable; urgency=medium
 
@@ -197,12 +424,6 @@ icinga2 (2.3.8-1) unstable; urgency=medium
   * [0f463b5] Imported Upstream version 2.3.8
 
  -- Markus Frosch <lazyfrosch@debian.org>  Mon, 20 Jul 2015 21:24:42 +0200
-
-icinga2 (2.3.7-1~debmon80+1) debmon-jessie; urgency=medium
-
-  * Rebuild for debmon-jessie
-
- -- Alexander Wirt <formorer@debian.org>  Mon, 20 Apr 2015 13:40:20 +0200
 
 icinga2 (2.3.7-1) unstable; urgency=medium
 
@@ -362,7 +583,7 @@ icinga2 (2.2.0-1) unstable; urgency=medium
   * [cd040c6] Build-depend on libyajl-dev
   * [f004624] Add yajl license
   * [62b4c4b] Update initscript to new cli command style
-  * [f7183e3] Change filename of apt.conf and install bash-completion 
+  * [f7183e3] Change filename of apt.conf and install bash-completion
               for new cli
   * [87415d0] Update postinst script to new cli command style
   * [8dd43b4] Allow the nagios user to write to /etc/icinga2
@@ -470,7 +691,7 @@ icinga2 (2.0.1-1) unstable; urgency=medium
   [ Alexander Wirt ]
   * [1fc2d37] Wrap and sort
   * [37d2d90] Recommend nagios-plugins in meta package
-  * [5b33ec5] Adapt url_cgi_path in cgi.cfg, so that icinga2-classic 
+  * [5b33ec5] Adapt url_cgi_path in cgi.cfg, so that icinga2-classic
               doesn't trigger csrf protection
   * [3639615] Add dbcconfig-common to ido-pg depends
   * [2f7dcb6] Imported Upstream version 2.0.1

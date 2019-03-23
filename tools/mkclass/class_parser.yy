@@ -1,7 +1,7 @@
 %{
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -61,6 +61,7 @@ using namespace icinga;
 %token T_CLASS "class (T_CLASS)"
 %token T_CODE "code (T_CODE)"
 %token T_LOAD_AFTER "load_after (T_LOAD_AFTER)"
+%token T_ACTIVATION_PRIORITY "activation_priority (T_ACTIVATION_PRIORITY)"
 %token T_LIBRARY "library (T_LIBRARY)"
 %token T_NAMESPACE "namespace (T_NAMESPACE)"
 %token T_VALIDATOR "validator (T_VALIDATOR)"
@@ -77,6 +78,7 @@ using namespace icinga;
 %token T_SET "set (T_SET)"
 %token T_DEFAULT "default (T_DEFAULT)"
 %token T_FIELD_ACCESSOR_TYPE "field_accessor_type (T_FIELD_ACCESSOR_TYPE)"
+%token T_NUMBER "number (T_NUMBER)"
 %type <text> T_IDENTIFIER
 %type <text> T_STRING
 %type <text> T_ANGLE_STRING
@@ -106,6 +108,7 @@ using namespace icinga;
 %type <rule> validator_rule
 %type <rules> validator_rules
 %type <validator> validator
+%type <num> T_NUMBER
 
 %{
 
@@ -113,9 +116,8 @@ int yylex(YYSTYPE *lvalp, YYLTYPE *llocp, void *scanner);
 
 void yyerror(YYLTYPE *locp, ClassCompiler *, const char *err)
 {
-	std::cerr << "in " << locp->path << " at " << locp->first_line << ":" << locp->first_column << "-" << locp->last_line << ":" << locp->last_column << ": "
-			  << err
-			  << std::endl;
+	std::cerr << "in " << locp->path << " at " << locp->first_line << ":" << locp->first_column << "-"
+		<< locp->last_line << ":" << locp->last_column << ": " << err << std::endl;
 	std::exit(1);
 }
 
@@ -248,11 +250,13 @@ class: class_attribute_list T_CLASS T_IDENTIFIER inherits_specifier type_base_sp
 
 		$$->Attributes = $1;
 
-		for (std::vector<Field>::iterator it = $7->begin(); it != $7->end(); it++) {
-			if (it->Attributes & FALoadDependency) {
-				$$->LoadDependencies.push_back(it->Name);
+		for (const Field& field : *$7) {
+			if (field.Attributes & FALoadDependency) {
+				$$->LoadDependencies.push_back(field.Name);
+			} else if (field.Attributes & FAActivationPriority) {
+				$$->ActivationPriority = field.Priority;
 			} else
-				$$->Fields.push_back(*it);
+				$$->Fields.push_back(field);
 		}
 
 		delete $7;
@@ -375,10 +379,17 @@ class_field: field_attribute_list field_type identifier alternative_name_specifi
 	}
 	| T_LOAD_AFTER identifier ';'
 	{
-		Field *field = new Field();
+		auto *field = new Field();
 		field->Attributes = FALoadDependency;
 		field->Name = $2;
 		std::free($2);
+		$$ = field;
+	}
+	| T_ACTIVATION_PRIORITY T_NUMBER ';'
+	{
+		auto *field = new Field();
+		field->Attributes = FAActivationPriority;
+		field->Priority = $2;
 		$$ = field;
 	}
 	;

@@ -1,13 +1,31 @@
-# <a id="icinga-template-library"></a> Icinga Template Library
+# Icinga Template Library <a id="icinga-template-library"></a>
 
-The Icinga Template Library (ITL) implements standard templates and object
-definitions for commonly used services.
+The Icinga Template Library (ITL) implements standard templates
+and object definitions.
 
-By default the ITL is included in the `icinga2.conf` configuration file:
+There is a subset of templates and object definitions available:
+
+* [Generic ITL templates](10-icinga-template-library.md#itl-generic-templates)
+* [CheckCommand definitions for Icinga 2](10-icinga-template-library.md#itl-check-commands) (this includes [icinga](10-icinga-template-library.md#itl-icinga),
+[cluster](10-icinga-template-library.md#itl-icinga-cluster), [cluster-zone](10-icinga-template-library.md#itl-icinga-cluster-zone), [ido](10-icinga-template-library.md#itl-icinga-ido), etc.)
+* [CheckCommand definitions for Monitoring Plugins](10-icinga-template-library.md#plugin-check-commands-monitoring-plugins)
+* [CheckCommand definitions for Icinga 2 Windows Plugins](10-icinga-template-library.md#windows-plugins)
+* [CheckCommand definitions for NSClient++](10-icinga-template-library.md#nscp-plugin-check-commands)
+* [CheckCommand definitions for Manubulon SNMP](10-icinga-template-library.md#snmp-manubulon-plugin-check-commands)
+* [Contributed CheckCommand definitions](10-icinga-template-library.md#plugin-contrib)
+
+The ITL content is updated with new releases. Please do not modify
+templates and/or objects as changes will be overridden without
+further notice.
+
+You are advised to create your own CheckCommand definitions in
+`/etc/icinga2`.
+
+## Generic Templates <a id="itl-generic-templates"></a>
+
+By default the generic templates are included in the [icinga2.conf](04-configuring-icinga-2.md#icinga2-conf) configuration file:
 
     include <itl>
-
-## <a id="itl-generic-templates"></a> Generic Templates
 
 These templates are imported by the provided example configuration.
 
@@ -16,73 +34,116 @@ These templates are imported by the provided example configuration.
 > These templates are built into the binaries. By convention
 > all command and timeperiod objects should import these templates.
 
-### <a id="itl-plugin-check-command"></a> plugin-check-command
+### plugin-check-command <a id="itl-plugin-check-command"></a>
 
 Command template for check plugins executed by Icinga 2.
 
 The `plugin-check-command` command does not support any vars.
 
-### <a id="itl-plugin-notification-command"></a> plugin-notification-command
+By default this template is automatically imported into all [CheckCommand](09-object-types.md#objecttype-checkcommand) definitions.
+
+### plugin-notification-command <a id="itl-plugin-notification-command"></a>
 
 Command template for notification scripts executed by Icinga 2.
 
 The `plugin-notification-command` command does not support any vars.
 
-### <a id="itl-plugin-event-command"></a> plugin-event-command
+By default this template is automatically imported into all [NotificationCommand](09-object-types.md#objecttype-notificationcommand) definitions.
+
+### plugin-event-command <a id="itl-plugin-event-command"></a>
 
 Command template for event handler scripts executed by Icinga 2.
 
 The `plugin-event-command` command does not support any vars.
 
-### <a id="itl-legacy-timeperiod"></a> legacy-timeperiod
+By default this template is automatically imported into all [EventCommand](09-object-types.md#objecttype-eventcommand) definitions.
 
-Timeperiod template for [Timeperiod objects](9-object-types.md#objecttype-timeperiod).
+### legacy-timeperiod <a id="itl-legacy-timeperiod"></a>
+
+Timeperiod template for [Timeperiod objects](09-object-types.md#objecttype-timeperiod).
 
 The `legacy-timeperiod` timeperiod does not support any vars.
 
-## <a id="itl-check-commands"></a> Check Commands
+By default this template is automatically imported into all [TimePeriod](09-object-types.md#objecttype-timeperiod) definitions.
+
+## Check Commands <a id="itl-check-commands"></a>
 
 These check commands are embedded into Icinga 2 and do not require any external
 plugin scripts.
 
-### <a id="itl-icinga"></a> icinga
+### icinga <a id="itl-icinga"></a>
 
 Check command for the built-in `icinga` check. This check returns performance
-data for the current Icinga instance.
+data for the current Icinga instance and optionally allows for minimum version checks.
 
-The `icinga` check command does not support any vars.
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
-### <a id="itl-icinga-cluster"></a> cluster
+Name                   | Description
+-----------------------|---------------
+icinga\_min\_version   | **Optional.** Required minimum Icinga 2 version, e.g. `2.8.0`. If not satisfied, the state changes to `Critical`. Release packages only.
+
+### cluster <a id="itl-icinga-cluster"></a>
 
 Check command for the built-in `cluster` check. This check returns performance
 data for the current Icinga instance and connected endpoints.
 
 The `cluster` check command does not support any vars.
 
-### <a id="itl-icinga-cluster-zone"></a> cluster-zone
+### cluster-zone <a id="itl-icinga-cluster-zone"></a>
 
 Check command for the built-in `cluster-zone` check.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
-Name                 | Description
----------------------|---------------
-cluster_zone         | **Required.** The zone name.
-cluster_lag_warning  | **Optional.** Warning threshold for log lag in seconds. Applies if the log lag is greater than the threshold.
-cluster_lag_critical | **Optional.** Critical threshold for log lag in seconds. Applies if the log lag is greater than the threshold.
+Name                   | Description
+-----------------------|---------------
+cluster\_zone          | **Required.** The zone name. Defaults to `$host.name$`.
+cluster\_lag\_warning  | **Optional.** Warning threshold for log lag in seconds. Applies if the log lag is greater than the threshold.
+cluster\_lag\_critical | **Optional.** Critical threshold for log lag in seconds. Applies if the log lag is greater than the threshold.
 
-### <a id="itl-icinga-ido"></a> ido
+### ido <a id="itl-icinga-ido"></a>
 
 Check command for the built-in `ido` check.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
-Name         | Description
--------------|---------------
-ido_type     | **Required.** The type of the IDO connection object. Can be either "IdoMysqlConnection" or "IdoPgsqlConnection".
-ido_name     | **Required.** The name of the IDO connection object.
+Name                            | Description
+--------------------------------|-----------------------------
+ido\_type                       | **Required.** The type of the IDO connection object. Can be either "IdoMysqlConnection" or "IdoPgsqlConnection".
+ido\_name                       | **Required.** The name of the IDO connection object.
+ido\_queries\_warning           | **Optional.** Warning threshold for queries/s. Applies if the rate is lower than the threshold.
+ido\_queries\_critical          | **Optional.** Critical threshold for queries/s. Applies if the rate is lower than the threshold.
+ido\_pending\_queries\_warning  | **Optional.** Warning threshold for pending queries. Applies if pending queries are higher than the threshold. Supersedes the `ido_queries` thresholds above.
+ido\_pending\_queries\_critical | **Optional.** Critical threshold for pending queries. Applies if pending queries are higher than the threshold. Supersedes the `ido_queries` thresholds above.
 
-### <a id="itl-random"></a> random
+
+### dummy <a id="itl-dummy"></a>
+
+Check command for the built-in `dummy` check. This allows to set
+a check result state and output and can be used in [freshness checks](08-advanced-topics.md#check-result-freshness)
+or [runtime object checks](08-advanced-topics.md#access-object-attributes-at-runtime).
+In contrast to the [check_dummy](https://www.monitoring-plugins.org/doc/man/check_dummy.html)
+plugin, Icinga 2 implements a light-weight in memory check with 2.9+.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name            | Description
+----------------|--------------
+dummy\_state     | **Optional.** The state. Can be one of 0 (ok), 1 (warning), 2 (critical) and 3 (unknown). Defaults to 0.
+dummy\_text      | **Optional.** Plugin output. Defaults to "Check was successful.".
+
+### passive <a id="itl-check-command-passive"></a>
+
+Specialised check command object for passive checks which uses the functionality of the "dummy" check command with appropriate default values.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name            | Description
+----------------|--------------
+dummy_state     | **Optional.** The state. Can be one of 0 (ok), 1 (warning), 2 (critical) and 3 (unknown). Defaults to 3.
+dummy_text      | **Optional.** Plugin output. Defaults to "No Passive Check Result Received.".
+
+### random <a id="itl-random"></a>
 
 Check command for the built-in `random` check. This check returns random states
 and adds the check source to the check output.
@@ -90,21 +151,22 @@ and adds the check source to the check output.
 For test and demo purposes only. The `random` check command does not support
 any vars.
 
-### <a id="itl-exception"></a> exception
+### exception <a id="itl-exception"></a>
 
 Check command for the built-in `exception` check. This check throws an exception.
 
 For test and demo purposes only. The `exception` check command does not support
 any vars.
 
-# <a id="plugin-check-commands"></a> Plugin Check Commands
+<!-- keep this anchor for URL link history only -->
+<a id="plugin-check-commands"></a>
 
-## <a id="plugin-check-commands-monitoring-plugins"></a> Plugin Check Commands for Monitoring Plugins
+## Plugin Check Commands for Monitoring Plugins <a id="plugin-check-commands-monitoring-plugins"></a>
 
 The Plugin Check Commands provides example configuration for plugin check commands
 provided by the [Monitoring Plugins](https://www.monitoring-plugins.org) project.
 
-By default the Plugin Check Commands are included in the `icinga2.conf` configuration
+By default the Plugin Check Commands are included in the [icinga2.conf](04-configuring-icinga-2.md#icinga2-conf) configuration
 file:
 
     include <plugins>
@@ -112,16 +174,18 @@ file:
 The plugin check commands assume that there's a global constant named `PluginDir`
 which contains the path of the plugins from the Monitoring Plugins project.
 
-**Note**: If there are command parameters missing for the provided CheckCommand
-definitions please kindly send a patch upstream. This should include an update
-for the ITL CheckCommand itself and this documentation section.
+> **Note**:
+>
+> Please be aware that the CheckCommand definitions are based on the [Monitoring Plugins](https://www.monitoring-plugins.org), other Plugin collections might not support
+> all parameters. If there are command parameters missing for the provided CheckCommand definitions please kindly send a patch upstream.
+> This should include an update for the ITL CheckCommand itself and this documentation section.
 
-### <a id="plugin-check-command-apt"></a> apt
+### apt <a id="plugin-check-command-apt"></a>
 
-The plugin [apt](https://www.monitoring-plugins.org/doc/index.html) checks for software updates on systems that use
+The plugin [apt](https://www.monitoring-plugins.org/doc/man/check_apt.html) checks for software updates on systems that use
 package management systems based on the apt-get(8) command found in Debian based systems.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                    | Description
 ------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,14 +196,15 @@ apt_include             | **Optional.** Include only packages matching REGEXP. C
 apt_exclude             | **Optional.** Exclude packages matching REGEXP from the list of packages that would otherwise be included. Can be specified multiple times.
 apt_critical            | **Optional.** If the full package information of any of the upgradable packages match this REGEXP, the plugin will return CRITICAL status. Can be specified multiple times.
 apt_timeout             | **Optional.** Seconds before plugin times out (default: 10).
+apt_only_critical       | **Optional.** Only warn about critical upgrades.
 
 
-### <a id="plugin-check-command-breeze"></a> breeze
+### breeze <a id="plugin-check-command-breeze"></a>
 
 The [check_breeze](https://www.monitoring-plugins.org/doc/man/check_breeze.html) plugin reports the signal
 strength of a Breezecom wireless equipment.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name             | Description
 -----------------|---------------------------------
@@ -149,36 +214,37 @@ breeze_warning   | **Required.** Percentage strength below which a WARNING statu
 breeze_critical  | **Required.** Percentage strength below which a WARNING status will result. Defaults to 20.
 
 
-### <a id="plugin-check-command-by-ssh"></a> by_ssh
+### by_ssh <a id="plugin-check-command-by-ssh"></a>
 
 The [check_by_ssh](https://www.monitoring-plugins.org/doc/man/check_by_ssh.html) plugin uses SSH to execute
 commands on a remote host.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
-Name            | Description
-----------------|--------------
-by_ssh_address  | **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
-by_ssh_port     | **Optional.** The SSH port. Defaults to 22.
-by_ssh_command  | **Required.** The command that should be executed. Can be an array if multiple arguments should be passed to `check_by_ssh`.
-by_ssh_arguments| **Optional.** A dictionary with arguments for the command. This works exactly like the 'arguments' dictionary for ordinary CheckCommands.
-by_ssh_logname  | **Optional.** The SSH username.
-by_ssh_identity | **Optional.** The SSH identity.
-by_ssh_quiet    | **Optional.** Whether to suppress SSH warnings. Defaults to false.
-by_ssh_warn     | **Optional.** The warning threshold.
-by_ssh_crit     | **Optional.** The critical threshold.
-by_ssh_timeout  | **Optional.** The timeout in seconds.
-by_ssh_options  | **Optional.** Call ssh with '-o OPTION' (multiple options may be specified as an array).
-by_ssh_ipv4     | **Optional.** Use IPv4 connection. Defaults to false.
-by_ssh_ipv6     | **Optional.** Use IPv6 connection. Defaults to false.
+Name               | Description
+----------------   | --------------
+by_ssh_address     | **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
+by_ssh_port        | **Optional.** The SSH port. Defaults to 22.
+by_ssh_command     | **Required.** The command that should be executed. Can be an array if multiple arguments should be passed to `check_by_ssh`.
+by_ssh_arguments   | **Optional.** A dictionary with arguments for the command. This works exactly like the 'arguments' dictionary for ordinary CheckCommands.
+by_ssh_logname     | **Optional.** The SSH username.
+by_ssh_identity    | **Optional.** The SSH identity.
+by_ssh_quiet       | **Optional.** Whether to suppress SSH warnings. Defaults to false.
+by_ssh_warn        | **Optional.** The warning threshold.
+by_ssh_crit        | **Optional.** The critical threshold.
+by_ssh_timeout     | **Optional.** The timeout in seconds.
+by_ssh_options     | **Optional.** Call ssh with '-o OPTION' (multiple options may be specified as an array).
+by_ssh_ipv4        | **Optional.** Use IPv4 connection. Defaults to false.
+by_ssh_ipv6        | **Optional.** Use IPv6 connection. Defaults to false.
+by_ssh_skip_stderr | **Optional.** Ignore all or (if specified) first n lines on STDERR.
 
 
-### <a id="plugin-check-command-clamd"></a> clamd
+### clamd <a id="plugin-check-command-clamd"></a>
 
 The [check_clamd](https://www.monitoring-plugins.org/doc/man/check_clamd.html) plugin tests CLAMD
 connections with the specified host (or unix socket).
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name               | Description
 -------------------|--------------
@@ -204,12 +270,12 @@ clamd_ipv4           | **Optional.** Use IPv4 connection. Defaults to false.
 clamd_ipv6           | **Optional.** Use IPv6 connection. Defaults to false.
 
 
-### <a id="plugin-check-command-dhcp"></a> dhcp
+### dhcp <a id="plugin-check-command-dhcp"></a>
 
 The [check_dhcp](https://www.monitoring-plugins.org/doc/man/check_dhcp.html) plugin
 tests the availability of DHCP servers on a network.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -221,12 +287,12 @@ dhcp_mac        | **Optional.** The MAC address to use in the DHCP request.
 dhcp_unicast    | **Optional.** Whether to use unicast requests. Defaults to false.
 
 
-### <a id="plugin-check-command-dig"></a> dig
+### dig <a id="plugin-check-command-dig"></a>
 
 The [check_dig](https://www.monitoring-plugins.org/doc/man/check_dig.html) plugin
 test the DNS service on the specified host using dig.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                 | Description
 ---------------------|--------------
@@ -244,13 +310,13 @@ dig_ipv4             | **Optional.** Force dig to only use IPv4 query transport.
 dig_ipv6             | **Optional.** Force dig to only use IPv6 query transport. Defaults to false.
 
 
-### <a id="plugin-check-command-disk"></a> disk
+### disk <a id="plugin-check-command-disk"></a>
 
 The [check_disk](https://www.monitoring-plugins.org/doc/man/check_disk.html) plugin
 checks the amount of used disk space on a mounted file system and generates an alert
 if free space is less than one of the threshold values.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            	| Description
 --------------------|------------------------
@@ -262,10 +328,10 @@ disk\_partition		| **Optional.** The partition. **Deprecated in 2.3.**
 disk\_partition\_excluded  | **Optional.** The excluded partition. **Deprecated in 2.3.**
 disk\_partitions 	| **Optional.** The partition(s). Multiple partitions must be defined as array.
 disk\_partitions\_excluded | **Optional.** The excluded partition(s). Multiple partitions must be defined as array.
-disk\_clear             | **Optional.** Clear thresholds.
-disk\_exact\_match      | **Optional.** For paths or partitions specified with -p, only check for exact paths.
+disk\_clear             | **Optional.** Clear thresholds. May be true or false.
+disk\_exact\_match      | **Optional.** For paths or partitions specified with -p, only check for exact paths. May be true or false.
 disk\_errors\_only      | **Optional.** Display only devices/mountpoints with errors. May be true or false.
-disk\_ignore\_reserved  | **Optional.** If set, account root-reserved blocks are not accounted for freespace in perfdata.
+disk\_ignore\_reserved  | **Optional.** If set, account root-reserved blocks are not accounted for freespace in perfdata. May be true or false.
 disk\_group             | **Optional.** Group paths. Thresholds apply to (free-)space of all partitions together.
 disk\_kilobytes         | **Optional.** Same as --units kB. May be true or false.
 disk\_local             | **Optional.** Only check local filesystems. May be true or false.
@@ -279,14 +345,14 @@ disk\_ignore\_eregi\_path | **Optional.** Regular expression to ignore selected 
 disk\_ignore\_ereg\_path  | **Optional.** Regular expression to ignore selected path or partition. Multiple regular expression strings must be defined as array.
 disk\_timeout             | **Optional.** Seconds before connection times out (default: 10).
 disk\_units               | **Optional.** Choose bytes, kB, MB, GB, TB (default: MB).
-disk\_exclude\_type       | **Optional.** Ignore all filesystems of indicated type. Multiple regular expression strings must be defined as array.
+disk\_exclude\_type       | **Optional.** Ignore all filesystems of indicated type. Multiple regular expression strings must be defined as array. Defaults to "none", "tmpfs", "sysfs", "proc", "configfs", "devtmpfs", "devfs", "mtmfs", "tracefs", "cgroup", "fuse.gvfsd-fuse", "fuse.gvfs-fuse-daemon", "fdescfs", "overlay", "nsfs", "squashfs".
 
-### <a id="plugin-check-command-disk-smb"></a> disk_smb
+### disk_smb <a id="plugin-check-command-disk-smb"></a>
 
 The [check_disk_smb](https://www.monitoring-plugins.org/doc/man/check_disk_smb.html) plugin
 uses the `smbclient` binary to check SMB shares.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            	| Description
 ------------------------|------------------------
@@ -300,47 +366,35 @@ disk_smb_wused      	| **Optional.** The used space warning threshold. Defaults 
 disk_smb_cused      	| **Optional.** The used space critical threshold. Defaults to "95%". If the percent sign is omitted, use optional disk units.
 disk_smb_port		| **Optional.** Connection port, e.g. `139` or `445`. Defaults to `smbclient` default if omitted.
 
-### <a id="plugin-check-command-dns"></a> dns
+### dns <a id="plugin-check-command-dns"></a>
 
 The [check_dns](https://www.monitoring-plugins.org/doc/man/check_dns.html) plugin
 uses the nslookup program to obtain the IP address for the given host/domain query.
 An optional DNS server to use may be specified. If no DNS server is specified, the
 default server(s) specified in `/etc/resolv.conf` will be used.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                 | Description
 ---------------------|--------------
 dns_lookup           | **Optional.** The hostname or IP to query the DNS for. Defaults to "$host_name$".
 dns_server           | **Optional.** The DNS server to query. Defaults to the server configured in the OS.
-dns_expected_answer  | **Optional.** The answer to look for. A hostname must end with a dot. **Deprecated in 2.3.**
+dns_query_type       | **Optional.** The DNS record query type where TYPE =(A, AAAA, SRV, TXT, MX, ANY). The default query type is 'A' (IPv4 host entry)
 dns_expected_answers | **Optional.** The answer(s) to look for. A hostname must end with a dot. Multiple answers must be defined as array.
 dns_authoritative    | **Optional.** Expect the server to send an authoritative answer.
+dns_accept_cname     | **Optional.** Accept cname responses as a valid result to a query.
 dns_wtime            | **Optional.** Return warning if elapsed time exceeds value.
 dns_ctime            | **Optional.** Return critical if elapsed time exceeds value.
 dns_timeout          | **Optional.** Seconds before connection times out. Defaults to 10.
 
 
-### <a id="plugin-check-command-dummy"></a> dummy
 
-The [check_dummy](https://www.monitoring-plugins.org/doc/man/check_dummy.html) plugin
-will simply return the state corresponding to the numeric value of the `dummy_state`
-argument with optional text.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name            | Description
-----------------|--------------
-dummy_state     | **Optional.** The state. Can be one of 0 (ok), 1 (warning), 2 (critical) and 3 (unknown). Defaults to 0.
-dummy_text      | **Optional.** Plugin output. Defaults to "Check was successful.".
-
-
-### <a id="plugin-check-command-file-age"></a> file_age
+### file_age <a id="plugin-check-command-file-age"></a>
 
 The [check_file_age](https://www.monitoring-plugins.org/doc/man/check_file_age.html) plugin
 checks a file's size and modification time to make sure it's not empty and that it's sufficiently recent.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                   | Description
 -----------------------|--------------------------------------------------------------------------------------------------------
@@ -352,12 +406,12 @@ file_age_critical_size | **Optional.** File must be at least this many bytes lon
 file_age_ignoremissing | **Optional.** Return OK if the file does not exist. Defaults to false.
 
 
-### <a id="plugin-check-command-flexlm"></a> flexlm
+### flexlm <a id="plugin-check-command-flexlm"></a>
 
 The [check_flexlm](https://www.monitoring-plugins.org/doc/man/check_flexlm.html) plugin
 checks available flexlm license managers. Requires the `lmstat` command.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name               | Description
 -------------------|----------------------------------------------------------
@@ -365,15 +419,15 @@ flexlm_licensefile | **Required.** Name of license file (usually license.dat).
 flexlm_timeout     | **Optional.** Plugin time out in seconds. Defaults to 15.
 
 
-### <a id="plugin-check-command-fping4"></a> fping4
+### fping4 <a id="plugin-check-command-fping4"></a>
 
 The [check_fping](https://www.monitoring-plugins.org/doc/man/check_fping.html) plugin
-will use the `fping` command to ping the specified host for a fast check. Note that it is
-necessary to set the suid flag on fping.
+uses the `fping` command to ping the specified host for a fast check. Note that it is
+necessary to set the `suid` flag on `fping`.
 
 This CheckCommand expects an IPv4 address.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -390,15 +444,15 @@ fping_source_ip | **Optional.** The name or ip address of the source ip.
 fping_source_interface | **Optional.** The source interface name.
 
 
-### <a id="plugin-check-command-fping6"></a> fping6
+### fping6 <a id="plugin-check-command-fping6"></a>
 
 The [check_fping](https://www.monitoring-plugins.org/doc/man/check_fping.html) plugin
 will use the `fping` command to ping the specified host for a fast check. Note that it is
-necessary to set the suid flag on fping.
+necessary to set the `suid` flag on `fping`.
 
 This CheckCommand expects an IPv6 address.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -415,12 +469,12 @@ fping_source_ip | **Optional.** The name or ip address of the source ip.
 fping_source_interface | **Optional.** The source interface name.
 
 
-### <a id="plugin-check-command-ftp"></a> ftp
+### ftp <a id="plugin-check-command-ftp"></a>
 
 The [check_ftp](https://www.monitoring-plugins.org/doc/man/check_ftp.html) plugin
 tests FTP connections with the specified host (or unix socket).
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name               | Description
 -------------------|--------------
@@ -446,7 +500,7 @@ ftp_ipv4           | **Optional.** Use IPv4 connection. Defaults to false.
 ftp_ipv6           | **Optional.** Use IPv6 connection. Defaults to false.
 
 
-### <a id="plugin-check-command-game"></a> game
+### game <a id="plugin-check-command-game"></a>
 
 The [check_game](https://www.monitoring-plugins.org/doc/man/check_game.html) plugin
 tests game server connections with the specified host.
@@ -454,7 +508,7 @@ This plugin uses the 'qstat' command, the popular game server status query tool.
 If you don't have the package installed, you will need to [download](http://www.activesw.com/people/steve/qstat.html)
 or install the package `quakestat` before you can use this plugin.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name               | Description
 -------------------|-------------------
@@ -469,13 +523,13 @@ game_gametime      | **Optional.** Field number in raw qstat output that contain
 game_hostname      | **Optional.** Name of the host running the game.
 
 
-### <a id="plugin-check-command-hostalive"></a> hostalive
+### hostalive <a id="plugin-check-command-hostalive"></a>
 
 Check command object for the [check_ping](https://www.monitoring-plugins.org/doc/man/check_ping.html)
 plugin with host check default values. This variant uses the host's `address` attribute
 if available and falls back to using the `address6` attribute if the `address` attribute is not set.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -488,12 +542,12 @@ ping_packets    | **Optional.** The number of packets to send. Defaults to 5.
 ping_timeout    | **Optional.** The plugin timeout in seconds. Defaults to 0 (no timeout).
 
 
-### <a id="plugin-check-command-hostalive4"></a> hostalive4
+### hostalive4 <a id="plugin-check-command-hostalive4"></a>
 
 Check command object for the [check_ping](https://www.monitoring-plugins.org/doc/man/check_ping.html)
 plugin with host check default values. This variant uses the host's `address` attribute.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -506,12 +560,12 @@ ping_packets    | **Optional.** The number of packets to send. Defaults to 5.
 ping_timeout    | **Optional.** The plugin timeout in seconds. Defaults to 0 (no timeout).
 
 
-### <a id="plugin-check-command-hostalive6"></a> hostalive6
+### hostalive6 <a id="plugin-check-command-hostalive6"></a>
 
 Check command object for the [check_ping](https://www.monitoring-plugins.org/doc/man/check_ping.html)
 plugin with host check default values. This variant uses the host's `address6` attribute.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -524,13 +578,13 @@ ping_packets    | **Optional.** The number of packets to send. Defaults to 5.
 ping_timeout    | **Optional.** The plugin timeout in seconds. Defaults to 0 (no timeout).
 
 
-### <a id="plugin-check-command-hpjd"></a> hpjd
+### hpjd <a id="plugin-check-command-hpjd"></a>
 
 The [check_hpjd](https://www.monitoring-plugins.org/doc/man/check_hpjd.html) plugin
 tests the state of an HP printer with a JetDirect card. Net-snmp must be installed
 on the computer running the plugin.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -539,14 +593,16 @@ hpjd_port       | **Optional.** The host's SNMP port. Defaults to 161.
 hpjd_community  | **Optional.** The SNMP community. Defaults  to "public".
 
 
-### <a id="plugin-check-command-http"></a> http
+### http <a id="plugin-check-command-http"></a>
 
 The [check_http](https://www.monitoring-plugins.org/doc/man/check_http.html) plugin
 tests the HTTP service on the specified host. It can test normal (http) and secure
 (https) servers, follow redirects, search for strings and regular expressions,
 check connection times, and report on certificate expiration times.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+The plugin can either test the HTTP response of a server, or if `http_certificate` is set to a non-empty value, the TLS certificate age for a HTTPS host.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                             | Description
 ---------------------------------|---------------------------------
@@ -572,11 +628,11 @@ http_ignore_body                 | **Optional.** Don't download the body, just t
 http_linespan                    | **Optional.** Allow regex to span newline.
 http_expect_body_regex           | **Optional.** A regular expression which the body must match against. Incompatible with http_ignore_body.
 http_expect_body_eregi           | **Optional.** A case-insensitive expression which the body must match against. Incompatible with http_ignore_body.
-http_invertregex                 | **Optional.** Changes behaviour of http_expect_body_regex and http_expect_body_eregi to return CRITICAL if found, OK if not.
+http_invertregex                 | **Optional.** Changes behavior of http_expect_body_regex and http_expect_body_eregi to return CRITICAL if found, OK if not.
 http_warn_time                   | **Optional.** The warning threshold.
 http_critical_time               | **Optional.** The critical threshold.
 http_expect                      | **Optional.** Comma-delimited list of strings, at least one of them is expected in the first (status) line of the server response. Default: HTTP/1.
-http_certificate                 | **Optional.** Minimum number of days a certificate has to be valid. This parameter explicitely sets the port to 443 and ignores the URL if passed.
+http_certificate                 | **Optional.** Minimum number of days a certificate has to be valid. Port defaults to 443. When this option is used the URL is not checked. The first parameter defines the warning threshold (in days), the second parameter the critical threshold (in days). (Example `http_certificate = "30,20"`).
 http_clientcert                  | **Optional.** Name of file contains the client certificate (PEM format).
 http_privatekey                  | **Optional.** Name of file contains the private key (PEM format).
 http_headerstring                | **Optional.** String to expect in the response headers.
@@ -593,17 +649,19 @@ http_pagesize                    | **Optional.** Minimum page size required:Maxi
 http_timeout                     | **Optional.** Seconds before connection times out.
 http_ipv4                        | **Optional.** Use IPv4 connection. Defaults to false.
 http_ipv6                        | **Optional.** Use IPv6 connection. Defaults to false.
+http_link                        | **Optional.** Wrap output in HTML link. Defaults to false.
+http_verbose                     | **Optional.** Show details for command-line debugging. Defaults to false.
 
 
-### <a id="plugin-check-command-icmp"></a> icmp
+### icmp <a id="plugin-check-command-icmp"></a>
 
 The [check_icmp](https://www.monitoring-plugins.org/doc/man/check_icmp.html) plugin
 check_icmp allows for checking multiple hosts at once compared to `check_ping`.
 The main difference is that check_ping executes the system's ping(1) command and
-parses its output while check_icmp talks ICMP itself. check_icmp must be installed
-setuid root.
+parses its output while `check_icmp` talks ICMP itself. `check_icmp` must be installed with
+`setuid` root.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -619,14 +677,15 @@ icmp_target_interval | **Optional.** The maximum target interval.
 icmp_hosts_alive | **Optional.** The number of hosts which have to be alive for the check to succeed.
 icmp_data_bytes | **Optional.** Payload size for each ICMP request. Defaults to 8.
 icmp_timeout    | **Optional.** The plugin timeout in seconds. Defaults to 10 (seconds).
+icmp_ttl        | **Optional.** The TTL on outgoing packets.
 
 
-### <a id="plugin-check-command-imap"></a> imap
+### imap <a id="plugin-check-command-imap"></a>
 
 The [check_imap](https://www.monitoring-plugins.org/doc/man/check_imap.html) plugin
 tests IMAP connections with the specified host (or unix socket).
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                  | Description
 ----------------------|--------------
@@ -651,7 +710,7 @@ imap_ipv4             | **Optional.** Use IPv4 connection. Defaults to false.
 imap_ipv6             | **Optional.** Use IPv6 connection. Defaults to false.
 
 
-### <a id="plugin-check-command-ldap"></a> ldap
+### ldap <a id="plugin-check-command-ldap"></a>
 
 The [check_ldap](https://www.monitoring-plugins.org/doc/man/check_ldap.html) plugin
 can be used to check LDAP servers.
@@ -659,31 +718,33 @@ can be used to check LDAP servers.
 The plugin can also be used for monitoring ldaps connections instead of the deprecated `check_ldaps`.
 This can be ensured by enabling `ldap_starttls` or `ldap_ssl`.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
-Name            | Description
-----------------|--------------
-ldap_address    | **Optional.** Host name, IP Address, or unix socket (must be an absolute path). Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
-ldap_port       | **Optional.** Port number. Defaults to 389.
-ldap_attr	| **Optional.** LDAP attribute to search for (default: "(objectclass=*)"
-ldap_base       | **Required.** LDAP base (eg. ou=myunit,o=myorg,c=at).
-ldap_bind       | **Optional.** LDAP bind DN (if required).
-ldap_pass       | **Optional.** LDAP password (if required).
-ldap_starttls   | **Optional.** Use STARTSSL mechanism introduced in protocol version 3.
-ldap_ssl        | **Optional.** Use LDAPS (LDAP v2 SSL method). This also sets the default port to 636.
-ldap_v2         | **Optional.** Use LDAP protocol version 2 (enabled by default).
-ldap_v3         | **Optional.** Use LDAP protocol version 3 (disabled by default)
-ldap_warning	| **Optional.** Response time to result in warning status (seconds).
-ldap_critical	| **Optional.** Response time to result in critical status (seconds).
-ldap_timeout	| **Optional.** Seconds before connection times out (default: 10).
-ldap_verbose	| **Optional.** Show details for command-line debugging (disabled by default)
+Name            	| Description
+------------------------|--------------
+ldap_address    	| **Optional.** Host name, IP Address, or unix socket (must be an absolute path). Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
+ldap_port       	| **Optional.** Port number. Defaults to 389.
+ldap_attr		| **Optional.** LDAP attribute to search for (default: "(objectclass=*)")
+ldap_base       	| **Required.** LDAP base (eg. ou=myunit,o=myorg,c=at).
+ldap_bind       	| **Optional.** LDAP bind DN (if required).
+ldap_pass       	| **Optional.** LDAP password (if required).
+ldap_starttls   	| **Optional.** Use STARTSSL mechanism introduced in protocol version 3.
+ldap_ssl        	| **Optional.** Use LDAPS (LDAP v2 SSL method). This also sets the default port to 636.
+ldap_v2         	| **Optional.** Use LDAP protocol version 2 (enabled by default).
+ldap_v3         	| **Optional.** Use LDAP protocol version 3 (disabled by default)
+ldap_warning		| **Optional.** Response time to result in warning status (seconds).
+ldap_critical		| **Optional.** Response time to result in critical status (seconds).
+ldap_warning_entries	| **Optional.** Number of found entries to result in warning status.
+ldap_critical_entries	| **Optional.** Number of found entries to result in critical status.
+ldap_timeout		| **Optional.** Seconds before connection times out (default: 10).
+ldap_verbose		| **Optional.** Show details for command-line debugging (disabled by default)
 
-### <a id="plugin-check-command-load"></a> load
+### load <a id="plugin-check-command-load"></a>
 
 The [check_load](https://www.monitoring-plugins.org/doc/man/check_load.html) plugin
 tests the current system load average.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -695,12 +756,12 @@ load_cload5     | **Optional.** The 5-minute critical threshold. Defaults to 6.
 load_cload15    | **Optional.** The 15-minute critical threshold. Defaults to 4.
 load_percpu     | **Optional.** Divide the load averages by the number of CPUs (when possible). Defaults to false.
 
-### <a id="plugin-check-command-mailq"></a> mailq
+### mailq <a id="plugin-check-command-mailq"></a>
 
 The [check_mailq](https://www.monitoring-plugins.org/doc/man/check_mailq.html) plugin
 checks the number of messages in the mail queue (supports multiple sendmail queues, qmail).
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                    | Description
 ------------------------|--------------
@@ -710,18 +771,20 @@ mailq_domain_warning	| **Optional.** Min. number of messages for same domain in 
 mailq_domain_critical	| **Optional.** Min. number of messages for same domain in queue to generate critical alert ( W < C ).
 mailq_timeout		| **Optional.** Plugin timeout in seconds (default = 15).
 mailq_servertype	| **Optional.** [ sendmail \| qmail \| postfix \| exim \| nullmailer ] (default = autodetect).
+mailq_sudo		| **Optional.** Use sudo to execute the mailq command.
 
-### <a id="plugin-check-command-mysql"></a> mysql
+### mysql <a id="plugin-check-command-mysql"></a>
 
 The [check_mysql](https://www.monitoring-plugins.org/doc/man/check_mysql.html) plugin
 tests connections to a MySQL server.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name			| Description
 ------------------------|---------------------------------------------------------------
 mysql_hostname		| **Optional.** Host name, IP Address, or unix socket (must be an absolute path).
 mysql_port		| **Optional.** Port number (default: 3306).
+mysql_socket		| **Optional.** Use the specified socket (has no effect if `mysql_hostname` is used).
 mysql_ignore_auth	| **Optional.** Ignore authentication failure and check for mysql connectivity only.
 mysql_database		| **Optional.** Check database with indicated name.
 mysql_file		| **Optional.** Read from the specified client options file.
@@ -731,7 +794,7 @@ mysql_password		| **Optional.** Use the indicated password to authenticate the c
 mysql_check_slave	| **Optional.** Check if the slave thread is running properly.
 mysql_warning		| **Optional.** Exit with WARNING status if slave server is more than INTEGER seconds behind master.
 mysql_critical		| **Optional.** Exit with CRITICAL status if slave server is more then INTEGER seconds behind master.
-mysql_ssl		| **Optional.** Use ssl encryptation.
+mysql_ssl		| **Optional.** Use ssl encryption.
 mysql_cacert		| **Optional.** Path to CA signing the cert.
 mysql_cert		| **Optional.** Path to SSL certificate.
 mysql_key		| **Optional.** Path to private SSL key.
@@ -739,7 +802,7 @@ mysql_cadir		| **Optional.** Path to CA directory.
 mysql_ciphers		| **Optional.** List of valid SSL ciphers.
 
 
-### <a id="plugin-check-command-mysql-query"></a> mysql_query
+### mysql_query <a id="plugin-check-command-mysql-query"></a>
 
 The [check_mysql_query](https://www.monitoring-plugins.org/doc/man/check_mysql_query.html) plugin
 checks a query result against threshold levels.
@@ -748,7 +811,7 @@ The result from the query should be numeric. For extra security, create a user w
 **Note**: You must specify `mysql_query_password` with an empty string to force an empty password,
 overriding any my.cnf settings.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                    | Description
 ------------------------|---------------------------------------------------------------
@@ -764,32 +827,33 @@ mysql_query_warning     | **Optional.** Exit with WARNING status if query is out
 mysql_query_critical    | **Optional.** Exit with CRITICAL status if query is outside of the range.
 
 
-### <a id="plugin-check-command-negate"></a> negate
+### negate <a id="plugin-check-command-negate"></a>
 
 The [negate](https://www.monitoring-plugins.org/doc/man/negate.html) plugin
 negates the status of a plugin (returns OK for CRITICAL and vice-versa).
 Additional switches can be used to control which state becomes what.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
-Name			| Description
-------------------------|---------------------------------------------------------------
-negate_timeout		| **Optional.** Seconds before plugin times out (default: 11).
-negate_timeout_result	| **Optional.** Custom result on Negate timeouts, default to UNKNOWN.
-negate_ok		| **Optional.** OK, WARNING, CRITICAL or UNKNOWN.
-negate_warning		|               Numeric values are accepted.
-negate_critical		|               If nothing is specified, permutes OK and CRITICAL.
-negate_substitute	| **Optional.** Substitute output text as well. Will only substitute text in CAPITALS.
-negate_command		| **Required.** Command to be negated.
-negate_arguments	| **Optional.** Arguments for the negated command.
+Name                  | Description
+----------------------|---------------------------------------------------------------
+negate_timeout        | **Optional.** Seconds before plugin times out (default: 11).
+negate_timeout_result | **Optional.** Custom result on Negate timeouts, default to UNKNOWN.
+negate_ok             | **Optional.** OK, WARNING, CRITICAL or UNKNOWN.
+negate_warning        |               Numeric values are accepted.
+negate_critical       |               If nothing is specified,
+negate_unknown        |               permutes OK and CRITICAL.
+negate_substitute     | **Optional.** Substitute output text as well. Will only substitute text in CAPITALS.
+negate_command        | **Required.** Command to be negated.
+negate_arguments      | **Optional.** Arguments for the negated command.
 
-### <a id="plugin-check-command-nrpe"></a> nrpe
+### nrpe <a id="plugin-check-command-nrpe"></a>
 
-The `check_nrpe` plugin can be used to query an [NRPE](http://docs.icinga.org/latest/en/nrpe.html)
+The `check_nrpe` plugin can be used to query an [NRPE](https://icinga.com/docs/icinga1/latest/en/nrpe.html)
 server or [NSClient++](https://www.nsclient.org). **Note**: This plugin
 is considered insecure/deprecated.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -802,14 +866,15 @@ nrpe_timeout    | **Optional.** The timeout in seconds.
 nrpe_arguments	| **Optional.** Arguments that should be passed to the command. Multiple arguments must be defined as array.
 nrpe_ipv4       | **Optional.** Use IPv4 connection. Defaults to false.
 nrpe_ipv6       | **Optional.** Use IPv6 connection. Defaults to false.
+nrpe_version_2	| **Optional.** Use this if you want to connect using NRPE v2 protocol. Defaults to false.
 
 
-### <a id="plugin-check-command-nscp"></a> nscp
+### nscp <a id="plugin-check-command-nscp"></a>
 
 The [check_nt](https://www.monitoring-plugins.org/doc/man/check_nt.html) plugin
 collects data from the [NSClient++](https://www.nsclient.org) service.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -824,14 +889,14 @@ nscp_timeout    | **Optional.** The query timeout in seconds.
 nscp_showall    | **Optional.** Use with SERVICESTATE to see working services or PROCSTATE for running processes. Defaults to false.
 
 
-### <a id="plugin-check-command-ntp-time"></a> ntp_time
+### ntp_time <a id="plugin-check-command-ntp-time"></a>
 
 The [check_ntp_time](https://www.monitoring-plugins.org/doc/man/check_ntp_time.html) plugin
 checks the clock offset between the local host and a remote NTP server.
 
 **Note**: If you want to monitor an NTP server, please use `ntp_peer`.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -846,19 +911,20 @@ ntp_ipv4        | **Optional.** Use IPv4 connection. Defaults to false.
 ntp_ipv6        | **Optional.** Use IPv6 connection. Defaults to false.
 
 
-### <a id="plugin-check-command-ntp-peer"></a> ntp_peer
+### ntp_peer <a id="plugin-check-command-ntp-peer"></a>
 
 The [check_ntp_peer](https://www.monitoring-plugins.org/doc/man/check_ntp_peer.html) plugin
 checks the health of an NTP server. It supports checking the offset with the sync peer, the
 jitter and stratum. This plugin will not check the clock offset between the local host and NTP
  server; please use `ntp_time` for that purpose.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
 ntp_address     | **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
 ntp_port        | **Optional.** The port to use. Default to 123.
+ntp_quiet       | **Optional.** Returns UNKNOWN instead of CRITICAL or WARNING if server isn't synchronized.
 ntp_warning     | **Optional.** Offset to result in warning status (seconds).
 ntp_critical    | **Optional.** Offset to result in critical status (seconds).
 ntp_wstratum    | **Optional.** Warning threshold for stratum of server's synchronization peer.
@@ -872,18 +938,7 @@ ntp_ipv4        | **Optional.** Use IPv4 connection. Defaults to false.
 ntp_ipv6        | **Optional.** Use IPv6 connection. Defaults to false.
 
 
-### <a id="plugin-check-command-passive"></a> passive
-
-Specialised check command object for passive checks executing the `check_dummy` plugin with appropriate default values.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name            | Description
-----------------|--------------
-dummy_state     | **Optional.** The state. Can be one of 0 (ok), 1 (warning), 2 (critical) and 3 (unknown). Defaults to 3.
-dummy_text      | **Optional.** Plugin output. Defaults to "No Passive Check Result Received.".
-
-### <a id="plugin-check-command-pgsql"></a> pgsql
+### pgsql <a id="plugin-check-command-pgsql"></a>
 
 The [check_pgsql](https://www.monitoring-plugins.org/doc/man/check_pgsql.html) plugin
 tests a PostgreSQL DBMS to determine whether it is active and accepting queries.
@@ -891,7 +946,7 @@ If a query is specified using the `pgsql_query` attribute, it will be executed a
 connecting to the server. The result from the query has to be numeric in order
 to compare it against the query thresholds if set.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name			| Description
 ------------------------|---------------------------------------------------------------
@@ -908,7 +963,7 @@ pgsql_query		| **Optional.** SQL query to run. Only first column in first row wi
 pgsql_query_warning	| **Optional.** SQL query value to result in warning status (double).
 pgsql_query_critical	| **Optional.** SQL query value to result in critical status (double).
 
-### <a id="plugin-check-command-ping"></a> ping
+### ping <a id="plugin-check-command-ping"></a>
 
 The [check_ping](https://www.monitoring-plugins.org/doc/man/check_ping.html) plugin
 uses the ping command to probe the specified host for packet loss (percentage) and
@@ -917,7 +972,7 @@ round trip average (milliseconds).
 This command uses the host's `address` attribute if available and falls back to using
 the `address6` attribute if the `address` attribute is not set.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -930,16 +985,16 @@ ping_packets    | **Optional.** The number of packets to send. Defaults to 5.
 ping_timeout    | **Optional.** The plugin timeout in seconds. Defaults to 0 (no timeout).
 
 
-### <a id="plugin-check-command-ping4"></a> ping4
+### ping4 <a id="plugin-check-command-ping4"></a>
 
 The [check_ping](https://www.monitoring-plugins.org/doc/man/check_ping.html) plugin
 uses the ping command to probe the specified host for packet loss (percentage) and
 round trip average (milliseconds).
 
-This command uses the host's `address` attribute if not explicitely specified using
+This command uses the host's `address` attribute if not explicitly specified using
 the `ping_address` attribute.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -951,16 +1006,16 @@ ping_cpl        | **Optional.** The packet loss critical threshold in %. Default
 ping_packets    | **Optional.** The number of packets to send. Defaults to 5.
 ping_timeout    | **Optional.** The plugin timeout in seconds. Defaults to 0 (no timeout).
 
-### <a id="plugin-check-command-ping6"></a> ping6
+### ping6 <a id="plugin-check-command-ping6"></a>
 
 The [check_ping](https://www.monitoring-plugins.org/doc/man/check_ping.html) plugin
 uses the ping command to probe the specified host for packet loss (percentage) and
 round trip average (milliseconds).
 
-This command uses the host's `address6` attribute if not explicitely specified using
+This command uses the host's `address6` attribute if not explicitly specified using
 the `ping_address` attribute.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -973,12 +1028,12 @@ ping_packets    | **Optional.** The number of packets to send. Defaults to 5.
 ping_timeout    | **Optional.** The plugin timeout in seconds. Defaults to 0 (no timeout).
 
 
-### <a id="plugin-check-command-pop"></a> pop
+### pop <a id="plugin-check-command-pop"></a>
 
 The [check_pop](https://www.monitoring-plugins.org/doc/man/check_pop.html) plugin
 tests POP connections with the specified host (or unix socket).
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                 | Description
 ---------------------|--------------
@@ -1003,14 +1058,14 @@ pop_ipv4             | **Optional.** Use IPv4 connection. Defaults to false.
 pop_ipv6             | **Optional.** Use IPv6 connection. Defaults to false.
 
 
-### <a id="plugin-check-command-processes"></a> procs
+### procs <a id="plugin-check-command-processes"></a>
 
 The [check_procs](https://www.monitoring-plugins.org/doc/man/check_procs.html) plugin
 checks all processes and generates WARNING or CRITICAL states if the specified
 metric is outside the required threshold ranges. The metric defaults to number
 of processes. Search filters can be applied to limit the processes to check.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                 | Description
 ---------------------|--------------
@@ -1031,12 +1086,57 @@ procs_command        | **Optional.** Only scan for exact matches of COMMAND (wit
 procs_nokthreads     | **Optional.** Only scan for non kernel threads. Defaults to false.
 
 
-### <a id="plugin-check-command-simap"></a> simap
+### radius <a id="plugin-check-command-radius"></a>
+
+The [check_radius](https://www.monitoring-plugins.org/doc/man/check_radius.html) plugin
+checks a RADIUS server to see if it is accepting connections.  The server to test
+must be specified in the invocation, as well as a user name and password. A configuration
+file may also be present. The format of the configuration file is described in the
+radiusclient library sources.  The password option presents a substantial security
+issue because the password can possibly be determined by careful watching of the
+command line in a process listing. This risk is exacerbated because the plugin will
+typically be executed at regular predictable intervals. Please be sure that the
+password used does not allow access to sensitive system resources.
+
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name               | Description
+-------------------|--------------
+radius_address     | **Optional.** The radius server's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
+radius_config_file | **Required.** The radius configuration file.
+radius_username    | **Required.** The radius username to test.
+radius_password    | **Required.** The radius password to test.
+radius_port        | **Optional.** The radius port number (default 1645).
+radius_nas_id      | **Optional.** The NAS identifier.
+radius_nas_address | **Optional.** The NAS IP address.
+radius_expect      | **Optional.** The response string to expect from the server.
+radius_retries     | **Optional.** The number of times to retry a failed connection.
+radius_timeout     | **Optional.** The number of seconds before connection times out (default: 10).
+
+### rpc <a id="plugin-check-command-rpc"></a>
+
+The [check_rpc](https://www.monitoring-plugins.org/doc/man/check_rpc.html)
+plugin tests if a service is registered and running using `rpcinfo -H host -C rpc_command`.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name        | Description
+---         | ---
+rpc_address | **Optional.** The rpc host address. Defaults to "$address$ if the host `address` attribute is set, "$address6$" otherwise.
+rpc_command | **Required.** The programm name (or number).
+rpc_port    | **Optional.** The port that should be checked.
+rpc_version | **Optional.** The version you want to check for (one or more).
+rpc_udp     | **Optional.** Use UDP test. Defaults to false.
+rpc_tcp     | **Optional.** Use TCP test. Defaults to false.
+rpc_verbose | **Optional.** Show verbose output. Defaults to false.
+
+### simap <a id="plugin-check-command-simap"></a>
 
 The [check_simap](https://www.monitoring-plugins.org/doc/man/check_simap.html) plugin
 tests SIMAP connections with the specified host (or unix socket).
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                   | Description
 -----------------------|--------------
@@ -1060,24 +1160,24 @@ simap_timeout          | **Optional.** Seconds before connection times out (defa
 simap_ipv4             | **Optional.** Use IPv4 connection. Defaults to false.
 simap_ipv6             | **Optional.** Use IPv6 connection. Defaults to false.
 
-### <a id="plugin-check-command-smart"></a> smart
+### smart <a id="plugin-check-command-smart"></a>
 
 The [check_ide_smart](https://www.monitoring-plugins.org/doc/man/check_ide_smart.html) plugin
 checks a local hard drive with the (Linux specific) SMART interface. Requires installation of `smartctl`.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
 smart_device    | **Required.** The name of a local hard drive to monitor.
 
 
-### <a id="plugin-check-command-smtp"></a> smtp
+### smtp <a id="plugin-check-command-smtp"></a>
 
 The [check_smtp](https://www.monitoring-plugins.org/doc/man/check_smtp.html) plugin
 will attempt to open an SMTP connection with the host.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                  | Description
 ----------------------|--------------
@@ -1101,14 +1201,14 @@ smtp_ipv4             | **Optional.** Use IPv4 connection. Defaults to false.
 smtp_ipv6             | **Optional.** Use IPv6 connection. Defaults to false.
 
 
-### <a id="plugin-check-command-snmp"></a> snmp
+### snmp <a id="plugin-check-command-snmp"></a>
 
 The [check_snmp](https://www.monitoring-plugins.org/doc/man/check_snmp.html) plugin
 checks the status of remote machines and obtains system information via SNMP.
 
 **Note**: This plugin uses the `snmpget` command included with the NET-SNMP package.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                | Description
 --------------------|--------------
@@ -1131,13 +1231,16 @@ snmp_rate_multiplier | **Optional.** Converts rate per second. For example, set 
 snmp_rate           | **Optional.** Boolean. Enable rate calculation.
 snmp_getnext        | **Optional.** Boolean. Use SNMP GETNEXT. Defaults to false.
 snmp_timeout        | **Optional.** The command timeout in seconds. Defaults to 10 seconds.
+snmp_offset         | **Optional.** Add/subtract the specified OFFSET to numeric sensor data.
+snmp_output_delimiter | **Optional.** Separates output on multiple OID requests.
+snmp_perf_oids      | **Optional.** Label performance data with OIDs instead of --label's.
 
-### <a id="plugin-check-command-snmpv3"></a> snmpv3
+### snmpv3 <a id="plugin-check-command-snmpv3"></a>
 
 Check command object for the [check_snmp](https://www.monitoring-plugins.org/doc/man/check_snmp.html)
 plugin, using SNMPv3 authentication and encryption options.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                 | Description
 ---------------------|--------------
@@ -1162,12 +1265,12 @@ snmpv3_rate_multiplier | **Optional.** Converts rate per second. For example, se
 snmpv3_rate          | **Optional.** Boolean. Enable rate calculation.
 snmpv3_timeout       | **Optional.** The command timeout in seconds. Defaults to 10 seconds.
 
-### <a id="plugin-check-command-snmp-uptime"></a> snmp-uptime
+### snmp-uptime <a id="plugin-check-command-snmp-uptime"></a>
 
 Check command object for the [check_snmp](https://www.monitoring-plugins.org/doc/man/check_snmp.html)
 plugin, using the uptime OID by default.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -1176,12 +1279,12 @@ snmp_oid        | **Optional.** The SNMP OID. Defaults to "1.3.6.1.2.1.1.3.0".
 snmp_community  | **Optional.** The SNMP community. Defaults to "public".
 
 
-### <a id="plugin-check-command-spop"></a> spop
+### spop <a id="plugin-check-command-spop"></a>
 
 The [check_spop](https://www.monitoring-plugins.org/doc/man/check_spop.html) plugin
 tests SPOP connections with the specified host (or unix socket).
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                  | Description
 ----------------------|--------------
@@ -1206,12 +1309,12 @@ spop_ipv4             | **Optional.** Use IPv4 connection. Defaults to false.
 spop_ipv6             | **Optional.** Use IPv6 connection. Defaults to false.
 
 
-### <a id="plugin-check-command-ssh"></a> ssh
+### ssh <a id="plugin-check-command-ssh"></a>
 
 The [check_ssh](https://www.monitoring-plugins.org/doc/man/check_ssh.html) plugin
 connects to an SSH server at a specified host and port.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -1222,28 +1325,29 @@ ssh_ipv4        | **Optional.** Use IPv4 connection. Defaults to false.
 ssh_ipv6        | **Optional.** Use IPv6 connection. Defaults to false.
 
 
-### <a id="plugin-check-command-ssl"></a> ssl
+### ssl <a id="plugin-check-command-ssl"></a>
 
 Check command object for the [check_tcp](https://www.monitoring-plugins.org/doc/man/check_tcp.html) plugin,
 using ssl-related options.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                          | Description
 ------------------------------|--------------
 ssl_address                   | **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
-ssl_port                      | **Required.** The port that should be checked.
+ssl_port                      | **Optional.** The port that should be checked. Defaults to 443.
 ssl_timeout                   | **Optional.** Timeout in seconds for the connect and handshake. The plugin default is 10 seconds.
-ssl_cert_valid_days_warn      | **Optional.** Warning threshold for days before the certificate will expire. When used, ssl_cert_valid_days_critical must also be set.
+ssl_cert_valid_days_warn      | **Optional.** Warning threshold for days before the certificate will expire. When used, the default for ssl_cert_valid_days_critical is 0.
 ssl_cert_valid_days_critical  | **Optional.** Critical threshold for days before the certificate will expire. When used, ssl_cert_valid_days_warn must also be set.
+ssl_sni                       | **Optional.** The `server_name` that is send to select the SSL certificate to check. Important if SNI is used.
 
 
-### <a id="plugin-check-command-ssmtp"></a> ssmtp
+### ssmtp <a id="plugin-check-command-ssmtp"></a>
 
 The [check_ssmtp](https://www.monitoring-plugins.org/doc/man/check_ssmtp.html) plugin
 tests SSMTP connections with the specified host (or unix socket).
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                   | Description
 -----------------------|--------------
@@ -1268,12 +1372,12 @@ ssmtp_ipv4             | **Optional.** Use IPv4 connection. Defaults to false.
 ssmtp_ipv6             | **Optional.** Use IPv6 connection. Defaults to false.
 
 
-### <a id="plugin-check-command-swap"></a> swap
+### swap <a id="plugin-check-command-swap"></a>
 
 The [check_swap](https://www.monitoring-plugins.org/doc/man/check_swap.html) plugin
 checks the swap space on a local machine.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -1284,12 +1388,12 @@ swap_allswaps   | **Optional.** Conduct comparisons for all swap partitions, one
 swap_noswap     | **Optional.** Resulting state when there is no swap regardless of thresholds. Possible values are "ok", "warning", "critical", "unknown". Defaults to "critical".
 
 
-### <a id="plugin-check-command-tcp"></a> tcp
+### tcp <a id="plugin-check-command-tcp"></a>
 
 The [check_tcp](https://www.monitoring-plugins.org/doc/man/check_tcp.html) plugin
 tests TCP connections with the specified host (or unix socket).
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -1315,12 +1419,12 @@ tcp_ipv4        | **Optional.** Use IPv4 connection. Defaults to false.
 tcp_ipv6        | **Optional.** Use IPv6 connection. Defaults to false.
 
 
-### <a id="plugin-check-command-udp"></a> udp
+### udp <a id="plugin-check-command-udp"></a>
 
 The [check_udp](https://www.monitoring-plugins.org/doc/man/check_udp.html) plugin
 tests UDP connections with the specified host (or unix socket).
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -1333,13 +1437,13 @@ udp_ipv4        | **Optional.** Use IPv4 connection. Defaults to false.
 udp_ipv6        | **Optional.** Use IPv6 connection. Defaults to false.
 
 
-### <a id="plugin-check-command-ups"></a> ups
+### ups <a id="plugin-check-command-ups"></a>
 
 The [check_ups](https://www.monitoring-plugins.org/doc/man/check_ups.html) plugin
 tests the UPS service on the specified host. [Network UPS Tools](http://www.networkupstools.org)
  must be running for this plugin to work.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
@@ -1353,31 +1457,33 @@ ups_celsius     | **Optional.** Display the temperature in degrees Celsius inste
 ups_timeout     | **Optional.** The number of seconds before the connection times out. Defaults to 10.
 
 
-### <a id="plugin-check-command-users"></a> users
+### users <a id="plugin-check-command-users"></a>
 
 The [check_users](https://www.monitoring-plugins.org/doc/man/check_users.html) plugin
 checks the number of users currently logged in on the local system and generates an
 error if the number exceeds the thresholds specified.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
 users_wgreater  | **Optional.** The user count warning threshold. Defaults to 20.
 users_cgreater  | **Optional.** The user count critical threshold. Defaults to 50.
 
-## <a id="windows-plugins"></a> Windows Plugins for Icinga 2
+
+
+## Windows Plugins for Icinga 2 <a id="windows-plugins"></a>
 
 To allow a basic monitoring of Windows clients Icinga 2 comes with a set of Windows only plugins. While trying to mirror the functionalities of their linux cousins from the monitoring-plugins package, the differences between Windows and Linux are too big to be able use the same CheckCommands for both systems.
 
-A check-commands-windows.conf comes with Icinga 2, it asumes that the Windows Plugins are installed in the PluginDir set in your constants.conf. To enable them the following include directive is needed in you icinga2.conf:
+A check-commands-windows.conf comes with Icinga 2, it assumes that the Windows Plugins are installed in the PluginDir set in your constants.conf. To enable them the following include directive is needed in you icinga2.conf:
 
 	include <windows-plugins>
 
 One of the differences between the Windows plugins and their linux counterparts is that they consistently do not require thresholds to run, functioning like dummies without.
 
 
-### <a id="windows-plugins-thresholds"></a> Threshold syntax
+### Threshold syntax <a id="windows-plugins-thresholds"></a>
 
 So not specified differently the thresholds for the plugins all follow the same pattern
 
@@ -1385,26 +1491,33 @@ Threshold    | Meaning
 :------------|:----------
 "29"         | The threshold is 29.
 "!29"        | The threshold is 29, but the negative of the result is returned.
-"[10-40]"    | The threshold is a range from (including) 20 to 40, a value inside means the threshold has been exceeded.
+"[10-40]"    | The threshold is a range from (including) 10 to 40, a value inside means the threshold has been exceeded.
 "![10-40]"   | Same as above, but the result is inverted.
 
 
-### <a id="windows-plugins-disk-windows"></a> disk-windows
+### disk-windows <a id="windows-plugins-disk-windows"></a>
 
 Check command object for the `check_disk.exe` plugin.
-Aggregates the free disk space of all volumes and mount points it can find, or the ones defined in `disk_win_path`. Ignores removable storage like fash drives and discs (CD, DVD etc.).
+Aggregates the disk space of all volumes and mount points it can find, or the ones defined in `disk_win_path`. Ignores removable storage like flash drives and discs (CD, DVD etc.).
+The data collection is instant and free disk space (default, see `disk_win_show_used`) is used for threshold computation.
+
+> **Note**
+>
+> Percentage based thresholds can be used by adding a '%' to the threshold
+> value.
 
 Custom attributes:
 
-Name                | Description
-:-------------------|:------------
-disk\_win\_warn     | **Optional**. The warning threshold.
-disk\_win\_crit     | **Optional**. The critical threshold.
-disk\_win\_path     | **Optional**. Check only these paths, default checks all.
-disk\_win\_unit     | **Optional**. Use this unit to display disk space, thresholds are interpreted in this unit. Defaults to "mb", possible values are: b, kb, mb, gb and tb.
-disk\_win\_exclude  | **Optional**. Exclude these drives from check.
+Name                  | Description
+:---------------------|:------------
+disk\_win\_warn       | **Optional**. The warning threshold. Defaults to "20%".
+disk\_win\_crit       | **Optional**. The critical threshold. Defaults to "10%".
+disk\_win\_path       | **Optional**. Check only these paths, default checks all.
+disk\_win\_unit       | **Optional**. Use this unit to display disk space, thresholds are interpreted in this unit. Defaults to "mb", possible values are: b, kb, mb, gb and tb.
+disk\_win\_exclude    | **Optional**. Exclude these drives from check.
+disk\_win\_show\_used | **Optional**. Use used instead of free space.
 
-### <a id="windows-plugins-load-windows"></a> load-windows
+### load-windows <a id="windows-plugins-load-windows"></a>
 
 Check command object for the `check_load.exe` plugin.
 This plugin collects the inverse of the performance counter `\Processor(_Total)\% Idle Time` two times, with a wait time of one second between the collection. To change this wait time use [`perfmon-windows`](10-icinga-template-library.md#windows-plugins-load-windows).
@@ -1417,10 +1530,10 @@ load\_win\_warn | **Optional**. The warning threshold.
 load\_win\_crit | **Optional**. The critical threshold.
 
 
-### <a id="windows-plugins-memory-windows"></a> memory-windows
+### memory-windows <a id="windows-plugins-memory-windows"></a>
 
 Check command object for the `check_memory.exe` plugin.
-The memory collection is instant.
+The memory collection is instant and free memory is used for threshold computation.
 
 > **Note**
 >
@@ -1432,30 +1545,32 @@ Custom attributes:
 
 Name              | Description
 :-----------------|:------------
-memory\_win\_warn | **Optional**. The warning threshold.
-memory\_win\_crit | **Optional**. The critical threshold.
-memory\_win\_unit | **Optional**. The unit to display the received value in, thresholds are interpreted in this unit. Defaults to "mb" (megabye), possible values are: b, kb, mb, gb and tb.
+memory\_win\_warn | **Optional**. The warning threshold. Defaults to "10%".
+memory\_win\_crit | **Optional**. The critical threshold. Defaults to "5%".
+memory\_win\_unit | **Optional**. The unit to display the received value in, thresholds are interpreted in this unit. Defaults to "mb" (megabyte), possible values are: b, kb, mb, gb and tb.
+memory\_win\_show\_used | **Optional**. Show used memory instead of the free memory.
 
 
-### <a id="windows-plugins-network-windows"></a> network-windows
+### network-windows <a id="windows-plugins-network-windows"></a>
 
 Check command object for the `check_network.exe` plugin.
-Collects the total Bytes inbount and outbound for all interfaces in one second, to itemise interfaces or use a different collection interval use [`perfmon-windows`](10-icinga-template-library.md#windows-plugins-load-windows).
+Collects the total Bytes inbound and outbound for all interfaces in one second, to itemise interfaces or use a different collection interval use [`perfmon-windows`](10-icinga-template-library.md#windows-plugins-load-windows).
 
 Custom attributes:
 
-Name               | Description
-:------------------|:------------
-network\_win\_warn | **Optional**. The warning threshold.
-network\_win\_crit | **Optional**. The critical threshold.
+Name                | Description
+:-------------------|:------------
+network\_win\_warn  | **Optional**. The warning threshold.
+network\_win\_crit  | **Optional**. The critical threshold.
+network\_no\_isatap | **Optional**. Do not print ISATAP interfaces.
 
 
-### <a id="windows-plugins-permon-windows"></a> perfmon-windows
+### perfmon-windows <a id="windows-plugins-perfmon-windows"></a>
 
 Check command object for the `check_perfmon.exe` plugin.
 This plugins allows to collect data from a Performance Counter. After the first data collection a second one is done after `perfmon_win_wait` milliseconds. When you know `perfmon_win_counter` only requires one set of data to provide valid data you can set `perfmon_win_wait` to `0`.
 
-To recieve a list of possible Performance Counter Objects run `check_perfmon.exe --print-objects` and to view an objects instances and counters run `check_perfmon.exe --print-object-info -P "name of object"`
+To receive a list of possible Performance Counter Objects run `check_perfmon.exe --print-objects` and to view an objects instances and counters run `check_perfmon.exe --print-object-info -P "name of object"`
 
 Custom attributes:
 
@@ -1465,13 +1580,14 @@ perfmon\_win\_warn    | **Optional**. The warning threshold.
 perfmon\_win\_crit    | **Optional**. The critical threshold.
 perfmon\_win\_counter | **Required**. The Performance Counter to use. Ex. `\Processor(_Total)\% Idle Time`.
 perfmon\_win\_wait    | **Optional**. Time in milliseconds to wait between data collection (default: 1000).
-perfmon\_win\_type    | **Optional**. Format in which to expect perfomance values. Possible are: long, int64 and double (default).
+perfmon\_win\_type    | **Optional**. Format in which to expect performance values. Possible are: long, int64 and double (default).
+perfmon\_win\_syntax  | **Optional**. Use this in the performance output instead of `perfmon\_win\_counter`. Exists for graphics compatibility reasons.
 
 
-### <a id="windows-plugins-ping-windows"></a> ping-windows
+### ping-windows <a id="windows-plugins-ping-windows"></a>
 
 Check command object for the `check_ping.exe` plugin.
-ping-windows should automaticly detect whether `ping_win_address` is an IPv4 or IPv6 address. If not, use ping4-windows and ping6-windows. Also note that check\_ping.exe waits at least `ping_win_timeout` milliseconds between the pings.
+ping-windows should automatically detect whether `ping_win_address` is an IPv4 or IPv6 address. If not, use ping4-windows and ping6-windows. Also note that check\_ping.exe waits at least `ping_win_timeout` milliseconds between the pings.
 
 Custom attributes:
 
@@ -1479,15 +1595,15 @@ Name               | Description
 :------------------|:------------
 ping\_win\_warn    | **Optional**. The warning threshold. RTA and package loss separated by comma.
 ping\_win\_crit    | **Optional**. The critical threshold. RTA and package loss separated by comma.
-ping\_win\_address | **Required**. An IPv4 or IPv6 address
+ping\_win\_address | **Required**. An IPv4 or IPv6 address.
 ping\_win\_packets | **Optional**. Number of packages to send. Default: 5.
 ping\_win\_timeout | **Optional**. The timeout in milliseconds. Default: 1000
 
 
-### <a id="windows-plugins-procs-windows"></a> procs-windows
+### procs-windows <a id="windows-plugins-procs-windows"></a>
 
 Check command object for `check_procs.exe` plugin.
-When useing `procs_win_user` this plugins needs adminstratice privileges to access the processes of other users, to just enumerate them no additional privileges are required.
+When using `procs_win_user` this plugins needs administrative privileges to access the processes of other users, to just enumerate them no additional privileges are required.
 
 Custom attributes:
 
@@ -1495,37 +1611,38 @@ Name             | Description
 :----------------|:------------
 procs\_win\_warn | **Optional**. The warning threshold.
 procs\_win\_crit | **Optional**. The critical threshold.
-procs\_win\_user | **Optional**. Count this useres processes.
+procs\_win\_user | **Optional**. Count this users processes.
 
 
-### <a id="windows-plugins-service-windows"></a> service-windows
+### service-windows <a id="windows-plugins-service-windows"></a>
 
 Check command object for `check_service.exe` plugin.
 This checks thresholds work different since the binary decision whether a service is running or not does not allow for three states. As a default `check_service.exe` will return CRITICAL when `service_win_service` is not running, the `service_win_warn` flag changes this to WARNING.
 
 Custom attributes:
 
-Name                  | Description
-:---------------------|:------------
-service\_win\_warn    | **Optional**. Warn when service is not running.
-service\_win\_service | **Required**. The critical threshold.
+Name                      | Description
+:-------------------------|:------------
+service\_win\_warn        | **Optional**. Warn when service is not running.
+service\_win\_description | **Optional**. If this is set, `service\_win\_service` looks at the service description.
+service\_win\_service     | **Required**. Name of the service to check.
 
 
-### <a id="windows-plugins-swap-windows"></a> swap-windows
+### swap-windows <a id="windows-plugins-swap-windows"></a>
 
 Check command object for `check_swap.exe` plugin.
 The data collection is instant.
 
 Custom attributes:
 
-Name            | Description
-:---------------|:------------
-swap\_win\_warn | **Optional**. The warning threshold.
-swap\_win\_crit | **Optional**. The critical threshold.
-swap\_win\_unit | **Optional**. The unit to display the received value in, thresholds are interpreted in this unit. Defaults to "mb" (megabyte).
+Name             | Description
+:--------------- | :------------
+swap\_win\_warn  | **Optional**. The warning threshold. Defaults to "10%".
+swap\_win\_crit  | **Optional**. The critical threshold. Defaults to "5%".
+swap\_win\_unit  | **Optional**. The unit to display the received value in, thresholds are interpreted in this unit. Defaults to "mb" (megabyte).
+swap\_win\_show\_used | **Optional**. Show used swap instead of the free swap.
 
-
-### <a id="windows-plugins-update-windows"></a> update-windows
+### update-windows <a id="windows-plugins-update-windows"></a>
 
 Check command object for `check_update.exe` plugin.
 Querying Microsoft for Windows updates can take multiple seconds to minutes. An update is treated as important when it has the WSUS flag for SecurityUpdates or CriticalUpdates.
@@ -1539,14 +1656,24 @@ Custom attributes:
 
 Name                | Description
 :-------------------|:------------
-update\_win\_warn   | If set, returns warning when important updates are available
-update\_win\_crit   | If set, return critical when important updates that require a reboot are available.
-update\_win\_reboot | Set to treat 'may need update' as 'definitely needs update'
+update\_win\_warn   | **Optional**. If set, returns warning when important updates are available.
+update\_win\_crit   | **Optional**. If set, return critical when important updates that require a reboot are available.
+update\_win\_reboot | **Optional**. Set to treat 'may need update' as 'definitely needs update'. Please Note that this is true for almost every update and is therefore not recommended.
 
 
-### <a id="windows-plugins-uptime-windows"></a> uptime-windows
+In contrast to most other plugins, the values of check_update's custom attributes do not set thresholds, but just enable/disable the behavior described in the table above.  
+It can be enabled/disabled for example by setting them to "true" or "false", "1" or "0" would also work.  
+Thresholds will always be "1".
 
-Check command opject for `check_uptime.exe` plugin.
+> **Note**
+>
+> If they are enabled, performance data will be shown in the web interface.
+> If run without the optional parameters, the plugin will output critical if any important updates are available.
+
+
+### uptime-windows <a id="windows-plugins-uptime-windows"></a>
+
+Check command object for `check_uptime.exe` plugin.
 Uses GetTickCount64 to get the uptime, so boot time is not included.
 
 Custom attributes:
@@ -1558,7 +1685,7 @@ uptime\_win\_crit | **Optional**. The critical threshold.
 uptime\_win\_unit | **Optional**. The unit to display the received value in, thresholds are interpreted in this unit. Defaults to "s"(seconds), possible values are ms (milliseconds), s, m (minutes), h (hours).
 
 
-### <a id="windows-plugins-users-windows"></a> users-windows
+### users-windows <a id="windows-plugins-users-windows"></a>
 
 Check command object for `check_users.exe` plugin.
 
@@ -1570,17 +1697,75 @@ users\_win\_warn | **Optional**. The warning threshold.
 users\_win\_crit | **Optional**. The critical threshold.
 
 
-## <a id="nscp-plugin-check-commands"></a> Plugin Check Commands for NSClient++
+## Plugin Check Commands for NSClient++ <a id="nscp-plugin-check-commands"></a>
 
-Icinga 2 can use the `nscp client` command to run arbitrary NSClient++ checks.
+There are two methods available for querying NSClient++:
+
+* Query the [HTTP API](06-distributed-monitoring.md#distributed-monitoring-windows-nscp-check-api) locally from an Icinga 2 client (requires a running NSClient++ service)
+* Run a [local CLI check](10-icinga-template-library.md#nscp-check-local) (does not require NSClient++ as a service)
+
+Both methods have their advantages and disadvantages. One thing to
+note: If you rely on performance counter delta calculations such as
+CPU utilization, please use the HTTP API instead of the CLI sample call.
+
+For security reasons, it is advised to enable the NSClient++ HTTP API for local
+connection from the Icinga 2 client only. Remote connections to the HTTP API
+are not recommended with using the legacy HTTP API.
+
+### nscp_api <a id="nscp-check-api"></a>
+
+`check_nscp_api` is part of the Icinga 2 plugins. This plugin is available for
+both, Windows and Linux/Unix.
+
+Verify that the ITL CheckCommand is included in the [icinga2.conf](04-configuring-icinga-2.md#icinga2-conf) configuration file:
+
+    vim /etc/icinga2/icinga2.conf
+
+    include <plugins>
+
+`check_nscp_api` runs queries against the NSClient++ API. Therefore NSClient++ needs to have
+the `webserver` module enabled, configured and loaded.
+
+You can install the webserver using the following CLI commands:
+
+    ./nscp.exe web install
+    ./nscp.exe web password — –set icinga
+
+Now you can define specific [queries](https://docs.nsclient.org/reference/check/CheckHelpers.html#queries)
+and integrate them into Icinga 2.
+
+The check plugin `check_nscp_api` can be integrated with the `nscp_api` CheckCommand object:
+
+Custom attributes:
+
+Name                   | Description
+:----------------------|:----------------------
+nscp\_api\_host       | **Required**. NSCP API host address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
+nscp\_api\_port       | **Optional**. NSCP API port. Defaults to `8443`.
+nscp\_api\_password   | **Required**. NSCP API password. Please check the NSCP documentation for setup details.
+nscp\_api\_query      | **Required**. NSCP API query endpoint. Refer to the NSCP documentation for possible values.
+nscp\_api\_arguments  | **Optional**. NSCP API arguments dictionary either as single strings or key-value pairs using `=`. Refer to the NSCP documentation.
+
+`nscp_api_arguments` can be used to pass required thresholds to the executed check. The example below
+checks the CPU utilization and specifies warning and critical thresholds.
+
+```
+check_nscp_api --host 10.0.10.148 --password icinga --query check_cpu --arguments show-all warning='load>40' critical='load>30'
+check_cpu CRITICAL: critical(5m: 48%, 1m: 36%), 5s: 0% | 'total 5m'=48%;40;30 'total 1m'=36%;40;30 'total 5s'=0%;40;30
+```
+
+
+### nscp-local <a id="nscp-check-local"></a>
+
+Icinga 2 can use the `nscp client` command to run arbitrary NSClient++ checks locally on the client.
 
 You can enable these check commands by adding the following the include directive in your
-[icinga2.conf](4-configuring-icinga-2.md#icinga2-conf) configuration file:
+[icinga2.conf](04-configuring-icinga-2.md#icinga2-conf) configuration file:
 
     include <nscp>
 
 You can also optionally specify an alternative installation directory for NSClient++ by adding
-the NscpPath constant in your [constants.conf](4-configuring-icinga-2.md#constants-conf) configuration
+the NscpPath constant in your [constants.conf](04-configuring-icinga-2.md#constants-conf) configuration
 file:
 
     const NscpPath = "C:\\Program Files (x86)\\NSClient++"
@@ -1590,34 +1775,39 @@ not be necessary to manually set this constant.
 
 Note that it is not necessary to run NSClient++ as a Windows service for these commands to work.
 
-### <a id="nscp-check-local"></a> nscp-local
+The check command object for NSClient++ is available as `nscp-local`.
 
-Check command object for NSClient++
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------
 nscp_log_level  | **Optional.** The log level. Defaults to "critical".
-nscp_load_all   | **Optional.** Whether to load all modules. Defaults to true.
+nscp_load_all   | **Optional.** Whether to load all modules. Defaults to false.
+nscp_modules    | **Optional.** An array of NSClient++ modules to load. Defaults to `[ "CheckSystem" ]`.
 nscp_boot       | **Optional.** Whether to use the --boot option. Defaults to true.
 nscp_query      | **Required.** The NSClient++ query. Try `nscp client -q x` for a list.
 nscp_arguments  | **Optional.** An array of query arguments.
 nscp_showall	| **Optional.** Shows more details in plugin output, default to false.
 
-### <a id="nscp-check-local-cpu"></a> nscp-local-cpu
+> **Tip**
+>
+> In order to measure CPU load, you'll need a running NSClient++ service.
+> Therefore it is advised to use a local [nscp-api](06-distributed-monitoring.md#distributed-monitoring-windows-nscp-check-api)
+> check against its REST API.
+
+### nscp-local-cpu <a id="nscp-check-local-cpu"></a>
 
 Check command object for the `check_cpu` NSClient++ plugin.
 
 Name                | Description
 --------------------|------------------
-nscp_cpu_time       | **Optional.** Calculate avarage usage for the given time intervals. Value has to be an array, default to [ "1m", "5m", "15m" ].
+nscp_cpu_time       | **Optional.** Calculate average usage for the given time intervals. Value has to be an array, default to [ "1m", "5m", "15m" ].
 nscp_cpu_warning    | **Optional.** Threshold for WARNING state in percent, default to 80.
 nscp_cpu_critical   | **Optional.** Threshold for CRITICAL state in percent, default to 90.
 nscp_cpu_arguments  | **Optional.** Additional arguments.
 nscp_cpu_showall    | **Optional.** Shows more details in plugin output, default to false.
 
-### <a id="nscp-check-local-memory"></a> nscp-local-memory
+### nscp-local-memory <a id="nscp-check-local-memory"></a>
 
 Check command object for the `check_memory` NSClient++ plugin.
 
@@ -1626,30 +1816,30 @@ Name                  | Description
 nscp_memory_committed | **Optional.** Check for committed memory, default to false.
 nscp_memory_physical  | **Optional.** Check for physical memory, default to true.
 nscp_memory_free      | **Optional.** Switch between checking free (true) or used memory (false), default to false.
-nscp_memory_warning   | **Optional.** Threshold for WARNING state in percent or absolut (use MB, GB, ...), default to 80 (free=false) or 20 (free=true).
-nscp_memory_critical  | **Optional.** Threshold for CRITICAL state in percent or absolut (use MB, GB, ...), default to 90 (free=false) or 10 (free=true).
+nscp_memory_warning   | **Optional.** Threshold for WARNING state in percent or absolute (use MB, GB, ...), default to 80 (free=false) or 20 (free=true).
+nscp_memory_critical  | **Optional.** Threshold for CRITICAL state in percent or absolute (use MB, GB, ...), default to 90 (free=false) or 10 (free=true).
 nscp_memory_arguments | **Optional.** Additional arguments.
 nscp_memory_showall   | **Optional.** Shows more details in plugin output, default to false.
 
-### <a id="nscp-check-local-os-version"></a> nscp-local-os-version
+### nscp-local-os-version <a id="nscp-check-local-os-version"></a>
 
 Check command object for the `check_os_version` NSClient++ plugin.
 
 This command has the same custom attributes like the `nscp-local` check command.
 
-### <a id="nscp-check-local-pagefile"></a> nscp-local-pagefile
+### nscp-local-pagefile <a id="nscp-check-local-pagefile"></a>
 
 Check command object for the `check_pagefile` NSClient++ plugin.
 
 This command has the same custom attributes like the `nscp-local` check command.
 
-### <a id="nscp-check-local-process"></a> nscp-local-process
+### nscp-local-process <a id="nscp-check-local-process"></a>
 
 Check command object for the `check_process` NSClient++ plugin.
 
 This command has the same custom attributes like the `nscp-local` check command.
 
-### <a id="nscp-check-local-service"></a> nscp-local-service
+### nscp-local-service <a id="nscp-check-local-service"></a>
 
 Check command object for the `check_service` NSClient++ plugin.
 
@@ -1666,19 +1856,20 @@ nscp_service_ctype     | **Optional.** Dedicate type for nscp_service_critical, 
 nscp_service_arguments | **Optional.** Additional arguments.
 nscp_service_showall   | **Optional.** Shows more details in plugin output, default to true.
 
-### <a id="nscp-check-local-uptime"></a> nscp-local-uptime
+### nscp-local-uptime <a id="nscp-check-local-uptime"></a>
 
 Check command object for the `check_uptime` NSClient++ plugin.
 
 This command has the same custom attributes like the `nscp-local` check command.
 
-### <a id="nscp-check-local-version"></a> nscp-local-version
+### nscp-local-version <a id="nscp-check-local-version"></a>
 
 Check command object for the `check_version` NSClient++ plugin.
 
 This command has the same custom attributes like the `nscp-local` check command.
+In addition to that the default value for `nscp_modules` is set to `[ "CheckHelpers" ]`.
 
-### <a id="nscp-check-local-disk"></a> nscp-local-disk
+### nscp-local-disk <a id="nscp-check-local-disk"></a>
 
 Check command object for the `check_drivesize` NSClient++ plugin.
 
@@ -1686,12 +1877,13 @@ Name                   | Description
 -----------------------|------------------
 nscp_disk_drive        | **Optional.** Drive character, default to all drives.
 nscp_disk_free         | **Optional.** Switch between checking free space (free=true) or used space (free=false), default to false.
-nscp_disk_warning      | **Optional.** Threshold for WARNING in percent or absolut (use MB, GB, ...), default to 80 (used) or 20 percent (free).
-nscp_disk_critical     | **Optional.** Threshold for CRITICAL in percent or absolut (use MB, GB, ...), default to 90 (used) or 10 percent (free).
+nscp_disk_warning      | **Optional.** Threshold for WARNING in percent or absolute (use MB, GB, ...), default to 80 (used) or 20 percent (free).
+nscp_disk_critical     | **Optional.** Threshold for CRITICAL in percent or absolute (use MB, GB, ...), default to 90 (used) or 10 percent (free).
 nscp_disk_arguments    | **Optional.** Additional arguments.
 nscp_disk_showall      | **Optional.** Shows more details in plugin output, default to true.
+nscp_modules           | **Optional.** An array of NSClient++ modules to load. Defaults to `[ "CheckDisk" ]`.
 
-### <a id="nscp-check-local-counter"></a> nscp-local-counter
+### nscp-local-counter <a id="nscp-check-local-counter"></a>
 
 Check command object for the `check_pdh` NSClient++ plugin.
 
@@ -1704,9 +1896,28 @@ nscp_counter_arguments | **Optional.** Additional arguments.
 nscp_counter_showall   | **Optional.** Shows more details in plugin output, default to false.
 nscp_counter_perfsyntax | **Optional.** Apply performance data label, e.g. `Total Processor Time` to avoid special character problems. Defaults to `nscp_counter_name`.
 
+### nscp-local-tasksched <a id="nscp-check-local-tasksched"></a>
+
+Check Command object for the `check_tasksched` NSClient++ plugin.
+You can check for a single task or for a complete folder (and sub folders) of tasks.
+
+Name                   | Description
+-----------------------|------------------
+nscp_tasksched_name         | **Optional.** Name of the task to check.
+nscp_tasksched_folder       | **Optional.** The folder in which the tasks to check reside.
+nscp_tasksched_recursive    | **Optional.** Recurse sub folder, defaults to true.
+nscp_tasksched_hidden       | **Optional.** Look for hidden tasks, defaults to false.
+nscp_tasksched_warning      | **Optional.** Filter which marks items which generates a warning state, defaults to `exit_code != 0`.
+nscp_tasksched_critical     | **Optional.** Filter which marks items which generates a critical state, defaults to `exit_code < 0`.
+nscp_tasksched_emptystate   | **Optional.** Return status to use when nothing matched filter, defaults to warning.
+nscp_tasksched_perfsyntax   | **Optional.** Performance alias syntax., defaults to `%(title)`
+nscp_tasksched_detailsyntax | **Optional.** Detail level syntax, defaults to `%(folder)/%(title): %(exit_code) != 0`
+nscp_tasksched_arguments    | **Optional.** Additional arguments.
+nscp_tasksched_showall      | **Optional.** Shows more details in plugin output, default to false.
+nscp_modules                | **Optional.** An array of NSClient++ modules to load. Defaults to `[ "CheckTaskSched" ]`.
 
 
-## <a id="snmp-manubulon-plugin-check-commands"></a> Plugin Check Commands for Manubulon SNMP
+## Plugin Check Commands for Manubulon SNMP <a id="snmp-manubulon-plugin-check-commands"></a>
 
 The `SNMP Manubulon Plugin Check Commands` provide configuration for plugin check
 commands provided by the [SNMP Manubulon project](http://nagios.manubulon.com/index_snmp.html).
@@ -1718,7 +1929,7 @@ The SNMP manubulon plugin check commands assume that the global constant named `
 is set to the path where the Manubublon SNMP plugins are installed.
 
 You can enable these plugin check commands by adding the following the include directive in your
-[icinga2.conf](4-configuring-icinga-2.md#icinga2-conf) configuration file:
+[icinga2.conf](04-configuring-icinga-2.md#icinga2-conf) configuration file:
 
     include <manubulon>
 
@@ -1750,17 +1961,17 @@ You can enable these plugin check commands by adding the following the include d
   Cisco CSS               |   Yes      |   ??     |   Yes     | Yes |   No     | ??  | check_snmp_css.pl
 
 
-### <a id="plugin-check-command-snmp-load"></a> snmp-load
+### snmp-env <a id="plugin-check-command-snmp-env"></a>
 
-Check command object for the [check_snmp_load.pl](http://nagios.manubulon.com/snmp_load.html) plugin.
+Check command object for the [check_snmp_env.pl](http://nagios.manubulon.com/snmp_env.html) plugin.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 
 Name                    | Description
 ------------------------|--------------
 snmp_address            | **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
-snmp_nocrypt            | **Optional.** Define SNMP encryption. If set, **snmp_v3** needs to be set. Defaults to false.
+snmp_nocrypt            | **Optional.** Define SNMP encryption. If set to `false`, `snmp_v3` needs to be enabled. Defaults to `true` (no encryption).
 snmp_community          | **Optional.** The SNMP community. Defaults to "public".
 snmp_port               | **Optional.** The SNMP port connection.
 snmp_v2                 | **Optional.** SNMP version to 2c. Defaults to false.
@@ -1768,6 +1979,34 @@ snmp_v3                 | **Optional.** SNMP version to 3. Defaults to false.
 snmp_login              | **Optional.** SNMP version 3 username. Defaults to "snmpuser".
 snmp_password           | **Required.** SNMP version 3 password. No value defined as default.
 snmp_v3_use_privpass    | **Optional.** Define to use SNMP version 3 priv password. Defaults to false.
+snmp_v3_use_authprotocol| **Optional.** Define to use SNMP version 3 authentication protocol. Defaults to false.
+snmp_authprotocol       | **Optional.** SNMP version 3 authentication protocol. Defaults to "md5,des".
+snmp_privpass           | **Required.** SNMP version 3 priv password. No value defined as default.
+snmp_env_type           | **Optional.** Environment Type [cisco|nokia|bc|iron|foundry|linux]. Defaults to "cisco".
+snmp_env_fan            | **Optional.** Minimum fan rpm value (only needed for 'iron' & 'linux')
+snmp_env_celsius        | **Optional.** Maximum temp in degrees celsius (only needed for 'iron' & 'linux')
+snmp_perf               | **Optional.** Enable perfdata values. Defaults to true.
+snmp_timeout            | **Optional.** The command timeout in seconds. Defaults to 5 seconds.
+
+### snmp-load <a id="plugin-check-command-snmp-load"></a>
+
+Check command object for the [check_snmp_load.pl](http://nagios.manubulon.com/snmp_load.html) plugin.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+
+Name                    | Description
+------------------------|--------------
+snmp_address            | **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
+snmp_nocrypt            | **Optional.** Define SNMP encryption. If set to `false`, `snmp_v3` needs to be enabled. Defaults to `true` (no encryption).
+snmp_community          | **Optional.** The SNMP community. Defaults to "public".
+snmp_port               | **Optional.** The SNMP port connection.
+snmp_v2                 | **Optional.** SNMP version to 2c. Defaults to false.
+snmp_v3                 | **Optional.** SNMP version to 3. Defaults to false.
+snmp_login              | **Optional.** SNMP version 3 username. Defaults to "snmpuser".
+snmp_password           | **Required.** SNMP version 3 password. No value defined as default.
+snmp_v3_use_privpass    | **Optional.** Define to use SNMP version 3 priv password. Defaults to false.
+snmp_v3_use_authprotocol| **Optional.** Define to use SNMP version 3 authentication protocol. Defaults to false.
 snmp_authprotocol       | **Optional.** SNMP version 3 authentication protocol. Defaults to "md5,des".
 snmp_privpass           | **Required.** SNMP version 3 priv password. No value defined as default.
 snmp_warn               | **Optional.** The warning threshold. Change the `snmp_load_type` var to "netsl" for using 3 values.
@@ -1776,16 +2015,16 @@ snmp_load_type          | **Optional.** Load type. Defaults to "stand". Check al
 snmp_perf               | **Optional.** Enable perfdata values. Defaults to true.
 snmp_timeout            | **Optional.** The command timeout in seconds. Defaults to 5 seconds.
 
-### <a id="plugin-check-command-snmp-memory"></a> snmp-memory
+### snmp-memory <a id="plugin-check-command-snmp-memory"></a>
 
 Check command object for the [check_snmp_mem.pl](http://nagios.manubulon.com/snmp_mem.html) plugin.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                    | Description
 ------------------------|--------------
 snmp_address            | **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
-snmp_nocrypt            | **Optional.** Define SNMP encryption. If set, **snmp_v3** needs to be set. Defaults to false.
+snmp_nocrypt            | **Optional.** Define SNMP encryption. If set to `false`, `snmp_v3` needs to be enabled. Defaults to `true` (no encryption).
 snmp_community          | **Optional.** The SNMP community. Defaults to "public".
 snmp_port               | **Optional.** The SNMP port connection.
 snmp_v2                 | **Optional.** SNMP version to 2c. Defaults to false.
@@ -1793,24 +2032,28 @@ snmp_v3                 | **Optional.** SNMP version to 3. Defaults to false.
 snmp_login              | **Optional.** SNMP version 3 username. Defaults to "snmpuser".
 snmp_password           | **Required.** SNMP version 3 password. No value defined as default.
 snmp_v3_use_privpass    | **Optional.** Define to use SNMP version 3 priv password. Defaults to false.
+snmp_v3_use_authprotocol| **Optional.** Define to use SNMP version 3 authentication protocol. Defaults to false.
 snmp_authprotocol       | **Optional.** SNMP version 3 authentication protocol. Defaults to "md5,des".
 snmp_privpass           | **Required.** SNMP version 3 priv password. No value defined as default.
 snmp_warn               | **Optional.** The warning threshold.
 snmp_crit               | **Optional.** The critical threshold.
 snmp_is_cisco		| **Optional.** Change OIDs for Cisco switches. Defaults to false.
+snmp_is_hp              | **Optional.** Change OIDs for HP/Procurve switches. Defaults to false.
 snmp_perf               | **Optional.** Enable perfdata values. Defaults to true.
+snmp_memcached          | **Optional.** Include cached memory in used memory, Defaults to false.
+snmp_membuffer          | **Optional.** Exclude buffered memory in used memory, Defaults to false.
 snmp_timeout            | **Optional.** The command timeout in seconds. Defaults to 5 seconds.
 
-### <a id="plugin-check-command-snmp-storage"></a> snmp-storage
+### snmp-storage <a id="plugin-check-command-snmp-storage"></a>
 
 Check command object for the [check_snmp_storage.pl](http://nagios.manubulon.com/snmp_storage.html) plugin.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                    | Description
 ------------------------|--------------
 snmp_address            | **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
-snmp_nocrypt            | **Optional.** Define SNMP encryption. If set, **snmp_v3** needs to be set. Defaults to false.
+snmp_nocrypt            | **Optional.** Define SNMP encryption. If set to `false`, `snmp_v3` needs to be enabled. Defaults to `true` (no encryption).
 snmp_community          | **Optional.** The SNMP community. Defaults to "public".
 snmp_port               | **Optional.** The SNMP port connection.
 snmp_v2                 | **Optional.** SNMP version to 2c. Defaults to false.
@@ -1818,6 +2061,7 @@ snmp_v3                 | **Optional.** SNMP version to 3. Defaults to false.
 snmp_login              | **Optional.** SNMP version 3 username. Defaults to "snmpuser".
 snmp_password           | **Required.** SNMP version 3 password. No value defined as default.
 snmp_v3_use_privpass    | **Optional.** Define to use SNMP version 3 priv password. Defaults to false.
+snmp_v3_use_authprotocol| **Optional.** Define to use SNMP version 3 authentication protocol. Defaults to false.
 snmp_authprotocol       | **Optional.** SNMP version 3 authentication protocol. Defaults to "md5,des".
 snmp_privpass           | **Required.** SNMP version 3 priv password. No value defined as default.
 snmp_warn               | **Optional.** The warning threshold.
@@ -1825,17 +2069,18 @@ snmp_crit               | **Optional.** The critical threshold.
 snmp_storage_name       | **Optional.** Storage name. Default to regex "^/$$". More options available in the [snmp storage](http://nagios.manubulon.com/snmp_storage.html) documentation.
 snmp_perf               | **Optional.** Enable perfdata values. Defaults to true.
 snmp_timeout            | **Optional.** The command timeout in seconds. Defaults to 5 seconds.
+snmp_storage_olength	| **Optional.** Max-size of the SNMP message, usefull in case of Too Long responses.
 
-### <a id="plugin-check-command-snmp-interface"></a> snmp-interface
+### snmp-interface <a id="plugin-check-command-snmp-interface"></a>
 
 Check command object for the [check_snmp_int.pl](http://nagios.manubulon.com/snmp_int.html) plugin.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                        | Description
 ----------------------------|--------------
 snmp_address                | **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
-snmp_nocrypt                | **Optional.** Define SNMP encryption. If set, **snmp_v3** needs to be set. Defaults to false.
+snmp_nocrypt                | **Optional.** Define SNMP encryption. If set to `false`, `snmp_v3` needs to be enabled. Defaults to `true` (no encryption).
 snmp_community              | **Optional.** The SNMP community. Defaults to "public".
 snmp_port                   | **Optional.** The SNMP port connection.
 snmp_v2                     | **Optional.** SNMP version to 2c. Defaults to false.
@@ -1843,12 +2088,14 @@ snmp_v3                     | **Optional.** SNMP version to 3. Defaults to false
 snmp_login                  | **Optional.** SNMP version 3 username. Defaults to "snmpuser".
 snmp_password               | **Required.** SNMP version 3 password. No value defined as default.
 snmp_v3_use_privpass        | **Optional.** Define to use SNMP version 3 priv password. Defaults to false.
+snmp_v3_use_authprotocol    | **Optional.** Define to use SNMP version 3 authentication protocol. Defaults to false.
 snmp_authprotocol           | **Optional.** SNMP version 3 authentication protocol. Defaults to "md5,des".
 snmp_privpass               | **Required.** SNMP version 3 priv password. No value defined as default.
 snmp_warn                   | **Optional.** The warning threshold.
 snmp_crit                   | **Optional.** The critical threshold.
 snmp_interface              | **Optional.** Network interface name. Default to regex "eth0".
-snmp_interface_perf         | **Optional.** Check the input/ouput bandwidth of the interface. Defaults to true.
+snmp_interface_inverse      | **Optional.** Inverse Interface check, down is ok. Defaults to false as it is missing.
+snmp_interface_perf         | **Optional.** Check the input/output bandwidth of the interface. Defaults to true.
 snmp_interface_label        | **Optional.** Add label before speed in output: in=, out=, errors-out=, etc.
 snmp_interface_bits_bytes   | **Optional.** Output performance data in bits/s or Bytes/s. **Depends** on snmp_interface_kbits set to true. Defaults to true.
 snmp_interface_percent      | **Optional.** Output performance data in % of max speed. Defaults to false.
@@ -1859,63 +2106,126 @@ snmp_interface_errors       | **Optional.** Add error & discard to Perfparse out
 snmp_interface_noregexp     | **Optional.** Do not use regexp to match interface name in description OID. Defaults to false.
 snmp_interface_delta        | **Optional.** Delta time of perfcheck. Defaults to "300" (5 min).
 snmp_interface_warncrit_percent | **Optional.** Make the warning and critical levels in % of reported interface speed. If set, **snmp_interface_megabytes** needs to be set to false. Defaults to false.
-snmp_interface_ifname       | **Optional.** Switch from IF-MIB::ifDescr to IF-MIB::ifName when looking up the interface's name
+snmp_interface_ifname       | **Optional.** Switch from IF-MIB::ifDescr to IF-MIB::ifName when looking up the interface's name.
+snmp_interface_ifalias      | **Optional.** Switch from IF-MIB::ifDescr to IF-MIB::ifAlias when looking up the interface's name.
+snmp_interface_weathermap   | **Optional.** Output data for ["weathermap" lines](http://docs.nagvis.org/1.9/en_US/lines_weathermap_style.html) in NagVis. **Depends** on `snmp_interface_perf` set to true. Defaults to `false`. **Note**: Available in `check_snmp_int.pl v2.1.0`.
 snmp_perf                   | **Optional.** Enable perfdata values. Defaults to true.
 snmp_timeout                | **Optional.** The command timeout in seconds. Defaults to 5 seconds.
 
-### <a id="plugin-check-command-snmp-process"></a> snmp-process
+### snmp-process <a id="plugin-check-command-snmp-process"></a>
 
 Check command object for the [check_snmp_process.pl](http://nagios.manubulon.com/snmp_process.html) plugin.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
-Name                    | Description
-------------------------|--------------
-snmp_address            | **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
-snmp_nocrypt            | **Optional.** Define SNMP encryption. If set, **snmp_v3** needs to be set. Defaults to false.
-snmp_community          | **Optional.** The SNMP community. Defaults to "public".
-snmp_port               | **Optional.** The SNMP port connection.
-snmp_v2                 | **Optional.** SNMP version to 2c. Defaults to false.
-snmp_v3                 | **Optional.** SNMP version to 3. Defaults to false.
-snmp_login              | **Optional.** SNMP version 3 username. Defaults to "snmpuser".
-snmp_password           | **Required.** SNMP version 3 password. No value defined as default.
-snmp_v3_use_privpass    | **Optional.** Define to use SNMP version 3 priv password. Defaults to false.
-snmp_authprotocol       | **Optional.** SNMP version 3 authentication protocol. Defaults to "md5,des".
-snmp_privpass           | **Required.** SNMP version 3 priv password. No value defined as default..
-snmp_warn               | **Optional.** The warning threshold.
-snmp_crit               | **Optional.** The critical threshold.
-snmp_process_name       | **Optional.** Name of the process (regexp). No trailing slash!. Defaults to ".*".
-snmp_perf               | **Optional.** Enable perfdata values. Defaults to true.
-snmp_timeout            | **Optional.** The command timeout in seconds. Defaults to 5 seconds.
-snmp_process_use_params | **Optional.** Add process parameters to process name for regexp matching. Example: "named.*-t /var/named/chroot" will only select named process with this parameter. Defaults to false.
+Name                       | Description
+---------------------------|--------------
+snmp_address               | **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
+snmp_nocrypt               | **Optional.** Define SNMP encryption. If set to `false`, `snmp_v3` needs to be enabled. Defaults to `true` (no encryption).
+snmp_community             | **Optional.** The SNMP community. Defaults to "public".
+snmp_port                  | **Optional.** The SNMP port connection.
+snmp_v2                    | **Optional.** SNMP version to 2c. Defaults to false.
+snmp_v3                    | **Optional.** SNMP version to 3. Defaults to false.
+snmp_login                 | **Optional.** SNMP version 3 username. Defaults to "snmpuser".
+snmp_password              | **Required.** SNMP version 3 password. No value defined as default.
+snmp_v3_use_privpass       | **Optional.** Define to use SNMP version 3 priv password. Defaults to false.
+snmp_v3_use_authprotocol   | **Optional.** Define to use SNMP version 3 authentication protocol. Defaults to false.
+snmp_authprotocol          | **Optional.** SNMP version 3 authentication protocol. Defaults to "md5,des".
+snmp_privpass              | **Required.** SNMP version 3 priv password. No value defined as default..
+snmp_warn                  | **Optional.** The warning threshold.
+snmp_crit                  | **Optional.** The critical threshold.
+snmp_process_name          | **Optional.** Name of the process (regexp). No trailing slash!. Defaults to ".*".
+snmp_perf                  | **Optional.** Enable perfdata values. Defaults to true.
+snmp_timeout               | **Optional.** The command timeout in seconds. Defaults to 5 seconds.
+snmp_process_use_params    | **Optional.** Add process parameters to process name for regexp matching. Example: "named.*-t /var/named/chroot" will only select named process with this parameter. Defaults to false.
+snmp_process_mem_usage     | **Optional.** Define to check memory usage for the process. Defaults to false.
+snmp_process_mem_threshold | **Optional.** Defines the warning and critical thresholds in Mb when snmp_process_mem_usage set to true. Example "512,1024". Defaults to "0,0".
+snmp_process_cpu_usage     | **Optional.** Define to check CPU usage for the process. Defaults to false.
+snmp_process_cpu_threshold | **Optional.** Defines the warning and critical thresholds in % when snmp_process_cpu_usage set to true. If more than one CPU, value can be > 100% : 100%=1 CPU. Example "15,50". Defaults to "0,0".
+
+### snmp-service <a id="plugin-check-command-snmp-service"></a>
+
+Check command object for the [check_snmp_win.pl](http://nagios.manubulon.com/snmp_windows.html) plugin.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                       | Description
+---------------------------|--------------
+snmp_address               | **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
+snmp_nocrypt               | **Optional.** Define SNMP encryption. If set to `false`, `snmp_v3` needs to be enabled. Defaults to `true` (no encryption).
+snmp_community             | **Optional.** The SNMP community. Defaults to "public".
+snmp_port                  | **Optional.** The SNMP port connection.
+snmp_v2                    | **Optional.** SNMP version to 2c. Defaults to false.
+snmp_v3                    | **Optional.** SNMP version to 3. Defaults to false.
+snmp_login                 | **Optional.** SNMP version 3 username. Defaults to "snmpuser".
+snmp_password              | **Required.** SNMP version 3 password. No value defined as default.
+snmp_v3_use_privpass       | **Optional.** Define to use SNMP version 3 priv password. Defaults to false.
+snmp_v3_use_authprotocol   | **Optional.** Define to use SNMP version 3 authentication protocol. Defaults to false.
+snmp_authprotocol          | **Optional.** SNMP version 3 authentication protocol. Defaults to "md5,des".
+snmp_privpass              | **Required.** SNMP version 3 priv password. No value defined as default.
+snmp_timeout               | **Optional.** The command timeout in seconds. Defaults to 5 seconds.
+snmp_service_name          | **Optional.** Comma separated names of services (perl regular expressions can be used for every one). By default, it is not case sensitive. eg. ^dns$. Defaults to ".*".
+snmp_service_count         | **Optional.** Compare matching services with a specified number instead of the number of names provided.
+snmp_service_showall       | **Optional.** Show all services in the output, instead of only the non-active ones. Defaults to false.
+snmp_service_noregexp      | **Optional.** Do not use regexp to match NAME in service description. Defaults to false.
 
 
-
-## <a id="plugin-contrib"></a> Contributed Plugin Check Commands
+## Contributed Plugin Check Commands <a id="plugin-contrib"></a>
 
 The contributed Plugin Check Commands provides various additional command definitions
 contributed by community members.
 
 These check commands assume that the global constant named `PluginContribDir`
 is set to the path where the user installs custom plugins and can be enabled by
-uncommenting the corresponding line in [icinga2.conf](4-configuring-icinga-2.md#icinga2-conf):
+uncommenting the corresponding line in [icinga2.conf](04-configuring-icinga-2.md#icinga2-conf):
 
-    include <plugin-contrib>
+```
+vim /etc/icinga2/icinga2.conf
 
-### <a id="plugin-contrib-databases"></a> Databases
+include <plugin-contrib>
+```
 
-All database plugins go in this category.
+This is enabled by default since Icinga 2 2.5.0.
 
-#### <a id="plugin-contrib-command-db2_health"></a> db2_health
+### Big Data <a id="plugin-contrib-big-data"></a>
 
-The plugin `db2_health` utilises Perl DBD::DB2.
-For release tarballs and detailed documentation especially on the different modes and required permissions see [https://labs.consol.de](https://labs.consol.de/nagios/check_db2_health/). For development check [https://github.com](https://github.com/lausser/check_db2_health).
+This category contains plugins for various Big Data systems.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+#### cloudera_service_status <a id="plugin-contrib-command-cloudera_service_status"></a>
+
+The [cloudera_service_status](https://github.com/miso231/icinga2-cloudera-plugin) plugin
+uses Cloudera Manager API to monitor cluster services
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                  | Description
+----------------------|-----------------------------------------------------------------
+cloudera_host         | **Required.** Hostname of cloudera server.
+cloudera_port         | **Optional.** Port where cloudera is listening. Defaults to 443.
+cloudera_user         | **Required.** The username for the API connection.
+cloudera_pass         | **Required.** The password for the API connection.
+cloudera_api_version  | **Required.** API version of cloudera.
+cloudera_cluster      | **Required.** The cluster name in cloudera manager.
+cloudera_service      | **Required.** Name of cluster service to be checked.
+cloudera_verify_ssl   | **Optional.** Verify SSL. Defaults to true.
+
+### Databases <a id="plugin-contrib-databases"></a>
+
+This category contains plugins for various database servers.
+
+#### db2_health <a id="plugin-contrib-command-db2_health"></a>
+
+The [check_db2_health](https://labs.consol.de/nagios/check_db2_health/) plugin
+uses the `DBD::DB2` Perl library to monitor a [DB2](https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/)
+database.
+
+The Git repository is located on [GitHub](https://github.com/lausser/check_db2_health).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                             | Description
 ---------------------------------|------------------------------------------------------------------------------------------------------------------------------
-db2_health_database           | **Required.** The name of the database. (If it was catalogued locally, this parameter is the only you need. Otherwise you must specify database, hostname and port)
+db2_health_database           | **Required.** The name of the database. (If it was catalogued locally, this parameter and `db2_health_not_catalogued = false` are the only you need. Otherwise you must specify database, hostname and port)
 db2_health_username           | **Optional.** The username for the database connection.
 db2_health_password           | **Optional.** The password for the database connection.
 db2_health_port               | **Optional.** The port where DB2 is listening.
@@ -1930,41 +2240,70 @@ db2_health_units              | **Optional.** This is used for a better output o
 db2_health_maxinactivity      | **Optional.** Used for the maximum amount of time a certain event has not happened.
 db2_health_mitigation         | **Optional.** Classifies the severity of an offline tablespace.
 db2_health_lookback           | **Optional.** How many days in the past db2_health check should look back to calculate exitcode.
+db2_health_report             | **Optional.** Report can be used to output only the bad news. Possible values are "short", "long", "html". Defaults to `short`.
+db2_health_not_catalogued     | **Optional.** Set this variable to false if you want to use a catalogued locally database. Defaults to `true`.
 db2_health_env_db2_home       | **Required.** Specifies the location of the db2 client libraries as environment variable `DB2_HOME`. Defaults to "/opt/ibm/db2/V10.5".
 db2_health_env_db2_version    | **Optional.** Specifies the DB2 version as environment variable `DB2_VERSION`.
 
-#### <a id="plugin-contrib-command-mssql_health"></a> mssql_health
+#### mssql_health <a id="plugin-contrib-command-mssql_health"></a>
 
-The plugin `mssql_health` utilises Perl DBD::Sybase based on FreeTDS to connect to MSSQL databases for monitoring.
-For release tarballs, detailed documentation especially on the different modes and scripts for creating a monitoring user see [https://labs.consol.de](https://labs.consol.de/nagios/check_mssql_health/). For development check [https://github.com](https://github.com/lausser/check_mssql_health).
+The [check_mssql_health](https://labs.consol.de/nagios/check_mssql_health/index.html) plugin
+uses the `DBD::Sybase` Perl library based on [FreeTDS](http://www.freetds.org/) to monitor a
+[MS SQL](https://www.microsoft.com/en-us/sql-server/) server.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+The Git repository is located on [GitHub](https://github.com/lausser/check_mssql_health).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                             | Description
 ---------------------------------|------------------------------------------------------------------------------------------------------------------------------
 mssql_health_hostname            | **Optional.** Specifies the database hostname or address. No default because you typically use "mssql_health_server".
+mssql_health_username            | **Optional.** The username for the database connection.
+mssql_health_password            | **Optional.** The password for the database connection.
 mssql_health_port                | **Optional.** Specifies the database port. No default because you typically use "mssql_health_server".
 mssql_health_server              | **Optional.** The name of a predefined connection (in freetds.conf).
 mssql_health_currentdb           | **Optional.** The name of a database which is used as the current database for the connection.
-mssql_health_username            | **Optional.** The username for the database connection.
-mssql_health_password            | **Optional.** The password for the database connection.
+mssql_health_offlineok           | **Optional.** Set this to true if offline databases are perfectly ok for you. Defaults to false.
+mssql_health_nooffline           | **Optional.** Set this to true to ignore offline databases. Defaults to false.
+mssql_health_dbthresholds        | **Optional.** With this parameter thresholds are read from the database table check_mssql_health_thresholds.
+mssql_health_notemp              | **Optional.** Set this to true to ignore temporary databases/tablespaces. Defaults to false.
+mssql_health_commit              | **Optional.** Set this to true to turn on autocommit for the dbd::sybase module. Defaults to false.
+mssql_health_method              | **Optional.** How the plugin should connect to the database (dbi for the perl module `DBD::Sybase` (default) and `sqlrelay` for the SQLRelay proxy).
+mssql_health_mode                | **Required.** The mode uses predefined keywords for the different checks. For example "connection-time", "database-free" or "sql".
+mssql_health_regexp              | **Optional.** If set to true, "mssql_health_name" will be interpreted as a regular expression. Defaults to false.
 mssql_health_warning             | **Optional.** The warning threshold depending on the mode.
 mssql_health_critical            | **Optional.** The critical threshold depending on the mode.
-mssql_health_mode                | **Required.** The mode uses predefined keywords for the different checks. For example "connection-time", "database-free" or "sql".
-mssql_health_method              | **Optional.** How the plugin should connect to the database (dbi for the perl module `DBD::Sybase` (default) and `sqlrelay` for the SQLRelay proxy).
+mssql_health_warningx            | **Optional.** A possible override for the warning threshold.
+mssql_health_criticalx           | **Optional.** A possible override for the critical threshold.
+mssql_health_units               | **Optional.** This is used for a better output of mode=sql and for specifying thresholds for mode=tablespace-free. Possible values are "%", "KB", "MB" and "GB".
 mssql_health_name                | **Optional.** Depending on the mode this could be the database name or a SQL statement.
 mssql_health_name2               | **Optional.** If "mssql_health_name" is a sql statement, "mssql_health_name2" can be used to appear in the output and the performance data.
-mssql_health_regexp              | **Optional.** If set to true, "mssql_health_name" will be interpreted as a regular expression. Defaults to false.
-mssql_health_units               | **Optional.** This is used for a better output of mode=sql and for specifying thresholds for mode=tablespace-free. Possible values are "%", "KB", "MB" and "GB".
-mssql_health_offlineok           | **Optional.** Set this to true if offline databases are perfectly ok for you. Defaults to false.
-mssql_health_commit              | **Optional.** Set this to true to turn on autocommit for the dbd::sybase module. Defaults to false.
+mssql_health_name3               | **Optional.** Additional argument used for 'database-file-free' mode for example.
+mssql_health_extraopts           | **Optional.** Read command line arguments from an external file.
+mssql_health_blacklist           | **Optional.** Blacklist some (missing/failed) components
+mssql_health_mitigation          | **Optional.** The parameter allows you to change a critical error to a warning.
+mssql_health_lookback            | **Optional.** The amount of time you want to look back when calculating average rates.
+mssql_health_environment         | **Optional.** Add a variable to the plugin's environment.
+mssql_health_negate              | **Optional.** Emulate the negate plugin. --negate warning=critical --negate unknown=critical.
+mssql_health_morphmessage        | **Optional.** Modify the final output message.
+mssql_health_morphperfdata       | **Optional.** The parameter allows you to change performance data labels.
+mssql_health_selectedperfdata    | **Optional.** The parameter allows you to limit the list of performance data.
+mssql_health_report              | **Optional.** Report can be used to output only the bad news. Possible values are "short", "long", "html". Defaults to `short`.
+mssql_health_multiline           | **Optional.** Multiline output.
+mssql_health_withmymodulesdyndir | **Optional.** Add-on modules for the my-modes will be searched in this directory.
+mssql_health_statefilesdir       | **Optional.** An alternate directory where the plugin can save files.
+mssql_health_isvalidtime         | **Optional.** Signals the plugin to return OK if now is not a valid check time.
+mssql_health_timeout           	 | **Optional.** Plugin timeout. Defaults to 15s.
 
-#### <a id="plugin-contrib-command-mysql_health"></a> mysql_health
+#### mysql_health <a id="plugin-contrib-command-mysql_health"></a>
 
-The plugin `mysql_health` utilises Perl DBD::MySQL to connect to MySQL databases for monitoring.
-For release tarballs and detailed documentation especially on the different modes and required permissions see [https://labs.consol.de](https://labs.consol.de/nagios/check_mysql_health/). For development check [https://github.com](https://github.com/lausser/check_mysql_health).
+The [check_mysql_health](https://labs.consol.de/nagios/check_mysql_health/index.html) plugin
+uses the `DBD::MySQL` Perl library to monitor a
+[MySQL](https://dev.mysql.com/downloads/mysql/) or [MariaDB](https://mariadb.org/about/) database.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+The Git repository is located on [GitHub](https://github.com/lausser/check_mysql_health).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                             | Description
 ---------------------------------|------------------------------------------------------------------------------------------------------------------------------
@@ -1980,7 +2319,7 @@ mysql_health_warningx            | **Optional.** The extended warning thresholds
 mysql_health_criticalx           | **Optional.** The extended critical thresholds depending on the mode.
 mysql_health_mode                | **Required.** The mode uses predefined keywords for the different checks. For example "connection-time", "slave-lag" or "sql".
 mysql_health_method              | **Optional.** How the plugin should connect to the database (`dbi` for using DBD::Mysql (default), `mysql` for using the mysql-Tool).
-mysql_health_commit              | **Optional.** Turns on autocommit for the dbd::* module.
+mysql_health_commit              | **Optional.** Turns on autocommit for the dbd::\* module.
 mysql_health_notemp              | **Optional.** Ignore temporary databases/tablespaces.
 mysql_health_nooffline           | **Optional.** Skip the offline databases.
 mysql_health_regexp              | **Optional.** Parameter name/name2/name3 will be interpreted as (perl) regular expression.
@@ -1990,26 +2329,29 @@ mysql_health_name3               | **Optional.** The tertiary name of a componen
 mysql_health_units               | **Optional.** This is used for a better output of mode=sql and for specifying thresholds for mode=tablespace-free. Possible values are "%", "KB", "MB" and "GB".
 mysql_health_labelformat         | **Optional.** One of those formats pnp4nagios or groundwork. Defaults to pnp4nagios.
 mysql_health_extraopts           | **Optional.** Read command line arguments from an external file.
-mysql_health_blacklist           | **Optional.** Blacklist some (missing/failed) components"
-mysql_health_mitigation          | **Optional.** "The parameter allows you to change a critical error to a warning."
-mysql_health_lookback            | **Optional.** The amount of time you want to look back when calculating average rates."
-mysql_health_environment         | **Optional.** Add a variable to the plugin's environment."
-mysql_health_morphmessage        | **Optional.** Modify the final output message."
-mysql_health_morphperfdata       | **Optional.** The parameter allows you to change performance data labels."
-mysql_health_selectedperfdata    | **Optional.** The parameter allows you to limit the list of performance data."
-mysql_health_report              | **Optional.** Can be used to shorten the output."
-mysql_health_multiline           | **Optional.** Multiline output."
-mysql_health_negate              | **Optional.** Emulate the negate plugin. --negate warning=critical --negate unknown=critical."
-mysql_health_withmymodulesdyndir | **Optional.** Add-on modules for the my-modes will be searched in this directory."
-mysql_health_statefilesdir       | **Optional.** An alternate directory where the plugin can save files."
-mysql_health_isvalidtime         | **Optional.** Signals the plugin to return OK if now is not a valid check time."
+mysql_health_blacklist           | **Optional.** Blacklist some (missing/failed) components
+mysql_health_mitigation          | **Optional.** The parameter allows you to change a critical error to a warning.
+mysql_health_lookback            | **Optional.** The amount of time you want to look back when calculating average rates.
+mysql_health_environment         | **Optional.** Add a variable to the plugin's environment.
+mysql_health_morphmessage        | **Optional.** Modify the final output message.
+mysql_health_morphperfdata       | **Optional.** The parameter allows you to change performance data labels.
+mysql_health_selectedperfdata    | **Optional.** The parameter allows you to limit the list of performance data.
+mysql_health_report              | **Optional.** Can be used to shorten the output.
+mysql_health_multiline           | **Optional.** Multiline output.
+mysql_health_negate              | **Optional.** Emulate the negate plugin. --negate warning=critical --negate unknown=critical.
+mysql_health_withmymodulesdyndir | **Optional.** Add-on modules for the my-modes will be searched in this directory.
+mysql_health_statefilesdir       | **Optional.** An alternate directory where the plugin can save files.
+mysql_health_isvalidtime         | **Optional.** Signals the plugin to return OK if now is not a valid check time.
+mysql_health_timeout           	 | **Optional.** Plugin timeout. Defaults to 60s.
 
-#### <a id="plugin-contrib-command-oracle_health"></a> oracle_health
+#### oracle_health <a id="plugin-contrib-command-oracle_health"></a>
 
-The plugin `oracle_health` utilises Perl DBD::Oracle based on oracle-instantclient-sdk or sqlplus to connect to Oracle databases for monitoring.
-For release tarballs and detailed documentation especially on the different modes and required permissions see [https://labs.consol.de](https://labs.consol.de/nagios/check_oracle_health/). For development check [https://github.com](https://github.com/lausser/check_oracle_health).
+The [check_oracle_health](https://labs.consol.de/nagios/check_oracle_health/index.html) plugin
+uses the `DBD::Oracle` Perl library to monitor an [Oracle](https://www.oracle.com/database/) database.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+The Git repository is located on [GitHub](https://github.com/lausser/check_oracle_health).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                             | Description
 ---------------------------------|------------------------------------------------------------------------------------------------------------------------------
@@ -2027,20 +2369,25 @@ oracle_health_units              | **Optional.** This is used for a better outpu
 oracle_health_ident              | **Optional.** If set to true, outputs instance and database names. Defaults to false.
 oracle_health_commit             | **Optional.** Set this to true to turn on autocommit for the dbd::oracle module. Defaults to false.
 oracle_health_noperfdata         | **Optional.** Set this to true if you want to disable perfdata. Defaults to false.
+oracle_health_timeout            | **Optional.** Plugin timeout. Defaults to 60s.
+oracle_health_report             | **Optional.** Select the plugin output format. Can be short or long. Default to long.
 
 Environment Macros:
 
 Name                | Description
 --------------------|------------------------------------------------------------------------------------------------------------------------------------------
-ORACLE_HOME         | **Required.** Specifies the location of the oracle instant client libraries. Defaults to "/usr/lib/oracle/11.2/client64/lib". Can be overridden by setting "oracle_home".
-TNS_ADMIN           | **Required.** Specifies the location of the tnsnames.ora including the database connection strings. Defaults to "/etc/icinga2/plugin-configs". Can be overridden by setting "oracle_tns_admin".
+ORACLE\_HOME         | **Required.** Specifies the location of the oracle instant client libraries. Defaults to "/usr/lib/oracle/11.2/client64/lib". Can be overridden by setting the custom attribute `oracle_home`.
+LD\_LIBRARY\_PATH    | **Required.** Specifies the location of the oracle instant client libraries for the run-time shared library loader. Defaults to "/usr/lib/oracle/11.2/client64/lib". Can be overridden by setting the custom attribute `oracle_ld_library_path`.
+TNS\_ADMIN           | **Required.** Specifies the location of the tnsnames.ora including the database connection strings. Defaults to "/etc/icinga2/plugin-configs". Can be overridden by setting the custom attribute `oracle_tns_admin`.
 
-#### <a id="plugin-contrib-command-postgres"></a> postgres
+#### postgres <a id="plugin-contrib-command-postgres"></a>
 
-The plugin `postgres` utilises the psql binary to connect to PostgreSQL databases for monitoring.
-For release tarballs and detailed documentation especially the different actions and required persmissions see [https://bucardo.org/wiki/Check_postgres](https://bucardo.org/wiki/Check_postgres). For development check [https://github.com](https://github.com/bucardo/check_postgres).
+The [check_postgres](https://bucardo.org/wiki/Check_postgres) plugin
+uses the `psql` binary to monitor a [PostgreSQL](https://www.postgresql.org/about/) database.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+The Git repository is located on [GitHub](https://github.com/bucardo/check_postgres).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                             | Description
 ---------------------------------|------------------------------------------------------------------------------------------------------------------------------
@@ -2056,65 +2403,72 @@ postgres_include     | **Optional.** Specifies name(s) items to specifically inc
 postgres_exclude     | **Optional.** Specifies name(s) items to specifically exclude (e.g. tables), depends on the action.
 postgres_includeuser | **Optional.** Include objects owned by certain users.
 postgres_excludeuser | **Optional.** Exclude objects owned by certain users.
-postgres_standby     | **Optional.** Assume that the server is in continious WAL recovery mode if set to true. Defaults to false.
+postgres_standby     | **Optional.** Assume that the server is in continuous WAL recovery mode if set to true. Defaults to false.
 postgres_production  | **Optional.** Assume that the server is in production mode if set to true. Defaults to false.
 postgres_action      | **Required.** Determines the test executed.
 postgres_unixsocket  | **Optional.** If "postgres_unixsocket" is set to true, the unix socket is used instead of an address. Defaults to false.
 postgres_query       | **Optional.** Query for "custom_query" action.
 postgres_valtype     | **Optional.** Value type of query result for "custom_query".
 postgres_reverse     | **Optional.** If "postgres_reverse" is set, warning and critical values are reversed for "custom_query" action.
+postgres_tempdir     | **Optional.** Specify directory for temporary files. The default directory is dependent on the OS. More details [here](https://perldoc.perl.org/File/Spec.html).
 
-#### <a id="plugin-contrib-command-mongodb"></a> mongodb
+#### mongodb <a id="plugin-contrib-command-mongodb"></a>
 
-The plugin `mongodb` utilises Python PyMongo.
-For development check [https://github.com](https://github.com/mzupan/nagios-plugin-mongodb).
+The [check_mongodb.py](https://github.com/mzupan/nagios-plugin-mongodb) plugin
+uses the `pymongo` Python library to monitor a [MongoDB](https://docs.mongodb.com/manual/) instance.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                             | Description
 ---------------------------------|------------------------------------------------------------------------------------------------------------------------------
-mongodb_host                     | **Required.** Specifies the hostname or address.
-mongodb_port                     | **Required.** The port mongodb is runnung on.
-mongodb_user                     | **Optional.** The username you want to login as
-mongodb_passwd                   | **Optional.** The password you want to use for that user
-mongodb_warning                  | **Optional.** The warning threshold we want to set
-mongodb_critical                 | **Optional.** The critical threshold we want to set
-mongodb_action                   | **Required.** The action you want to take
-mongodb_maxlag                   | **Optional.** Get max replication lag (for replication_lag action only)
-mongodb_mappedmemory             | **Optional.** Get mapped memory instead of resident (if resident memory can not be read)
-mongodb_perfdata                 | **Optional.** Enable output of Nagios performance data
-mongodb_database                 | **Optional.** Specify the database to check
-mongodb_alldatabases             | **Optional.** Check all databases (action database_size)
-mongodb_ssl                      | **Optional.** Connect using SSL
-mongodb_replicaset               | **Optional.** Connect to replicaset
-mongodb_replcheck                | **Optional.** If set to true, will enable the mongodb_replicaset value needed for "replica_primary" check
-mongodb_querytype                | **Optional.** The query type to check [query\|insert\|update\|delete\|getmore\|command] from queries_per_second
-mongodb_collection               | **Optional.** Specify the collection to check
-mongodb_sampletime               | **Optional.** Time used to sample number of pages faults
+mongodb_host                     | **Required.** Specifies the hostname or address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
+mongodb_port                     | **Required.** The port mongodb is running on.
+mongodb_user                     | **Optional.** The username you want to login as.
+mongodb_passwd                   | **Optional.** The password you want to use for that user.
+mongodb_authdb                   | **Optional.** The database you want to authenticate against.
+mongodb_warning                  | **Optional.** The warning threshold we want to set.
+mongodb_critical                 | **Optional.** The critical threshold we want to set.
+mongodb_action                   | **Required.** The action you want to take.
+mongodb_maxlag                   | **Optional.** Get max replication lag (for replication_lag action only).
+mongodb_mappedmemory             | **Optional.** Get mapped memory instead of resident (if resident memory can not be read).
+mongodb_perfdata                 | **Optional.** Enable output of Nagios performance data.
+mongodb_database                 | **Optional.** Specify the database to check.
+mongodb_alldatabases             | **Optional.** Check all databases (action database_size).
+mongodb_ssl                      | **Optional.** Connect using SSL.
+mongodb_replicaset               | **Optional.** Connect to replicaset.
+mongodb_replcheck                | **Optional.** If set to true, will enable the mongodb_replicaset value needed for "replica_primary" check.
+mongodb_querytype                | **Optional.** The query type to check [query\|insert\|update\|delete\|getmore\|command] from queries_per_second.
+mongodb_collection               | **Optional.** Specify the collection to check.
+mongodb_sampletime               | **Optional.** Time used to sample number of pages faults.
 
-#### <a id="plugin-contrib-command-elasticsearch"></a> elasticsearch
+#### elasticsearch <a id="plugin-contrib-command-elasticsearch"></a>
 
-An [ElasticSearch](https://www.elastic.co/products/elasticsearch) availability
-and performance monitoring plugin available for download at [GitHub](https://github.com/anchor/nagios-plugin-elasticsearch).
-The plugin requires the HTTP API enabled on your ElasticSearch node.
+The [check_elasticsearch](https://github.com/anchor/nagios-plugin-elasticsearch) plugin
+uses the HTTP API to monitor an [Elasticsearch](https://www.elastic.co/products/elasticsearch) node.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                         | Description
 -----------------------------|-------------------------------------------------------------------------------------------------------
+elasticsearch_host           | **Optional.** Hostname or network address to probe. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
 elasticsearch_failuredomain  | **Optional.** A comma-separated list of ElasticSearch attributes that make up your cluster's failure domain.
-elasticsearch_host           | **Optional.** Hostname or network address to probe. Defaults to 'localhost'.
 elasticsearch_masternodes    | **Optional.** Issue a warning if the number of master-eligible nodes in the cluster drops below this number. By default, do not monitor the number of nodes in the cluster.
 elasticsearch_port           | **Optional.** TCP port to probe.  The ElasticSearch API should be listening here. Defaults to 9200.
 elasticsearch_prefix         | **Optional.** Optional prefix (e.g. 'es') for the ElasticSearch API. Defaults to ''.
 elasticsearch_yellowcritical | **Optional.** Instead of issuing a 'warning' for a yellow cluster state, issue a 'critical' alert. Defaults to false.
 
-#### <a id="plugin-contrib-command-redis"></a> redis
+#### redis <a id="plugin-contrib-command-redis"></a>
 
-The plugin `redis` can measure response time, hitrate, memory utilization, check replication sync and more. It can also test data in a specified key (if necessary, doing average or sum on range).
-It is provided by `William Leibzon` at [https://github.com](https://github.com/willixix/naglio-plugins/blob/master/check_redis.pl).
+The [check_redis.pl](https://github.com/willixix/naglio-plugins/blob/master/check_redis.pl) plugin
+uses the `Redis` Perl library to monitor a [Redis](https://redis.io/) instance. The plugin can
+measure response time, hitrate, memory utilization, check replication synchronization, etc. It is
+also possible to test data in a specified key and calculate averages or summaries on ranges.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                     | Description
 -------------------------|--------------------------------------------------------------------------------------------------------------
-redis_hostname           | **Required.** Hostname or IP Address to check. Defaults to "127.0.0.1".
+redis_hostname           | **Required.** Hostname or IP Address to check. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
 redis_port               | **Optional.** Port number to query. Default to "6379".
 redis_database           | **Optional.** Database name (usually a number) to query, needed for **redis_query**.
 redis_password           | **Optional.** Password for Redis authentication. Safer alternative is to put them in a file and use **redis_credentials**.
@@ -2136,15 +2490,29 @@ redis_total_memory       | **Optional.** Amount of memory on a system for memory
 redis_replication_delay  | **Optional.** Allows to set threshold on replication delay info.
 
 
-### <a id="plugin-contrib-hardware"></a> Hardware
+### Hardware <a id="plugin-contrib-hardware"></a>
 
-This category includes all plugins for various hardware checks.
+This category includes all plugin check commands for various hardware checks.
 
-#### <a id="plugin-contrib-command-hpasm"></a> hpasm
+#### hpasm <a id="plugin-contrib-command-hpasm"></a>
 
-The plugin [check_hpasm](https://labs.consol.de/de/nagios/check_hpasm/index.html) is a plugin to monitor HP hardware through the HP Insight Agent via SNMP.
+The [check_hpasm](https://labs.consol.de/de/nagios/check_hpasm/index.html) plugin
+monitors the hardware health of HP Proliant Servers, provided that the `hpasm`
+(HP Advanced Server Management) software is installed. It is also able to monitor
+the system health of HP Bladesystems and storage systems.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+The plugin can run in two different ways:
+
+1. Local execution using the `hpasmcli` command line tool.
+2. Remote SNMP query which invokes the HP Insight Tools on the remote node.
+
+You can either set or omit `hpasm_hostname` custom attribute and select the corresponding node.
+
+The `hpasm_remote` attribute enables the plugin to execute remote SNMP queries if set to `true`.
+For compatibility reasons this attribute uses `true` as default value, and ensures that
+specifying the `hpasm_hostname` always enables remote checks.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                    	| Description
 --------------------------------|-----------------------------------------------------------------------
@@ -2156,7 +2524,7 @@ hpasm_blacklist			| **Optional.** Blacklist some (missing/failed) components.
 hpasm_ignore-dimms		| **Optional.** Ignore "N/A"-DIMM status on misc. servers (e.g. older DL320).
 hpasm_ignore-fan-redundancy	| **Optional.** Ignore missing redundancy partners.
 hpasm_customthresholds		| **Optional.** Use custom thresholds for certain temperatures.
-hpasm_eventrange		| **Optional.** Period of time before critical IML events respecively become warnings or vanish. A range is descibed as a number and a unit (s, m, h, d), e.g. --eventrange 1h/20m.
+hpasm_eventrange		| **Optional.** Period of time before critical IML events respectively become warnings or vanish. A range is described as a number and a unit (s, m, h, d), e.g. --eventrange 1h/20m.
 hpasm_perfdata			| **Optional.** Output performance data. If your performance data string becomes too long and is truncated by Nagios, then you can use --perfdata=short instead. This will output temperature tags without location information.
 hpasm_username			| **Optional.** The securityName for the USM security model (SNMPv3 only).
 hpasm_authpassword		| **Optional.** The authentication password for SNMPv3.
@@ -2164,35 +2532,151 @@ hpasm_authprotocol		| **Optional.** The authentication protocol for SNMPv3 (md5\
 hpasm_privpassword		| **Optional.** The password for authPriv security level.
 hpasm_privprotocol		| **Optional.** The private protocol for SNMPv3 (des\|aes\|aes128\|3des\|3desde).
 hpasm_servertype		| **Optional.** The type of the server: proliant (default) or bladesystem.
-hpasm_eval-nics			| **Optional.** Check network interfaces (and groups). Try it and report me whyt you think about it. I need to build up some know how on this subject. If you get an error and think, it is not justified for your configuration, please tell me about it. (alwasy send the output of "snmpwalk -On .... 1.3.6.1.4.1.232" and a description how you setup your nics and why it is correct opposed to the plugins error message.
+hpasm_eval-nics			| **Optional.** Check network interfaces (and groups). Try it and report me whyt you think about it. I need to build up some know how on this subject. If you get an error and think, it is not justified for your configuration, please tell me about it. (always send the output of "snmpwalk -On .... 1.3.6.1.4.1.232" and a description how you setup your nics and why it is correct opposed to the plugins error message.
+hpasm_remote			| **Optional.** Run remote SNMP checks if enabled. Otherwise checks are executed locally using the `hpasmcli` binary. Defaults to `true`.
+
+#### openmanage <a id="plugin-contrib-command-openmanage"></a>
+
+The [check_openmanage](http://folk.uio.no/trondham/software/check_openmanage.html) plugin
+checks the hardware health of Dell PowerEdge (and some PowerVault) servers.
+It uses the Dell OpenManage Server Administrator (OMSA) software, which must be running on
+the monitored system. check_openmanage can be used remotely with SNMP or locally with icinga2 agent,
+check_by_ssh or similar, whichever suits your needs and particular taste.
+
+The plugin checks the health of the storage subsystem, power supplies, memory modules,
+temperature probes etc., and gives an alert if any of the components are faulty or operate outside normal parameters.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    	| Description
+--------------------------------|-----------------------------------------------------------------------
+openmanage_all			| **Optional.** Check everything, even log content
+openmanage_blacklist		| **Optional.** Blacklist missing and/or failed components
+openmanage_check		| **Optional.** Fine-tune which components are checked
+openmanage_community		| **Optional.** SNMP community string [default=public]
+openmanage_config		| **Optional.** Specify configuration file
+openmanage_critical		| **Optional.** Custom temperature critical limits
+openmanage_extinfo		| **Optional.** Append system info to alerts
+openmanage_fahrenheit		| **Optional.** Use Fahrenheit as temperature unit
+openmanage_hostname		| **Optional.** Hostname or IP (required for SNMP)
+openmanage_htmlinfo		| **Optional.** HTML output with clickable links
+openmanage_info			| **Optional.** Prefix any alerts with the service tag
+openmanage_ipv6			| **Optional.** Use IPv6 instead of IPv4 [default=no]
+openmanage_legacy_perfdata	| **Optional.** Legacy performance data output
+openmanage_no_storage		| **Optional.** Don't check storage
+openmanage_only			| **Optional.** Only check a certain component or alert type
+openmanage_perfdata		| **Optional.** Output performance data [default=no]
+openmanage_port			| **Optional.** SNMP port number [default=161]
+openmanage_protocol		| **Optional.** SNMP protocol version [default=2c]
+openmanage_short_state		| **Optional.** Prefix alerts with alert state abbreviated
+openmanage_show_blacklist	| **Optional.** Show blacklistings in OK output
+openmanage_state		| **Optional.** Prefix alerts with alert state
+openmanage_tcp			| **Optional.** Use TCP instead of UDP [default=no]
+openmanage_timeout		| **Optional.** Plugin timeout in seconds [default=30]
+openmanage_vdisk_critical	| **Optional.** Make any alerts on virtual disks critical
+openmanage_warning		| **Optional.** Custom temperature warning limits
+
+#### adaptec-raid <a id="plugin-contrib-command-adaptec-raid"></a>
+
+The [check_adaptec_raid](https://github.com/thomas-krenn/check_adaptec_raid) plugin
+uses the `arcconf` binary to monitor Adaptec RAID controllers.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                            | Description
+--------------------------------|-----------------------------------------------------------------------
+adaptec_controller_number       | **Required.** Controller number to monitor.
+arcconf_path                    | **Required.** Path to the `arcconf` binary, e.g. "/sbin/arcconf".
+
+#### lsi-raid <a id="plugin-contrib-command-lsi-raid"></a>
+
+The [check_lsi_raid](https://github.com/thomas-krenn/check_lsi_raid) plugin
+uses the `storcli` binary to monitor MegaRAID RAID controllers.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                            | Description
+--------------------------------|-----------------------------------------------------------------------
+lsi_controller_number           | **Optional.** Controller number to monitor.
+storcli_path                    | **Optional.** Path to the `storcli` binary, e.g. "/usr/sbin/storcli".
+lsi_enclosure_id                | **Optional.** Enclosure numbers to be checked, comma-separated.
+lsi_ld_id                       | **Optional.** Logical devices to be checked, comma-separated.
+lsi_pd_id                       | **Optional.** Physical devices to be checked, comma-separated.
+lsi_temp_warning                | **Optional.** RAID controller warning temperature.
+lsi_temp_critical               | **Optional.** RAID controller critical temperature.
+lsi_pd_temp_warning             | **Optional.** Disk warning temperature.
+lsi_pd_temp_critical            | **Optional.** Disk critical temperature.
+lsi_bbu_temp_warning            | **Optional.** Battery warning temperature.
+lsi_bbu_temp_critical           | **Optional.** Battery critical temperature.
+lsi_cv_temp_warning             | **Optional.** CacheVault warning temperature.
+lsi_cv_temp_critical            | **Optional.** CacheVault critical temperature.
+lsi_ignored_media_errors        | **Optional.** Warning threshold for media errors.
+lsi_ignored_other_errors        | **Optional.** Warning threshold for other errors.
+lsi_ignored_predictive_fails    | **Optional.** Warning threshold for predictive failures.
+lsi_ignored_shield_counters     | **Optional.** Warning threshold for shield counter.
+lsi_ignored_bbm_counters        | **Optional.** Warning threshold for BBM counter.
+lsi_bbu                         | **Optional.** Define if BBU is present and it's state should be checked.
+lsi_noenclosures                | **Optional.** If set to true, does not check enclosures.
+lsi_nosudo                      | **Optional.** If set to true, does not use sudo when running storcli.
+lsi_nocleanlogs                 | **Optional.** If set to true, does not clean up the log files after executing storcli checks.
 
 
-### <a id="plugin-contrib-icingacli"></a> IcingaCLI
+#### smart-attributes <a id="plugin-contrib-command-smart-attributes"></a>
+
+The [check_smart_attributes](https://github.com/thomas-krenn/check_smart_attributes) plugin
+uses the `smartctl` binary to monitor SMART values of SSDs and HDDs.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                            | Description
+--------------------------------|-----------------------------------------------------------------------
+smart_attributes_config_path    | **Required.** Path to the smart attributes config file (e.g. check_smartdb.json).
+smart_attributes_device         | **Required.** Device name (e.g. /dev/sda) to monitor.
+
+
+### IcingaCLI <a id="plugin-contrib-icingacli"></a>
 
 This category includes all plugins using the icingacli provided by Icinga Web 2.
 
-#### <a id="plugin-contrib-icingacli-businessprocess"></a> Business Process
+The user running Icinga 2 needs sufficient permissions to read the Icinga Web 2 configuration directory. e.g. `usermod -a -G icingaweb2 icinga`. You need to restart, not reload Icinga 2 for the new group membership to work.
 
-This subcommand is provided by the [business process module](https://exchange.icinga.org/icinga/Business+Process) and executed as `icingacli-businessprocess`. The module is hosted by the Icinga project on its [project homepage](https://dev.icinga.org/projects/icingaweb2-module-businessprocess).
+#### Business Process <a id="plugin-contrib-icingacli-businessprocess"></a>
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+This subcommand is provided by the [business process module](https://exchange.icinga.com/icinga/Business+Process)
+and executed as `icingacli businessprocess` CLI command.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                    	          | Description
 ------------------------------------------|-----------------------------------------------------------------------------------------
 icingacli_businessprocess_process         | **Required.** Business process to monitor.
 icingacli_businessprocess_config          | **Optional.** Configuration file containing your business process without file extension.
-icingacli_businessprocess_details         | **Optional.** Get details for root cause analyses. Defaults to false.
+icingacli_businessprocess_details         | **Optional.** Get details for root cause analysis. Defaults to false.
+icingacli_businessprocess_statetype       | **Optional.** Define which state type to look at, `soft` or `hard`. Overrides the default value inside the businessprocess module, if configured.
 
+#### Director <a id="plugin-contrib-icingacli-director"></a>
 
-### <a id="plugin-contrib-ipmi"></a> IPMI Devices
+This subcommand is provided by the [director module](https://github.com/Icinga/icingaweb2-module-director) > 1.4.2 and executed as `icingacli director health check`. Please refer to the [documentation](https://github.com/Icinga/icingaweb2-module-director/blob/master/doc/60-CLI.md#health-check-plugin) for all available sub-checks.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                                      | Description
+------------------------------------------|-----------------------------------------------------------------------------------------
+icingacli_director_check                  | **Optional.** Run only a specific test suite.
+icingacli_director_db                     | **Optional.** Use a specific Icinga Web DB resource.
+
+### IPMI Devices <a id="plugin-contrib-ipmi"></a>
 
 This category includes all plugins for IPMI devices.
 
-#### <a id="plugin-contrib-command-ipmi-sensor"></a> ipmi-sensor
+#### ipmi-sensor <a id="plugin-contrib-command-ipmi-sensor"></a>
 
-With the plugin `ipmi-sensor` provided by <a href="https://www.thomas-krenn.com/">Thomas-Krenn.AG</a> you can monitor sensor data for IPMI devices. See https://www.thomas-krenn.com/en/wiki/IPMI_Sensor_Monitoring_Plugin for installation and configuration instructions.
+The [check_ipmi_sensor](https://github.com/thomas-krenn/check_ipmi_sensor_v3) plugin
+uses the `ipmimonitoring` binary to monitor sensor data for IPMI devices. Please
+read the [documentation](https://www.thomas-krenn.com/en/wiki/IPMI_Sensor_Monitoring_Plugin)
+for installation and configuration details.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                             | Description
 ---------------------------------|-----------------------------------------------------------------------------------------------------
@@ -2201,24 +2685,74 @@ ipmi_config_file                 | **Optional.** Path to the FreeIPMI configurat
 ipmi_username                    | **Optional.** The IPMI username.
 ipmi_password                    | **Optional.** The IPMI password.
 ipmi_privilege_level             | **Optional.** The IPMI privilege level of the IPMI user.
-ipmi_backward_compatibility_mode | **Optional.** Enable backward compatibility mode, useful for FreeIPMI 0.5.* (this omits FreeIPMI options "--quiet-cache" and "--sdr-cache-recreate").
+ipmi_backward_compatibility_mode | **Optional.** Enable backward compatibility mode, useful for FreeIPMI 0.5.\* (this omits FreeIPMI options "--quiet-cache" and "--sdr-cache-recreate").
 ipmi_sensor_type                 | **Optional.** Limit sensors to query based on IPMI sensor type. Examples for IPMI sensor types are 'Fan', 'Temperature' and 'Voltage'.
+ipmi_sel_type                    | **Optional.** Limit SEL entries to specific types, run 'ipmi-sel -L' for a list of types. All sensors are populated to the SEL and per default all sensor types are monitored.
 ipmi_exclude_sensor_id           | **Optional.** Exclude sensor matching ipmi_sensor_id.
+ipmi_exclude_sensor              | **Optional.** Exclude sensor based on IPMI sensor type. (Comma-separated)
+ipmi_exclude_sel                 | **Optional.** Exclude SEL entries of specific sensor types. (comma-separated list).
 ipmi_sensor_id                   | **Optional.** Include sensor matching ipmi_sensor_id.
-ipmi_protocal_lan_version        | **Optional.** Change the protocol LAN version. Defaults to "LAN_2_0".
+ipmi_protocol_lan_version        | **Optional.** Change the protocol LAN version. Defaults to "LAN_2_0".
 ipmi_number_of_active_fans       | **Optional.** Number of fans that should be active. Otherwise a WARNING state is returned.
 ipmi_show_fru                    | **Optional.** Print the product serial number if it is available in the IPMI FRU data.
 ipmi_no_sel_checking             | **Optional.** Turn off system event log checking via ipmi-sel.
+ipmi_no_thresholds               | **Optional.** Turn off performance data thresholds from output-sensor-thresholds.
+ipmi_verbose                     | **Optional.** Be Verbose multi line output, also with additional details for warnings.
+ipmi_debug                       | **Optional.** Be Verbose debugging output, followed by normal multi line output.
 
-### <a id="plugin-contrib-metrics"></a> Metrics
+#### ipmi-alive <a id="plugin-contrib-command-ipmi-alive"></a>
+
+The `ipmi-alive` check commands allows you to create a ping check for the IPMI Interface.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                             | Description
+---------------------------------|-----------------------------------------------------------------------------------------------------
+ping_address                     | **Optional.** The address of the IPMI interface. Defaults to "$address$" if the IPMI interface's `address` attribute is set, "$address6$" otherwise.
+ping_wrta                        | **Optional.** The RTA warning threshold in milliseconds. Defaults to 5000.
+ping_wpl                         | **Optional.** The packet loss warning threshold in %. Defaults to 100.
+ping_crta                        | **Optional.** The RTA critical threshold in milliseconds. Defaults to 5000.
+ping_cpl                         | **Optional.** The packet loss critical threshold in %. Defaults to 100.
+ping_packets                     | **Optional.** The number of packets to send. Defaults to 1.
+ping_timeout                     | **Optional.** The plugin timeout in seconds. Defaults to 0 (no timeout).
+
+
+### Log Management <a id="plugins-contrib-log-management"></a>
+
+This category includes all plugins for log management, for example [Logstash](https://www.elastic.co/products/logstash).
+
+#### logstash <a id="plugins-contrib-command-logstash"></a>
+
+The [logstash](https://github.com/widhalmt/check_logstash) plugin connects to
+the Node API of Logstash. This plugin requires at least Logstash version 5.0.x.
+
+The Node API is not activated by default. You have to configure your Logstash
+installation in order to allow plugin connections.
+
+Name                       | Description
+---------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+logstash_hostname          | **Optional.** Hostname where Logstash is running. Defaults to `check_address`
+logstash_port              | **Optional.** Port where Logstash is listening for API requests. Defaults to 9600
+logstash_filedesc_warn     | **Optional.** Warning threshold of file descriptor usage in percent. Defaults to 85 (percent).
+logstash_filedesc_crit     | **Optional.** Critical threshold of file descriptor usage in percent. Defaults to 95 (percent).
+logstash_heap_warn         | **Optional.** Warning threshold of heap usage in percent. Defaults to 70 (percent).
+logstash_heap_crit         | **Optional.** Critical threshold of heap usage in percent Defaults to 80 (percent).
+logstash_inflight_warn     | **Optional.** Warning threshold of inflight events.
+logstash_inflight_crit     | **Optional.** Critical threshold of inflight events.
+logstash_cpu_warn          | **Optional.** Warning threshold for cpu usage in percent.
+logstash_cpu_crit          | **Optional.** Critical threshold for cpu usage in percent.
+
+
+### Metrics <a id="plugin-contrib-metrics"></a>
 
 This category includes all plugins for metric-based checks.
 
-#### <a id="plugin-contrib-command-graphite"></a> graphite
+#### graphite <a id="plugin-contrib-command-graphite"></a>
 
-Check command object for the [check_graphite](https://github.com/obfuscurity/nagios-scripts) plugin.
+The [check_graphite](https://github.com/obfuscurity/nagios-scripts) plugin
+uses the `rest-client` Ruby library to monitor a [Graphite](https://graphiteapp.org) instance.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                                | Description
 ------------------------------------|-----------------------------------------------------------------------------------------------------
@@ -2234,15 +2768,18 @@ graphite_message                    | **Optional.** Text message to output (defa
 graphite_zero_on_error              | **Optional.** Return 0 on a graphite 500 error.
 graphite_link_graph                 | **Optional.** Add a link in the plugin output, showing a 24h graph for this metric in graphite.
 
-### <a id="plugin-contrib-network-components"></a> Network Components
+### Network Components <a id="plugin-contrib-network-components"></a>
 
 This category includes all plugins for various network components like routers, switches and firewalls.
 
-#### <a id="plugin-contrib-command-interfacetable"></a> interfacetable
+#### interfacetable <a id="plugin-contrib-command-interfacetable"></a>
 
-The plugin `interfacetable` generates a html page containing information about the monitored node and all of its interfaces. The actively developed and maintained version is `interfacetable_v3t` provided by `Yannick Charton` on [http://www.tontonitch.com](http://www.tontonitch.com/tiki/tiki-index.php?page=Nagios+plugins+-+interfacetable_v3t) or [https://github.com](https://github.com/Tontonitch/interfacetable_v3t).
+The [check_interfacetable_v3t](http://www.tontonitch.com/tiki/tiki-index.php?page=Nagios+plugins+-+interfacetable_v3t) plugin
+generates a html page containing information about the monitored node and all of its interfaces.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+The Git repository is located on [GitHub](https://github.com/Tontonitch/interfacetable_v3t).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                                | Description
 ------------------------------------|-----------------------------------------------------------------------------------------------------
@@ -2275,7 +2812,7 @@ interfacetable_64bits               | **Optional.** Use SNMP 64-bits counters. D
 interfacetable_maxrepetitions       | **Optional.** Increasing this value may enhance snmp query performances by gathering more results at one time.
 interfacetable_snmptimeout          | **Optional.** Define the Transport Layer timeout for the snmp queries.
 interfacetable_snmpretries          | **Optional.** Define the number of times to retry sending a SNMP message.
-interfacetable_snmpmaxmsgsize       | **Optional.** Size of the SNMP message in octets, usefull in case of too long responses. Be carefull with network filters. Range 484 - 65535. Apply only to netsnmp perl bindings. The default is 1472 octets for UDP/IPv4, 1452 octets for UDP/IPv6, 1460 octets for TCP/IPv4, and 1440 octets for TCP/IPv6.
+interfacetable_snmpmaxmsgsize       | **Optional.** Size of the SNMP message in octets, useful in case of too long responses. Be careful with network filters. Range 484 - 65535. Apply only to netsnmp perl bindings. The default is 1472 octets for UDP/IPv4, 1452 octets for UDP/IPv6, 1460 octets for TCP/IPv4, and 1440 octets for TCP/IPv6.
 interfacetable_unixsnmp             | **Optional.** Use unix snmp utilities for snmp requests. Defaults to false, which means use the perl bindings.
 interfacetable_enableperfdata       | **Optional.** Enable port performance data. Defaults to false.
 interfacetable_perfdataformat       | **Optional.** Define which performance data will be generated. Possible values are "full" (default), "loadonly", "globalonly".
@@ -2293,14 +2830,14 @@ interfacetable_noipinfo             | **Optional.** Remove the ip information fo
 interfacetable_alias                | **Optional.** Add the alias information for each interface in the interface table. Defaults to false.
 interfacetable_accessmethod         | **Optional.** Access method for a shortcut to the host in the HTML page. Format is : <method>[:<target>] Where method can be: ssh, telnet, http or https.
 interfacetable_htmltablelinktarget  | **Optional.** Specifies the windows or the frame where the [details] link will load the generated html page. Possible values are: "_blank", "_self" (default), "_parent", "_top", or a frame name.
-interfacetable_delta                | **Optional.** Set the delta used for interface throuput calculation in seconds.
+interfacetable_delta                | **Optional.** Set the delta used for interface throughput calculation in seconds.
 interfacetable_ifs                  | **Optional.** Input field separator. Defaults to ",".
 interfacetable_cache                | **Optional.** Define the retention time of the cached data in seconds.
 interfacetable_noifloadgradient     | **Optional.** Disable color gradient from green over yellow to red for the load percentage. Defaults to false.
 interfacetable_nohuman              | **Optional.** Do not translate bandwidth usage in human readable format. Defaults to false.
 interfacetable_snapshot             | **Optional.** Force the plugin to run like if it was the first launch. Defaults to false.
 interfacetable_timeout              | **Optional.** Define the global timeout limit of the plugin in seconds. Defaults to "15s".
-interfacetable_css                  | **Optional.** Define the css stylesheet used by the generated html files. Possible values are "classic", "icinga", "icinga-alternate1" or "nagiosxi".
+interfacetable_css                  | **Optional.** Define the css stylesheet used by the generated html files. Possible values are "classic", "icinga" or "icinga-alternate1".
 interfacetable_config               | **Optional.** Specify a config file to load.
 interfacetable_noconfigtable        | **Optional.** Disable configuration table on the generated HTML page. Defaults to false.
 interfacetable_notips               | **Optional.** Disable the tips in the generated html tables. Defaults to false.
@@ -2308,12 +2845,12 @@ interfacetable_defaulttablesorting  | **Optional.** Default table sorting can be
 interfacetable_tablesplit           | **Optional.** Generate multiple interface tables, one per interface type. Defaults to false.
 interfacetable_notype               | **Optional.** Remove the interface type for each interface. Defaults to false.
 
-#### <a id="plugin-contrib-command-iftraffic"></a> iftraffic
+#### iftraffic <a id="plugin-contrib-command-iftraffic"></a>
 
-The plugin [check_iftraffic](https://exchange.icinga.org/exchange/iftraffic)
+The [check_iftraffic](https://exchange.icinga.com/exchange/iftraffic) plugin
 checks the utilization of a given interface name using the SNMP protocol.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                    | Description
 ------------------------|---------------------------------------------------------
@@ -2326,12 +2863,12 @@ iftraffic_warn		| **Optional.** Percent of bandwidth usage necessary to result i
 iftraffic_crit		| **Optional.** Percent of bandwidth usage necessary to result in critical status (defaults to `98`).
 iftraffic_max_counter	| **Optional.** Maximum counter value of net devices in kilo/mega/giga/bytes.
 
-#### <a id="plugin-contrib-command-iftraffic64"></a> iftraffic64
+#### iftraffic64 <a id="plugin-contrib-command-iftraffic64"></a>
 
-The plugin [check_iftraffic64](https://exchange.icinga.org/exchange/iftraffic64)
+The [check_iftraffic64](https://exchange.icinga.com/exchange/iftraffic64) plugin
 checks the utilization of a given interface name using the SNMP protocol.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                    | Description
 ------------------------|---------------------------------------------------------
@@ -2344,12 +2881,12 @@ iftraffic64_warn        | **Optional.** Percent of bandwidth usage necessary to 
 iftraffic64_crit        | **Optional.** Percent of bandwidth usage necessary to result in critical status (defaults to `98`).
 iftraffic64_max_counter	| **Optional.** Maximum counter value of net devices in kilo/mega/giga/bytes.
 
-#### <a id="plugin-contrib-command-interfaces"></a> interfaces
+#### interfaces <a id="plugin-contrib-command-interfaces"></a>
 
-The plugin [check_interfaces](https://www.netways.org/projects/check-interfaces)
-Check interfaces and utilization.
+The [check_interfaces](https://git.netways.org/plugins/check_interfaces) plugin
+uses SNMP to monitor network interfaces and their utilization.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                      | Description
 --------------------------|---------------------------------------------------------
@@ -2375,13 +2912,23 @@ interfaces_aliases        | **Optional.** Retrieves the interface description.
 interfaces_match_aliases  | **Optional.** Also match against aliases (Option --aliases automatically enabled).
 interfaces_timeout        | **Optional.** Sets the SNMP timeout (in ms).
 interfaces_sleep          | **Optional.** Sleep between every SNMP query (in ms).
+interfaces_names          | **Optional.** If set to true, use ifName instead of ifDescr.
 
-#### <a id="plugin-contrib-command-nwc_health"></a> nwc_health
+#### nwc_health <a id="plugin-contrib-command-nwc_health"></a>
 
-The plugin [check_nwc_health](https://labs.consol.de/de/nagios/check_nwc_health/index.html)
-Check switches, router, there interfaces and utilization.
+The [check_nwc_health](https://labs.consol.de/de/nagios/check_nwc_health/index.html) plugin
+uses SNMP to monitor network components. The plugin is able to generate interface statistics,
+check hardware (CPU, memory, fan, power, etc.), monitor firewall policies, HRSP, load-balancer
+pools, processor and memory usage.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Currently the following network components are supported: Cisco IOS, Cisco Nexus, Cisco ASA,
+Cisco PIX, F5 BIG-IP, CheckPoint Firewall1, Juniper NetScreen, HP Procurve, Nortel, Brocade 4100/4900,
+EMC DS 4700, EMC DS 24, Allied Telesyn. Blue Coat SG600, Cisco Wireless Lan Controller 5500,
+Brocade ICX6610-24-HPOE, Cisco UC Telefonzeugs, FOUNDRY-SN-AGENT-MIB, FRITZ!BOX 7390, FRITZ!DECT 200,
+Juniper IVE, Pulse-Gateway MAG4610, Cisco IronPort AsyncOS, Foundry, etc. A complete list can be
+found in the plugin [documentation](https://labs.consol.de/nagios/check_nwc_health/index.html).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                      	| Description
 --------------------------------|---------------------------------------------------------
@@ -2410,13 +2957,13 @@ nwc_health_ifspeed		| **Optional.** Override the ifspeed oid of an interface
 nwc_health_units		| **Optional.** One of %, B, KB, MB, GB, Bit, KBi, MBi, GBi. (used for e.g. mode interface-usage)
 nwc_health_name2		| **Optional.** The secondary name of a component.
 nwc_health_role			| **Optional.** The role of this device in a hsrp group (active/standby/listen).
-nwc_health_report		| **Optional.** Can be used to shorten the output.
+nwc_health_report		| **Optional.** Can be used to shorten the output. Possible values are: 'long' (default), 'short' (to shorten if available), or 'html' (to produce some html outputs if available)
 nwc_health_lookback		| **Optional.** The amount of time you want to look back when calculating average rates. Use it for mode interface-errors or interface-usage. Without --lookback the time between two runs of check_nwc_health is the base for calculations. If you want your checkresult to be based for example on the past hour, use --lookback 3600.
 nwc_health_warning		| **Optional.** The warning threshold
 nwc_health_critical		| **Optional.** The critical threshold
 nwc_health_warningx		| **Optional.** The extended warning thresholds
 nwc_health_criticalx		| **Optional.** The extended critical thresholds
-nwc_health_mitigation		| **Optional.** The parameter allows you to change a critical error to a warning.
+nwc_health_mitigation		| **Optional.** The parameter allows you to change a critical error to a warning (1) or ok (0).
 nwc_health_selectedperfdata	| **Optional.** The parameter allows you to limit the list of performance data. It's a perl regexp. Only matching perfdata show up in the output.
 nwc_health_morphperfdata	| **Optional.** The parameter allows you to change performance data labels. It's a perl regexp and a substitution. --morphperfdata '(.*)ISATAP(.*)'='$1patasi$2'
 nwc_health_negate		| **Optional.** The parameter allows you to map exit levels, such as warning=critical.
@@ -2428,36 +2975,2242 @@ nwc_health_offline		| **Optional.** The maximum number of seconds since the last
 nwc_health_multiline		| **Optional.** Multiline output
 
 
-### <a id="plugin-contrib-web"></a> Web
+### Operating System <a id="plugin-contrib-operating-system"></a>
 
-This category includes all plugins for web-based checks.
+This category contains plugins which receive details about your operating system
+or the guest system.
 
-#### <a id="plugin-contrib-command-webinject"></a> webinject
+#### mem <a id="plugin-contrib-command-mem"></a>
 
-Check command object for the [check_webinject](http://www.webinject.org/manual.html) plugin.
+The [check_mem.pl](https://github.com/justintime/nagios-plugins) plugin checks the
+memory usage on linux and unix hosts. It is able to count cache memory as free when
+compared to thresholds. More details can be found on [this blog entry](http://sysadminsjourney.com/content/2009/06/04/new-and-improved-checkmempl-nagios-plugin).
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name         | Description
+-------------|-----------------------------------------------------------------------------------------------------------------------
+mem_used     | **Optional.** Tell the plugin to check for used memory in opposite of **mem_free**. Must specify one of these as true.
+mem_free     | **Optional.** Tell the plugin to check for free memory in opposite of **mem_used**. Must specify one of these as true.
+mem_cache    | **Optional.** If set to true, plugin will count cache as free memory. Defaults to false.
+mem_warning  | **Required.** Specify the warning threshold as number interpreted as percent.
+mem_critical | **Required.** Specify the critical threshold as number interpreted as percent.
+
+#### running_kernel <a id="plugin-contrib-command-running_kernel"></a>
+
+The [check_running_kernel](https://packages.debian.org/stretch/nagios-plugins-contrib) plugin
+is provided by the `nagios-plugin-contrib` package on Debian/Ubuntu.
+
+Custom attributes:
+
+Name                       | Description
+---------------------------|-------------
+running\_kernel\_use\_sudo | Whether to run the plugin with `sudo`. Defaults to false except on Ubuntu where it defaults to true.
+
+#### iostats <a id="plugin-contrib-command-iostats"></a>
+
+The [check_iostats](https://github.com/dnsmichi/icinga-plugins/blob/master/scripts/check_iostats) plugin
+uses the `iostat` binary to monitor I/O on a Linux host. The default thresholds are rather high
+so you can use a grapher for baselining before setting your own.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name           | Description
+---------------|-----------------------------------------------------------------------------------------------------------------------
+iostats\_disk            | **Required.** The device to monitor without path. e.g. sda or vda. (default: sda).
+iostats\_warning\_tps    | **Required.** Warning threshold for tps (default: 3000).
+iostats\_warning\_read   | **Required.** Warning threshold for KB/s reads (default: 50000).
+iostats\_warning\_write  | **Required.** Warning threshold for KB/s writes (default: 10000).
+iostats\_warning\_wait   | **Required.** Warning threshold for % iowait (default: 50).
+iostats\_critical\_tps   | **Required.** Critical threshold for tps (default: 5000).
+iostats\_critical\_read  | **Required.** Critical threshold for KB/s reads (default: 80000).
+iostats\_critical\_write | **Required.** Critical threshold for KB/s writes (default: 25000).
+iostats\_critical\_wait  | **Required.** Critical threshold for % iowait (default: 80).
+
+#### iostat <a id="plugin-contrib-command-iostat"></a>
+
+The [check_iostat](https://github.com/dnsmichi/icinga-plugins/blob/master/scripts/check_iostat) plugin
+uses the `iostat` binary to monitor disk I/O on a Linux host. The default thresholds are rather high
+so you can use a grapher for baselining before setting your own.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name           | Description
+---------------|-----------------------------------------------------------------------------------------------------------------------
+iostat\_disk   | **Required.** The device to monitor without path. e.g. sda or vda. (default: sda).
+iostat\_wtps   | **Required.** Warning threshold for tps (default: 100).
+iostat\_wread  | **Required.** Warning threshold for KB/s reads (default: 100).
+iostat\_wwrite | **Required.** Warning threshold for KB/s writes (default: 100).
+iostat\_ctps   | **Required.** Critical threshold for tps (default: 200).
+iostat\_cread  | **Required.** Critical threshold for KB/s reads (default: 200).
+iostat\_cwrite | **Required.** Critical threshold for KB/s writes (default: 200).
+
+#### yum <a id="plugin-contrib-command-yum"></a>
+
+The [check_yum](https://github.com/calestyo/check_yum) plugin checks the YUM package
+management system for package updates.
+The plugin requires the `yum-plugin-security` package to differentiate between security and normal updates.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+yum_all_updates         | **Optional.** Set to true to not distinguish between security and non-security updates, but returns critical for any available update. This may be used if the YUM security plugin is absent or you want to maintain every single package at the latest version. You may want to use **yum_warn_on_any_update** instead of this option. Defaults to false.
+yum_warn_on_any_update  | **Optional.** Set to true to warn if there are any (non-security) package updates available. Defaults to false.
+yum_cache_only          | **Optional.** If set to true, plugin runs entirely from cache and does not update the cache when running YUM. Useful if you have `yum makecache` cronned. Defaults to false.
+yum_no_warn_on_lock     | **Optional.** If set to true, returns OK instead of WARNING when YUM is locked and fails to check for updates due to another instance running. Defaults to false.
+yum_no_warn_on_updates  | **Optional.** If set to true, returns OK instead of WARNING even when updates are available. The plugin output still shows the number of available updates. Defaults to false.
+yum_enablerepo          | **Optional.** Explicitly enables a repository when calling YUM. Can take a comma separated list of repositories. Note that enabling repositories can lead to unexpected results, for example when protected repositories are enabled.
+yum_disablerepo         | **Optional.** Explicitly disables a repository when calling YUM. Can take a comma separated list of repositories. Note that enabling repositories can lead to unexpected results, for example when protected repositories are enabled.
+yum_installroot         | **Optional.** Specifies another installation root directory (for example a chroot).
+yum_timeout             | **Optional.** Set a timeout in seconds after which the plugin will exit (defaults to 55 seconds).
+
+### Storage <a id="plugins-contrib-storage"></a>
+
+This category includes all plugins for various storage and object storage technologies.
+
+#### glusterfs <a id="plugins-contrib-command-glusterfs"></a>
+
+The [glusterfs](https://www.unixadm.org/software/nagios-stuff/checks/check_glusterfs) plugin
+is used to check the GlusterFS storage health on the server.
+The plugin requires `sudo` permissions.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                       | Description
+---------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+glusterfs_perfdata         | **Optional.** Print perfdata of all or the specified volume.
+glusterfs_warnonfailedheal | **Optional.** Warn if the *heal-failed* log contains entries. The log can be cleared by restarting glusterd.
+glusterfs_volume           | **Optional.** Only check the specified *VOLUME*. If --volume is not set, all volumes are checked.
+glusterfs_disk_warning     | **Optional.** Warn if disk usage is above *DISKWARN*. Defaults to 90 (percent).
+glusterfs_disk_critical    | **Optional.** Return a critical error if disk usage is above *DISKCRIT*. Defaults to 95 (percent).
+glusterfs_inode_warning    | **Optional.** Warn if inode usage is above *DISKWARN*. Defaults to 90 (percent).
+glusterfs_inode_critical   | **Optional.** Return a critical error if inode usage is above *DISKCRIT*. Defaults to 95 (percent).
+
+#### ceph <a id="plugins-contrib-command-ceph"></a>
+
+The [ceph plugin](https://github.com/ceph/ceph-nagios-plugins)
+is used to check the Ceph storage health on the server.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name             | Description
+-----------------|---------------------------------------------------------
+ceph_exec_dir    | **Optional.** Ceph executable. Default /usr/bin/ceph.
+ceph_conf_file   | **Optional.** Alternative ceph conf file.
+ceph_mon_address | **Optional.** Ceph monitor address[:port].
+ceph_client_id   | **Optional.** Ceph client id.
+ceph_client_name | **Optional.** Ceph client name.
+ceph_client_key  | **Optional.** Ceph client keyring file.
+ceph_whitelist   | **Optional.** Whitelist regexp for ceph health warnings.
+ceph_details     | **Optional.** Run 'ceph health detail'.
+
+
+### Virtualization <a id="plugin-contrib-virtualization"></a>
+
+This category includes all plugins for various virtualization technologies.
+
+#### esxi_hardware <a id="plugin-contrib-command-esxi-hardware"></a>
+
+The [check_esxi_hardware.py](https://www.claudiokuenzler.com/nagios-plugins/check_esxi_hardware.php) plugin
+uses the [pywbem](https://pywbem.github.io/pywbem/) Python library to monitor the hardware of ESXi servers
+through the [VMWare API](https://www.vmware.com/support/pubs/sdk_pubs.html) and CIM service.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+esxi_hardware_host      | **Required.** Specifies the host to monitor. Defaults to "$address$".
+esxi_hardware_user      | **Required.** Specifies the user for polling. Must be a local user of the root group on the system. Can also be provided as a file path file:/path/to/.passwdfile, then first string of file is used.
+esxi_hardware_pass      | **Required.** Password of the user. Can also be provided as a file path file:/path/to/.passwdfile, then second string of file is used.
+esxi_hardware_port      | **Optional.** Specifies the CIM port to connect to. Defaults to 5989.
+esxi_hardware_vendor    | **Optional.** Defines the vendor of the server: "auto", "dell", "hp", "ibm", "intel", "unknown" (default).
+esxi_hardware_html      | **Optional.** Add web-links to hardware manuals for Dell servers (use your country extension). Only useful with **esxi_hardware_vendor** = dell.
+esxi_hardware_ignore    | **Optional.** Comma separated list of elements to ignore.
+esxi_hardware_perfdata  | **Optional.** Add performcedata for graphers like PNP4Nagios to the output. Defaults to false.
+esxi_hardware_nopower   | **Optional.** Do not collect power performance data, when **esxi_hardware_perfdata** is set to true. Defaults to false.
+esxi_hardware_novolts   | **Optional.** Do not collect voltage performance data, when **esxi_hardware_perfdata** is set to true. Defaults to false.
+esxi_hardware_nocurrent | **Optional.** Do not collect current performance data, when **esxi_hardware_perfdata** is set to true. Defaults to false.
+esxi_hardware_notemp    | **Optional.** Do not collect temperature performance data, when **esxi_hardware_perfdata** is set to true. Defaults to false.
+esxi_hardware_nofan     | **Optional.** Do not collect fan performance data, when **esxi_hardware_perfdata** is set to true. Defaults to false.
+esxi_hardware_nolcd     | **Optional.** Do not collect lcd/display status data. Defaults to false.
+
+#### VMware <a id="plugin-contrib-vmware"></a>
+
+Check commands for the [check_vmware_esx](https://github.com/BaldMansMojo/check_vmware_esx) plugin.
+
+**vmware-esx-dc-volumes**
+
+Check command object for the `check_vmware_esx` plugin. Shows all datastore volumes info.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                    | Description
 ------------------------|--------------
-webinject_config_file   | **Optional.** There is a configuration file named 'config.xml' that is used to store configuration settings for your project. You can use this to specify which test case files to run and to set some constants and settings to be used by WebInject.
-webinject_output        | **Optional.** This option is followed by a directory name or a prefix to prepended to the output files. This is used to specify the location for writing output files (http.log, results.html, and results.xml). If a directory name is supplied (use either an absolute or relative path and make sure to add the trailing slash), all output files are written to this directory. If the trailing slash is ommitted, it is assumed to a prefix and this will be prepended to the output files. You may also use a combination of a directory and prefix.
-webinject_no_output     | **Optional.** Suppresses all output to STDOUT except the results summary.
-webinject_timeout       | **Optional.** The value [given in seconds] will be compared to the global time elapsed to run all the tests. If the tests have all been successful, but have taken more time than the 'globaltimeout' value, a warning message is sent back to Icinga.
-webinject_report_type   | **Optional.** This setting is used to enable output formatting that is compatible for use with specific external programs. The available values you can set this to are: nagios, mrtg, external and standard.
-webinject_testcase_file | **Optional.** When you launch WebInject in console mode, you can optionally supply an argument for a testcase file to run. It will look for this file in the directory that webinject.pl resides in. If no filename is passed from the command line, it will look in config.xml for testcasefile declarations. If no files are specified, it will look for a default file named 'testcases.xml' in the current [webinject] directory. If none of these are found, the engine will stop and give you an error.
+vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
+vmware_cluster          | **Optional.** ESX or ESXi clustername.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_subselect        | **Optional.** Volume name to be checked the free space.
+vmware_gigabyte         | **Optional.** Output in GB instead of MB.
+vmware_usedspace        | **Optional.** Output used space instead of free. Defaults to "false".
+vmware_alertonly        | **Optional.** List only alerting volumes. Defaults to "false".
+vmware_exclude          | **Optional.** Blacklist volumes name. No value defined as default.
+vmware_include          | **Optional.** Whitelist volumes name. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_dc_volume_used   | **Optional.** Output used space instead of free. Defaults to "true".
+vmware_warn             | **Optional.** The warning threshold for volumes. Defaults to "80%".
+vmware_crit             | **Optional.** The critical threshold for volumes. Defaults to "90%".
 
-#### <a id="plugin-contrib-command-jmx4perl"></a> jmx4perl
 
-The plugin `jmx4perl` utilizes the api provided by the jolokia web application to query java message beans on an application server. It is part of the perl module provided by Roland Huß on [cpan](http://search.cpan.org/~roland/jmx4perl/) including a detailed [documentation](http://search.cpan.org/~roland/jmx4perl/scripts/check_jmx4perl) containing installation tutorial, security advices und usage examples.
+**vmware-esx-dc-runtime-info**
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Check command object for the `check_vmware_esx` plugin. Shows all runtime info for the datacenter/Vcenter.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
+vmware_cluster          | **Optional.** ESX or ESXi clustername.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-dc-runtime-listvms**
+
+Check command object for the `check_vmware_esx` plugin. List of vmware machines and their power state. BEWARE!! In larger environments systems can cause trouble displaying the informations needed due to the mass of data. Use **vmware_alertonly** to avoid this.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
+vmware_cluster          | **Optional.** ESX or ESXi clustername.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_alertonly        | **Optional.** List only alerting VMs. Important here to avoid masses of data.
+vmware_exclude          | **Optional.** Blacklist VMs name. No value defined as default.
+vmware_include          | **Optional.** Whitelist VMs name. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+**vmware-esx-dc-runtime-listhost**
+
+Check command object for the `check_vmware_esx` plugin. List of VMware ESX hosts and their power state.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
+vmware_cluster          | **Optional.** ESX or ESXi clustername.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_alertonly        | **Optional.** List only alerting hosts. Important here to avoid masses of data.
+vmware_exclude          | **Optional.** Blacklist VMware ESX hosts. No value defined as default.
+vmware_include          | **Optional.** Whitelist VMware ESX hosts. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+**vmware-esx-dc-runtime-listcluster**
+
+Check command object for the `check_vmware_esx` plugin. List of VMware clusters and their states.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
+vmware_cluster          | **Optional.** ESX or ESXi clustername.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_alertonly        | **Optional.** List only alerting hosts. Important here to avoid masses of data.
+vmware_exclude          | **Optional.** Blacklist VMware cluster. No value defined as default.
+vmware_include          | **Optional.** Whitelist VMware cluster. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+**vmware-esx-dc-runtime-issues**
+
+Check command object for the `check_vmware_esx` plugin. All issues for the host.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
+vmware_cluster          | **Optional.** ESX or ESXi clustername.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist issues. No value defined as default.
+vmware_include          | **Optional.** Whitelist issues. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+**vmware-esx-dc-runtime-status**
+
+Check command object for the `check_vmware_esx` plugin. Overall object status (gray/green/red/yellow).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
+vmware_cluster          | **Optional.** ESX or ESXi clustername.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-dc-runtime-tools**
+
+Check command object for the `check_vmware_esx` plugin. Vmware Tools status.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
+vmware_cluster          | **Optional.** ESX or ESXi clustername.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_poweredonly      | **Optional.** List only VMs which are powered on. No value defined as default.
+vmware_alertonly        | **Optional.** List only alerting VMs. Important here to avoid masses of data.
+vmware_exclude          | **Optional.** Blacklist VMs. No value defined as default.
+vmware_include          | **Optional.** Whitelist VMs. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+vmware_openvmtools	| **Optional** Prevent CRITICAL state for installed and running Open VM Tools.
+
+
+**vmware-esx-soap-host-check**
+
+Check command object for the `check_vmware_esx` plugin. Simple check to verify a successful connection to VMware SOAP API.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-host-uptime**
+
+Check command object for the `check_vmware_esx` plugin. Displays uptime of the VMware host.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-host-cpu**
+
+Check command object for the `check_vmware_esx` plugin. CPU usage in percentage.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold in percent. Defaults to "80%".
+vmware_crit             | **Optional.** The critical threshold in percent. Defaults to "90%".
+
+
+**vmware-esx-soap-host-cpu-ready**
+
+Check command object for the `check_vmware_esx` plugin. Percentage of time that the virtual machine was ready, but could not get scheduled to run on the physical CPU. CPU ready time is dependent on the number of virtual machines on the host and their CPU loads. High or growing ready time can be a hint CPU bottlenecks.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-host-cpu-wait**
+
+Check command object for the `check_vmware_esx` plugin. CPU time spent in wait state. The wait total includes time spent the CPU idle, CPU swap wait, and CPU I/O wait states. High or growing wait time can be a hint I/O bottlenecks.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-host-cpu-usage**
+
+Check command object for the `check_vmware_esx` plugin. Actively used CPU of the host, as a percentage of the total available CPU. Active CPU is approximately equal to the ratio of the used CPU to the available CPU.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold in percent. Defaults to "80%".
+vmware_crit             | **Optional.** The critical threshold in percent. Defaults to "90%".
+
+
+**vmware-esx-soap-host-mem**
+
+Check command object for the `check_vmware_esx` plugin. All mem info(except overall and no thresholds).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-host-mem-usage**
+
+Check command object for the `check_vmware_esx` plugin. Average mem usage in percentage.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold in percent. Defaults to "80%".
+vmware_crit             | **Optional.** The critical threshold in percent. Defaults to "90%".
+
+
+**vmware-esx-soap-host-mem-consumed**
+
+Check command object for the `check_vmware_esx` plugin. Amount of machine memory used on the host. Consumed memory includes Includes memory used by the Service Console, the VMkernel vSphere services, plus the total consumed metrics for all running virtual machines in MB.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold in percent. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold in percent. No value defined as default.
+
+
+**vmware-esx-soap-host-mem-swapused**
+
+Check command object for the `check_vmware_esx` plugin. Amount of memory that is used by swap. Sum of memory swapped of all powered on VMs and vSphere services on the host in MB. In case of an error all VMs with their swap used will be displayed.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold in percent. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold in percent. No value defined as default.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+**vmware-esx-soap-host-mem-overhead**
+
+Check command object for the `check_vmware_esx` plugin. Additional mem used by VM Server in MB.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Auhentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold in percent. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold in percent. No value defined as default.
+
+
+**vmware-esx-soap-host-mem-memctl**
+
+Check command object for the `check_vmware_esx` plugin. The sum of all vmmemctl values in MB for all powered-on virtual machines, plus vSphere services on the host. If the balloon target value is greater than the balloon value, the VMkernel inflates the balloon, causing more virtual machine memory to be reclaimed. If the balloon target value is less than the balloon value, the VMkernel deflates the balloon, which allows the virtual machine to consume additional memory if needed (used by VM memory control driver). In case of an error all VMs with their vmmemctl values will be displayed.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold in percent. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold in percent. No value defined as default.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+**vmware-esx-soap-host-net**
+
+Check command object for the `check_vmware_esx` plugin. Shows net info.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist NICs. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist expression as regexp.
+
+
+**vmware-esx-soap-host-net-usage**
+
+Check command object for the `check_vmware_esx` plugin. Overall network usage in KBps(Kilobytes per Second).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold in KBps(Kilobytes per Second). No value defined as default.
+vmware_crit             | **Optional.** The critical threshold in KBps(Kilobytes per Second). No value defined as default.
+
+
+**vmware-esx-soap-host-net-receive**
+
+Check command object for the `check_vmware_esx` plugin. Data receive in KBps(Kilobytes per Second).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold in KBps(Kilobytes per Second). No value defined as default.
+vmware_crit             | **Optional.** The critical threshold in KBps(Kilobytes per Second). No value defined as default.
+
+
+**vmware-esx-soap-host-net-send**
+
+Check command object for the `check_vmware_esx` plugin. Data send in KBps(Kilobytes per Second).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold in KBps(Kilobytes per Second). No value defined as default.
+vmware_crit             | **Optional.** The critical threshold in KBps(Kilobytes per Second). No value defined as default.
+
+
+**vmware-esx-soap-host-net-nic**
+
+Check command object for the `check_vmware_esx` plugin. Check all active NICs.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist NICs. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist expression as regexp.
+
+
+**vmware-esx-soap-host-volumes**
+
+Check command object for the `check_vmware_esx` plugin. Shows all datastore volumes info.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_subselect        | **Optional.** Volume name to be checked the free space.
+vmware_gigabyte         | **Optional.** Output in GB instead of MB.
+vmware_usedspace        | **Optional.** Output used space instead of free. Defaults to "false".
+vmware_alertonly        | **Optional.** List only alerting volumes. Defaults to "false".
+vmware_exclude          | **Optional.** Blacklist volumes name. No value defined as default.
+vmware_include          | **Optional.** Whitelist volumes name. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_warn             | **Optional.** The warning threshold for volumes. Defaults to "80%".
+vmware_crit             | **Optional.** The critical threshold for volumes. Defaults to "90%".
+vmware_spaceleft        | **Optional.** This has to be used in conjunction with thresholds as mentioned above.
+
+
+**vmware-esx-soap-host-io**
+
+Check command object for the `check_vmware_esx` plugin. Shows all disk io info. Without subselect no thresholds can be given. All I/O values are aggregated from historical intervals over the past 24 hours with a 5 minute sample rate.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-host-io-aborted**
+
+Check command object for the `check_vmware_esx` plugin. Number of aborted SCSI commands.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-host-io-resets**
+
+Check command object for the `check_vmware_esx` plugin. Number of SCSI bus resets.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-host-io-read**
+
+Check command object for the `check_vmware_esx` plugin. Average number of kilobytes read from the disk each second.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-host-io-read-latency**
+
+Check command object for the `check_vmware_esx` plugin. Average amount of time (ms) to process a SCSI read command issued from the Guest OS to the virtual machine.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-host-io-write**
+
+Check command object for the `check_vmware_esx` plugin. Average number of kilobytes written to disk each second.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-host-io-write-latency**
+
+Check command object for the `check_vmware_esx` plugin. Average amount of time (ms) taken to process a SCSI write command issued by the Guest OS to the virtual machine.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-host-io-usage**
+
+Check command object for the `check_vmware_esx` plugin. Aggregated disk I/O rate. For hosts, this metric includes the rates for all virtual machines running on the host.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-host-io-kernel-latency**
+
+Check command object for the `check_vmware_esx` plugin. Average amount of time (ms) spent by VMkernel processing each SCSI command.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-host-io-device-latency**
+
+Check command object for the `check_vmware_esx` plugin. Average amount of time (ms) to complete a SCSI command from the physical device.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-host-io-queue-latency**
+
+Check command object for the `check_vmware_esx` plugin. Average amount of time (ms) spent in the VMkernel queue.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-host-io-total-latency**
+
+Check command object for the `check_vmware_esx` plugin. Average amount of time (ms) taken during the collection interval to process a SCSI command issued by the guest OS to the virtual machine. The sum of kernelWriteLatency and deviceWriteLatency.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-host-media**
+
+Check command object for the `check_vmware_esx` plugin. List vm's with attached host mounted media like cd,dvd or floppy drives. This is important for monitoring because a virtual machine with a mount cd or dvd drive can not be moved to another host.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist VMs name. No value defined as default.
+vmware_include          | **Optional.** Whitelist VMs name. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+**vmware-esx-soap-host-service**
+
+Check command object for the `check_vmware_esx` plugin. Shows host service info.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist services name. No value defined as default.
+vmware_include          | **Optional.** Whitelist services name. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+**vmware-esx-soap-host-runtime**
+
+Check command object for the `check_vmware_esx` plugin. Shows runtime info: VMs, overall status, connection state, health, storagehealth, temperature and sensor are represented as one value and without thresholds.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist VMs name. No value defined as default.
+vmware_include          | **Optional.** Whitelist VMs name. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+
+
+**vmware-esx-soap-host-runtime-con**
+
+Check command object for the `check_vmware_esx` plugin. Shows connection state.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-host-runtime-listvms**
+
+Check command object for the `check_vmware_esx` plugin. List of VMware machines and their status.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist VMs name. No value defined as default.
+vmware_include          | **Optional.** Whitelist VMs name. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+**vmware-esx-soap-host-runtime-status**
+
+Check command object for the `check_vmware_esx` plugin. Overall object status (gray/green/red/yellow).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-host-runtime-health**
+
+Check command object for the `check_vmware_esx` plugin. Checks cpu/storage/memory/sensor status.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist status name. No value defined as default.
+vmware_include          | **Optional.** Whitelist status name. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+
+
+**vmware-esx-soap-host-runtime-health-listsensors**
+
+Check command object for the `check_vmware_esx` plugin. List all available sensors(use for listing purpose only).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist status name. No value defined as default.
+vmware_include          | **Optional.** Whitelist status name. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+
+
+**vmware-esx-soap-host-runtime-health-nostoragestatus**
+
+Check command object for the `check_vmware_esx` plugin. This is to avoid a double alarm if you use **vmware-esx-soap-host-runtime-health** and **vmware-esx-soap-host-runtime-storagehealth**.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist status name. No value defined as default.
+vmware_include          | **Optional.** Whitelist status name. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+
+
+**vmware-esx-soap-host-runtime-storagehealth**
+
+Check command object for the `check_vmware_esx` plugin. Local storage status check.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist storage name. No value defined as default.
+vmware_include          | **Optional.** Whitelist storage name. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+**vmware-esx-soap-host-runtime-temp**
+
+Check command object for the `check_vmware_esx` plugin. Lists all temperature sensors.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist sensor name. No value defined as default.
+vmware_include          | **Optional.** Whitelist sensor name. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+**vmware-esx-soap-host-runtime-issues**
+
+Check command object for the `check_vmware_esx` plugin. Lists all configuration issues for the host.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist configuration issues. No value defined as default.
+vmware_include          | **Optional.** Whitelist configuration issues. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+**vmware-esx-soap-host-storage**
+
+Check command object for the `check_vmware_esx` plugin. Shows Host storage info.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist adapters, luns and paths. No value defined as default.
+vmware_include          | **Optional.** Whitelist adapters, luns and paths. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+
+
+**vmware-esx-soap-host-storage-adapter**
+
+Check command object for the `check_vmware_esx` plugin. List host bus adapters.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist adapters. No value defined as default.
+vmware_include          | **Optional.** Whitelist adapters. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+**vmware-esx-soap-host-storage-lun**
+
+Check command object for the `check_vmware_esx` plugin. List SCSI logical units. The listing will include: LUN, canonical name of the disc, all of displayed name which is not part of the canonical name and status.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_exclude          | **Optional.** Blacklist luns. No value defined as default.
+vmware_include          | **Optional.** Whitelist luns. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+**vmware-esx-soap-host-storage-path**
+
+Check command object for the `check_vmware_esx` plugin. List multipaths and the associated paths.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_host             | **Required.** ESX or ESXi hostname.
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. In case the check is done through a Datacenter/vCenter host.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_alertonly        | **Optional.** List only alerting units. Important here to avoid masses of data. Defaults to "false".
+vmware_exclude          | **Optional.** Blacklist paths. No value defined as default.
+vmware_include          | **Optional.** Whitelist paths. No value defined as default.
+vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+vmware_standbyok        | **Optional.** For storage systems where a standby multipath is ok and not a warning. Defaults to false.
+
+
+**vmware-esx-soap-vm-cpu**
+
+Check command object for the `check_vmware_esx` plugin. Shows all CPU usage info.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+
+**vmware-esx-soap-vm-cpu-ready**
+
+Check command object for the `check_vmware_esx` plugin. Percentage of time that the virtual machine was ready, but could not get scheduled to run on the physical CPU.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-vm-cpu-wait**
+
+Check command object for the `check_vmware_esx` plugin. CPU time spent in wait state. The wait total includes time spent the CPU idle, CPU swap wait, and CPU I/O wait states. High or growing wait time can be a hint I/O bottlenecks.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-vm-cpu-usage**
+
+Check command object for the `check_vmware_esx` plugin. Amount of actively used virtual CPU, as a percentage of total available CPU. This is the host's view of the CPU usage, not the guest operating system view. It is the average CPU utilization over all available virtual CPUs in the virtual machine.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** Warning threshold in percent. Defaults to "80%".
+vmware_crit             | **Optional.** Critical threshold in percent. Defaults to "90%".
+
+
+**vmware-esx-soap-vm-mem**
+
+Check command object for the `check_vmware_esx` plugin. Shows all memory info, except overall.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-vm-mem-usage**
+
+Check command object for the `check_vmware_esx` plugin. Average mem usage in percentage of configured virtual machine "physical" memory.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** Warning threshold in percent. Defaults to "80%".
+vmware_crit             | **Optional.** Critical threshold in percent. Defaults to "90%".
+
+
+**vmware-esx-soap-vm-mem-consumed**
+
+Check command object for the `check_vmware_esx` plugin. Amount of guest physical memory in MB consumed by the virtual machine for guest memory. Consumed memory does not include overhead memory. It includes shared memory and memory that might be reserved, but not actually used. Use this metric for charge-back purposes.<br>
+**vm consumed memory = memory granted -- memory saved**
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-vm-mem-memctl**
+
+Check command object for the `check_vmware_esx` plugin. Amount of guest physical memory that is currently reclaimed from the virtual machine through ballooning. This is the amount of guest physical memory that has been allocated and pinned by the balloon driver.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+
+**vmware-esx-soap-vm-net**
+
+Check command object for the `check_vmware_esx` plugin. Shows net info.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-vm-net-usage**
+
+Check command object for the `check_vmware_esx` plugin. Overall network usage in KBps(Kilobytes per Second).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-vm-net-receive**
+
+Check command object for the `check_vmware_esx` plugin. Receive in KBps(Kilobytes per Second).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-vm-net-send**
+
+Check command object for the `check_vmware_esx` plugin. Send in KBps(Kilobytes per Second).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-vm-io**
+
+Check command object for the `check_vmware_esx` plugin. Shows all disk io info. Without subselect no thresholds can be given. All I/O values are aggregated from historical intervals over the past 24 hours with a 5 minute sample rate.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-vm-io-read**
+
+Check command object for the `check_vmware_esx` plugin. Average number of kilobytes read from the disk each second.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session - IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-vm-io-write**
+
+Check command object for the `check_vmware_esx` plugin. Average number of kilobytes written to disk each second.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-vm-io-usage**
+
+Check command object for the `check_vmware_esx` plugin. Aggregated disk I/O rate.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-vm-runtime**
+
+Check command object for the `check_vmware_esx` plugin. Shows virtual machine runtime info.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-vm-runtime-con**
+
+Check command object for the `check_vmware_esx` plugin. Shows the connection state.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-vm-runtime-powerstate**
+
+Check command object for the `check_vmware_esx` plugin. Shows virtual machine power state: poweredOn, poweredOff or suspended.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-vm-runtime-status**
+
+Check command object for the `check_vmware_esx` plugin. Overall object status (gray/green/red/yellow).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+
+**vmware-esx-soap-vm-runtime-consoleconnections**
+
+Check command object for the `check_vmware_esx` plugin. Console connections to virtual machine.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_warn             | **Optional.** The warning threshold. No value defined as default.
+vmware_crit             | **Optional.** The critical threshold. No value defined as default.
+
+
+**vmware-esx-soap-vm-runtime-gueststate**
+
+Check command object for the `check_vmware_esx` plugin. Guest OS status. Needs VMware Tools installed and running.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+
+**vmware-esx-soap-vm-runtime-tools**
+
+Check command object for the `check_vmware_esx` plugin. Guest OS status. VMware tools  status.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_openvmtools	| **Optional** Prevent CRITICAL state for installed and running Open VM Tools.
+
+
+**vmware-esx-soap-vm-runtime-issues**
+
+Check command object for the `check_vmware_esx` plugin. All issues for the virtual machine.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|--------------
+vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
+vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
+vmware_vmname           | **Required.** Virtual machine name.
+vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
+vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
+vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
+vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
+vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
+vmware_sessionfile      | **Optional.** Session file name enhancement.
+vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
+vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
+vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
+vmware_password         | **Optional.** The username's password. No value defined as default.
+vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Authentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
+vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
+
+
+### Web <a id="plugin-contrib-web"></a>
+
+This category includes all plugins for web-based checks.
+
+#### apache-status <a id="plugin-contrib-command-apache-status"></a>
+
+The [check_apache_status.pl](https://github.com/lbetz/check_apache_status) plugin
+uses the [/server-status](https://httpd.apache.org/docs/current/mod/mod_status.html)
+HTTP endpoint to monitor status metrics for the Apache webserver.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    | Description
+------------------------|----------------------------------------------------------------------------------
+apache_status_address	| **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, `address6` otherwise.
+apache_status_port	| **Optional.** the http port.
+apache_status_url	| **Optional.** URL to use, instead of the default (http://`apache_status_address`/server-status).
+apache_status_ssl	| **Optional.** set to use ssl connection
+apache_status_timeout	| **Optional.** timeout in seconds
+apache_status_warning	| **Optional.** Warning threshold (number of open slots, busy workers and idle workers that will cause a WARNING) like ':20,50,:50'.
+apache_status_critical	| **Optional.** Critical threshold (number of open slots, busy workers and idle workers that will cause a CRITICAL) like ':10,25,:20'.
+
+
+#### ssl_cert <a id="plugin-check-command-ssl_cert"></a>
+
+The [check_ssl_cert](https://github.com/matteocorti/check_ssl_cert) plugin
+uses the openssl binary (and optional curl) to check a X.509 certificate.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                      | Description
+--------------------------|--------------
+ssl_cert_address              | **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
+ssl_cert_port                 | **Optional.** TCP port number (default: 443).
+ssl_cert_file                 | **Optional.** Local file path. Works only if `ssl_cert_address` is set to "localhost".
+ssl_cert_warn                 | **Optional.** Minimum number of days a certificate has to be valid.
+ssl_cert_critical             | **Optional.** Minimum number of days a certificate has to be valid to issue a critical status.
+ssl_cert_cn                   | **Optional.** Pattern to match the CN of the certificate.
+ssl_cert_altnames             | **Optional.** Matches the pattern specified in -n with alternate
+ssl_cert_issuer               | **Optional.** Pattern to match the issuer of the certificate.
+ssl_cert_org                  | **Optional.** Pattern to match the organization of the certificate.
+ssl_cert_email                | **Optional.** Pattern to match the email address contained in the certificate.
+ssl_cert_serial               | **Optional.** Pattern to match the serial number.
+ssl_cert_noauth               | **Optional.** Ignore authority warnings (expiration only)
+ssl_cert_match_host           | **Optional.** Match CN with the host name.
+ssl_cert_selfsigned           | **Optional.** Allow self-signed certificate.
+ssl_cert_sni                  | **Optional.** Sets the TLS SNI (Server Name Indication) extension.
+ssl_cert_timeout              | **Optional.** Seconds before connection times out (default: 15)
+ssl_cert_protocol             | **Optional.** Use the specific protocol {http,smtp,pop3,imap,ftp,xmpp,irc,ldap} (default: http).
+ssl_cert_clientcert           | **Optional.** Use client certificate to authenticate.
+ssl_cert_clientpass           | **Optional.** Set passphrase for client certificate.
+ssl_cert_ssllabs              | **Optional.** SSL Labs assessment
+ssl_cert_ssllabs_nocache      | **Optional.** Forces a new check by SSL Labs
+ssl_cert_rootcert             | **Optional.** Root certificate or directory to be used for certificate validation.
+ssl_cert_ignore_signature     | **Optional.** Do not check if the certificate was signed with SHA1 od MD5.
+ssl_cert_ssl_version          | **Optional.** Force specific SSL version out of {ssl2,ssl3,tls1,tls1_1,tls1_2}.
+ssl_cert_disable_ssl_versions | **Optional.** Disable specific SSL versions out of {ssl2,ssl3,tls1,tls1_1,tls1_2}. Multiple versions can be given as array.
+ssl_cert_cipher               | **Optional.** Cipher selection: force {ecdsa,rsa} authentication.
+ssl_cert_ignore_expiration    | **Optional.** Ignore expiration date.
+ssl_cert_ignore_ocsp          | **Optional.** Do not check revocation with OCSP.
+
+
+#### jmx4perl <a id="plugin-contrib-command-jmx4perl"></a>
+
+The [check_jmx4perl](http://search.cpan.org/~roland/jmx4perl/scripts/check_jmx4perl) plugin
+uses the HTTP API exposed by the [Jolokia](https://jolokia.org)
+web application and queries Java message beans on an application server. It is
+part of the `JMX::Jmx4Perl` Perl module which includes detailed
+[documentation](http://search.cpan.org/~roland/jmx4perl/scripts/check_jmx4perl).
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                         | Description
 -----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------
 jmx4perl_url                 | **Required.** URL to agent web application. Defaults to "http://$address$:8080/jolokia".
-jmx4perl_product             | **Optional.** Name of app server product (e.g. jboss), by default is uses an autodetection facility.
-jmx4perl_alias               | **Optional.** Alias name for attribute (e.g. MEMORY_HEAP_USED). All availables aliases can be viewed by executing `jmx4perl aliases` on the command line.
+jmx4perl_product             | **Optional.** Name of app server product (e.g. jboss), by default is uses an auto detection facility.
+jmx4perl_alias               | **Optional.** Alias name for attribute (e.g. MEMORY_HEAP_USED). All available aliases can be viewed by executing `jmx4perl aliases` on the command line.
 jmx4perl_mbean               | **Optional.** MBean name (e.g. java.lang:type=Memory).
 jmx4perl_attribute           | **Optional.** Attribute name (e.g. HeapMemoryUsage).
 jmx4perl_operation           | **Optional.** Operation to execute.
@@ -2476,7 +5229,7 @@ jmx4perl_base                | **Optional.** Base name, which when given, interp
 jmx4perl_base_mbean          | **Optional.** Base MBean name, interprets critical and warning values as relative in the range 0 .. 100%. Requires "jmx4perl_base_attribute".
 jmx4perl_base_attribute      | **Optional.** Base attribute for a relative check. Requires "jmx4perl_base_mbean".
 jmx4perl_base_path           | **Optional.** Base path for relative checks, where this path is used on the base attribute's value.
-jmx4perl_unit                | **Optional.** Unit of measurement of the data retreived. Recognized values are [B\|KB\|MN\|GB\|TB] for memory values and [us\|ms\|s\|m\|h\|d] for time values.
+jmx4perl_unit                | **Optional.** Unit of measurement of the data retrieved. Recognized values are [B\|KB\|MN\|GB\|TB] for memory values and [us\|ms\|s\|m\|h\|d] for time values.
 jmx4perl_null                | **Optional.** Value which should be used in case of a null return value of an operation or attribute. Defaults to null.
 jmx4perl_string              | **Optional.** Force string comparison for critical and warning checks. Defaults to false.
 jmx4perl_numeric             | **Optional.** Force numeric comparison for critical and warning checks. Defaults to false.
@@ -2490,70 +5243,13 @@ jmx4perl_config              | **Optional.** Path to configuration file.
 jmx4perl_server              | **Optional.** Symbolic name of server url to use, which needs to be configured in the configuration file.
 jmx4perl_check               | **Optional.** Name of a check configuration as defined in the configuration file, use array if you need arguments.
 
-#### <a id="plugin-contrib-command-squid"></a> squid
 
-Plugin for monitoring [Squid](https://exchange.icinga.org/exchange/check_squid).
+#### kdc <a id="plugin-contrib-command-kdc"></a>
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+The [check_kdc](https://exchange.nagios.org/directory/Plugins/Security/check_kdc/details) plugin
+uses the Kerberos `kinit` binary to monitor Kerberos 5 KDC by acquiring a ticket.
 
-Name                    | Description
-------------------------|----------------------------------------------------------------------------------
-squid_hostname		| **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
-squid_data		| **Optional.** Data to fetch (default: Connections) available data: Connections Cache Resources Memory FileDescriptors.
-squid_port		| **Optional.** Port number (default: 3128).
-squid_user		| **Optional.** WWW user
-squid_password		| **Optional.** WWW password
-squid_warning		| **Optional.** Warning threshold. See http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT for the threshold format.
-squid_critical		| **Optional.** Critical threshold. See http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT for the threshold format.
-squid_client		| **Optional.** Path of squidclient (default: /usr/bin/squidclient).
-squid_timeout		| **Optional.** Seconds before plugin times out (default: 15).
-
-
-#### <a id="plugin-contrib-command-nginx_status"></a> nginx_status
-
-Plugin for monitoring [nginx_status](https://github.com/regilero/check_nginx_status).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|----------------------------------------------------------------------------------
-nginx_status_host_address		| **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, `address6` otherwise.
-nginx_status_port		| **Optional.** the http port.
-nginx_status_url		| **Optional.** URL to use, instead of the default (http://`nginx_status_hostname`/nginx_status).
-nginx_status_servername		| **Optional.** ServerName to use if you specified an IP to match the good Virtualhost in your target
-nginx_status_ssl		| **Optional.** set to use ssl connection
-nginx_status_disable_sslverify		| **Optional.** set to disable SSL hostname verification
-nginx_status_user		| **Optional.** Username for basic auth
-nginx_status_pass		| **Optional.** Password for basic auth
-nginx_status_realm		| **Optional.** Realm for basic auth
-nginx_status_maxreach		| **Optional.** Number of max processes reached (since last check) that should trigger an alert
-nginx_status_timeout		| **Optional.** timeout in seconds
-nginx_status_warn		| **Optional.** Warning threshold (number of active connections, ReqPerSec or ConnPerSec that will cause a WARNING) like '10000,100,200'.
-nginx_status_critical		| **Optional.** Critical threshold (number of active connections, ReqPerSec or ConnPerSec that will cause a CRITICAL) like '20000,200,300'.
-
-
-#### <a id="plugin-contrib-command-apache_status"></a> apache_status
-
-Plugin for monitoring [apache_status](https://github.com/lbetz/check_apache_status).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|----------------------------------------------------------------------------------
-apache_status_address	| **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, `address6` otherwise.
-apache_status_port	| **Optional.** the http port.
-apache_status_url	| **Optional.** URL to use, instead of the default (http://`apache_status_address`/server-status).
-apache_status_ssl	| **Optional.** set to use ssl connection
-apache_status_timeout	| **Optional.** timeout in seconds
-apache_status_warning	| **Optional.** Warning threshold (number of open slots, busy workers and idle workers that will cause a WARNING) like ':20,50,:50'.
-apache_status_critical	| **Optional.** Critical threshold (number of open slots, busy workers and idle workers that will cause a CRITICAL) like ':10,25,:20'.
-
-
-#### <a id="plugin-contrib-command-kdc"></a> kdc
-
-Plugin for monitoring [kdc](https://exchange.nagios.org/directory/Plugins/Security/check_kdc/details).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------------------------------------------------------------------
@@ -2563,11 +5259,38 @@ kdc_principal	| **Required** Principal name to authenticate as (including realm)
 kdc_keytab	| **Required** Keytab file containing principal's key.
 
 
-#### <a id="plugin-contrib-command-rbl"></a> rbl
+#### nginx_status <a id="plugin-contrib-command-nginx_status"></a>
 
-Plugin for monitoring [rbl](https://github.com/matteocorti/check_rbl)
+The [check_nginx_status.pl](https://github.com/regilero/check_nginx_status) plugin
+uses the [/nginx_status](https://nginx.org/en/docs/http/ngx_http_stub_status_module.html)
+HTTP endpoint which provides metrics for monitoring Nginx.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
+
+Name                    	| Description
+--------------------------------|----------------------------------------------------------------------------------
+nginx_status_host_address	| **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, `address6` otherwise.
+nginx_status_port		| **Optional.** the http port.
+nginx_status_url		| **Optional.** URL to use, instead of the default (http://`nginx_status_hostname`/nginx_status).
+nginx_status_servername		| **Optional.** ServerName to use if you specified an IP to match the good Virtualhost in your target.
+nginx_status_ssl		| **Optional.** set to use ssl connection.
+nginx_status_disable_sslverify		| **Optional.** set to disable SSL hostname verification.
+nginx_status_user		| **Optional.** Username for basic auth.
+nginx_status_pass		| **Optional.** Password for basic auth.
+nginx_status_realm		| **Optional.** Realm for basic auth.
+nginx_status_maxreach		| **Optional.** Number of max processes reached (since last check) that should trigger an alert.
+nginx_status_timeout		| **Optional.** timeout in seconds.
+nginx_status_warn		| **Optional.** Warning threshold (number of active connections, ReqPerSec or ConnPerSec that will cause a WARNING) like '10000,100,200'.
+nginx_status_critical		| **Optional.** Critical threshold (number of active connections, ReqPerSec or ConnPerSec that will cause a CRITICAL) like '20000,200,300'.
+
+
+#### rbl <a id="plugin-contrib-command-rbl"></a>
+
+The [check_rbl](https://github.com/matteocorti/check_rbl) plugin
+uses the `Net::DNS` Perl library to check whether your SMTP server
+is blacklisted.
+
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name            | Description
 ----------------|--------------------------------------------------------------------------
@@ -2578,2034 +5301,45 @@ rbl_critical	| **Optional** Number of blacklisting servers for a critical.
 tbl_timeout	| **Optional** Seconds before plugin times out (default: 15).
 
 
-### <a id="plugin-contrib-operating-system"></a> Operating System
+#### squid <a id="plugin-contrib-command-squid"></a>
 
-In this category you can find plugins for gathering information about your operating system or the system beneath like memory usage.
+The [check_squid](https://exchange.icinga.com/exchange/check_squid) plugin
+uses the `squidclient` binary to monitor a [Squid proxy](http://www.squid-cache.org).
 
-#### <a id="plugin-contrib-command-mem"></a> mem
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
-The plugin `mem` is used for gathering information about memory usage on linux and unix hosts. It is able to count cache memory as free when comparing it to the thresholds. It is provided by `Justin Ellison` on [https://github.com](https://github.com/justintime/nagios-plugins). For more details see the developers blog [http://sysadminsjourney.com](http://sysadminsjourney.com/content/2009/06/04/new-and-improved-checkmempl-nagios-plugin).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name         | Description
--------------|-----------------------------------------------------------------------------------------------------------------------
-mem_used     | **Optional.** Tell the plugin to check for used memory in opposite of **mem_free**. Must specify one of these as true.
-mem_free     | **Optional.** Tell the plugin to check for free memory in opposite of **mem_used**. Must specify one of these as true.
-mem_cache    | **Optional.** If set to true, plugin will count cache as free memory. Defaults to false.
-mem_warning  | **Required.** Specify the warning threshold as number interpreted as percent.
-mem_critical | **Required.** Specify the critical threshold as number interpreted as percent.
-
-#### <a id="plugin-contrib-command-running_kernel"></a> running_kernel
-
-Check command object for the `check_running_kernel` plugin
-provided by the `nagios-plugin-contrib` package on Debian.
-
-Custom attributes:
-
-Name                       | Description
----------------------------|-------------
-running\_kernel\_use\_sudo | Whether to run the plugin with `sudo`. Defaults to false except on Ubuntu where it defaults to true.
-
-#### <a id="plugin-contrib-command-iostat"></a> iostat
-
-The plugin [check_iostat](https://github.com/dnsmichi/icinga-plugins/blob/master/scripts/check_iostat) is used to monitor I/O with `iostat` on a linux host. The default thresholds are rather high so you can use a grapher for baselining before setting your own.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name           | Description
----------------|-----------------------------------------------------------------------------------------------------------------------
-iostat\_disk   | **Required.** The device to monitor without path. e.g. sda or vda. (default: sda)
-iostat\_wtps   | **Required.** Warning threshold for tps (default: 100)
-iostat\_wread  | **Required.** Warning threshold for KB/s reads (default: 100)
-iostat\_wwrite | **Required.** Warning threshold for KB/s writes (default: 100)
-iostat\_ctps   | **Required.** Critical threshold for tps (default: 200)
-iostat\_cread  | **Required.** Critical threshold for KB/s reads (default: 200)
-iostat\_cwrite | **Required.** Critical threshold for KB/s writes (default: 200)
-
-#### <a id="plugin-contrib-command-yum"></a> yum
-
-The plugin [check_yum](https://github.com/calestyo/check_yum) is used to check the YUM package
-management system for package updates.
-The plugin requires the `yum-plugin-security` package to differentiate between security and normal updates.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-yum_all_updates         | **Optional.** Set to true to not distinguish between security and non-security updates, but returns critical for any available update. This may be used if the YUM security plugin is absent or you want to maintain every single package at the latest version. You may want to use **yum_warn_on_any_update** instead of this option. Defaults to false.
-yum_warn_on_any_update  | **Optional.** Set to true to warn if there are any (non-security) package updates available. Defaults to false.
-yum_cache_only          | **Optional.** If set to true, plugin runs entirely from cache and does not update the cache when running YUM. Useful if you have `yum makecache` cronned. Defaults to false.
-yum_no_warn_on_lock     | **Optional.** If set to true, returns OK instead of WARNING when YUM is locked and fails to check for updates due to another instance running. Defaults to false.
-yum_no_warn_on_updates  | **Optional.** If set to true, returns OK instead of WARNING even when updates are available. The plugin output still shows the number of available updates. Defaults to false.
-yum_enablerepo          | **Optional.** Explicitly enables a reposity when calling YUM. Can take a comma separated list of repositories. Note that enabling repositories can lead to unexpected results, for example when protected repositories are enabled.
-yum_disablerepo         | **Optional.** Explicitly disables a reposity when calling YUM. Can take a comma separated list of repositories. Note that enabling repositories can lead to unexpected results, for example when protected repositories are enabled.
-yum_installroot         | **Optional.** Specifies another installation root directory (for example a chroot).
-yum_timeout             | **Optional.** Set a timeout in seconds after which the plugin will exit (defaults to 55 seconds).
-
-### <a id="plugin-contrib-virtualization"></a> Virtualization
-
-This category includes all plugins for various virtualization technologies.
-
-#### <a id="plugin-contrib-command-esxi-hardware"></a> esxi_hardware
-
-The plugin `esxi_hardware` is a plugin to monitor hardware of ESXi servers through the vmware api and cim service. It is provided by `Claudio Kuenzler` on [http://www.claudiokuenzler.com](http://www.claudiokuenzler.com/nagios-plugins/check_esxi_hardware.php). For instruction on creating the required local user and workarounds for some hardware types have a look on his homepage.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-esxi_hardware_host      | **Required.** Specifies the host to monitor. Defaults to "$address$".
-esxi_hardware_user      | **Required.** Specifies the user for polling. Must be a local user of the root group on the system. Can also be provided as a file path file:/path/to/.passwdfile, then first string of file is used.
-esxi_hardware_pass      | **Required.** Password of the user. Can also be provided as a file path file:/path/to/.passwdfile, then second string of file is used.
-esxi_hardware_port      | **Optional.** Specifies the CIM port to connect to. Defaults to 5989.
-esxi_hardware_vendor    | **Optional.** Defines the vendor of the server: "auto", "dell", "hp", "ibm", "intel", "unknown" (default).
-esxi_hardware_html      | **Optional.** Add web-links to hardware manuals for Dell servers (use your country extension). Only useful with **esxi_hardware_vendor** = dell.
-esxi_hardware_ignore    | **Optional.** Comma separated list of elements to ignore.
-esxi_hardware_perfdata  | **Optional.** Add performcedata for graphers like PNP4Nagios to the output. Defaults to false.
-esxi_hardware_nopower   | **Optional.** Do not collect power performance data, when **esxi_hardware_perfdata** is set to true. Defaults to false.
-esxi_hardware_novolts   | **Optional.** Do not collect voltage performance data, when **esxi_hardware_perfdata** is set to true. Defaults to false.
-esxi_hardware_nocurrent | **Optional.** Do not collect current performance data, when **esxi_hardware_perfdata** is set to true. Defaults to false.
-esxi_hardware_notemp    | **Optional.** Do not collect temperature performance data, when **esxi_hardware_perfdata** is set to true. Defaults to false.
-esxi_hardware_nofan     | **Optional.** Do not collect fan performance data, when **esxi_hardware_perfdata** is set to true. Defaults to false.
-
-### <a id="plugin-contrib-vmware"></a> VMware
-
-Check commands for the [check_vmware_esx](https://github.com/BaldMansMojo/check_vmware_esx) plugin.
-
-#### <a id="plugin-contrib-vmware-esx-dc-volumes"></a> vmware-esx-dc-volumes
-
-Check command object for the `check_vmware_esx` plugin. Shows all datastore volumes info.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_subselect        | **Optional.** Volume name to be checked the free space.
-vmware_gigabyte         | **Optional.** Output in GB instead of MB.
-vmware_usedspace        | **Optional.** Output used space instead of free. Defaults to "false".
-vmware_alertonly        | **Optional.** List only alerting volumes. Defaults to "false".
-vmware_exclude          | **Optional.** Blacklist volumes name. No value defined as default.
-vmware_include          | **Optional.** Whitelist volumes name. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_dc_volume_used   | **Optional.** Output used space instead of free. Defaults to "true".
-vmware_warn             | **Optional.** The warning threshold for volumes. Defaults to "80%".
-vmware_crit             | **Optional.** The critical threshold for volumes. Defaults to "90%".
-
-
-#### <a id="plugin-contrib-vmware-esx-dc-runtime-info"></a> vmware-esx-dc-runtime-info
-
-Check command object for the `check_vmware_esx` plugin. Shows all runtime info for the datacenter/Vcenter.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-dc-runtime-listvms"></a> vmware-esx-dc-runtime-listvms
-
-Check command object for the `check_vmware_esx` plugin. List of vmware machines and their power state. BEWARE!! In larger environments systems can cause trouble displaying the informations needed due to the mass of data. Use **vmware_alertonly** to avoid this.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_alertonly        | **Optional.** List only alerting VMs. Important here to avoid masses of data.
-vmware_exclude          | **Optional.** Blacklist VMs name. No value defined as default.
-vmware_include          | **Optional.** Whitelist VMs name. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-dc-runtime-listhost"></a> vmware-esx-dc-runtime-listhost
-
-Check command object for the `check_vmware_esx` plugin. List of VMware ESX hosts and their power state.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_alertonly        | **Optional.** List only alerting hosts. Important here to avoid masses of data.
-vmware_exclude          | **Optional.** Blacklist VMware ESX hosts. No value defined as default.
-vmware_include          | **Optional.** Whitelist VMware ESX hosts. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-dc-runtime-listcluster"></a> vmware-esx-dc-runtime-listcluster
-
-Check command object for the `check_vmware_esx` plugin. List of VMware clusters and their states.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_alertonly        | **Optional.** List only alerting hosts. Important here to avoid masses of data.
-vmware_exclude          | **Optional.** Blacklist VMware cluster. No value defined as default.
-vmware_include          | **Optional.** Whitelist VMware cluster. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-dc-runtime-issues"></a> vmware-esx-dc-runtime-issues
-
-Check command object for the `check_vmware_esx` plugin. All issues for the host.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist issues. No value defined as default.
-vmware_include          | **Optional.** Whitelist issues. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-dc-runtime-status"></a> vmware-esx-dc-runtime-status
-
-Check command object for the `check_vmware_esx` plugin. Overall object status (gray/green/red/yellow).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-dc-runtime-tools"></a> vmware-esx-dc-runtime-tools
-
-Check command object for the `check_vmware_esx` plugin. Vmware Tools status.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Required.** Datacenter/vCenter hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_poweredonly      | **Optional.** List only VMs which are powered on. No value defined as default.
-vmware_alertonly        | **Optional.** List only alerting VMs. Important here to avoid masses of data.
-vmware_exclude          | **Optional.** Blacklist VMs. No value defined as default.
-vmware_include          | **Optional.** Whitelist VMs. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-vmware_openvmtools	| **Optional** Prevent CRITICAL state for installed and running Open VM Tools.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-check"></a> vmware-esx-soap-host-check
-
-Check command object for the `check_vmware_esx` plugin. Simple check to verify a successfull connection to VMware SOAP API.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-uptime"></a> vmware-esx-soap-host-uptime
-
-Check command object for the `check_vmware_esx` plugin. Displays uptime of the VMware host.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-cpu"></a> vmware-esx-soap-host-cpu
-
-Check command object for the `check_vmware_esx` plugin. CPU usage in percentage.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold in percent. Defaults to "80%".
-vmware_crit             | **Optional.** The critical threshold in percent. Defaults to "90%".
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-cpu-ready"></a> vmware-esx-soap-host-cpu-ready
-
-Check command object for the `check_vmware_esx` plugin. Percentage of time that the virtual machine was ready, but could not get scheduled to run on the physical CPU. CPU ready time is dependent on the number of virtual machines on the host and their CPU loads. High or growing ready time can be a hint CPU bottlenecks.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-cpu-wait"></a> vmware-esx-soap-host-cpu-wait
-
-Check command object for the `check_vmware_esx` plugin. CPU time spent in wait state. The wait total includes time spent the CPU idle, CPU swap wait, and CPU I/O wait states. High or growing wait time can be a hint I/O bottlenecks.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-cpu-usage"></a> vmware-esx-soap-host-cpu-usage
-
-Check command object for the `check_vmware_esx` plugin. Actively used CPU of the host, as a percentage of the total available CPU. Active CPU is approximately equal to the ratio of the used CPU to the available CPU.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold in percent. Defaults to "80%".
-vmware_crit             | **Optional.** The critical threshold in percent. Defaults to "90%".
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-mem"></a> vmware-esx-soap-host-mem
-
-Check command object for the `check_vmware_esx` plugin. All mem info(except overall and no thresholds).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-mem-usage"></a> vmware-esx-soap-host-mem-usage
-
-Check command object for the `check_vmware_esx` plugin. Average mem usage in percentage.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold in percent. Defaults to "80%".
-vmware_crit             | **Optional.** The critical threshold in percent. Defaults to "90%".
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-mem-consumed"></a> vmware-esx-soap-host-mem-consumed
-
-Check command object for the `check_vmware_esx` plugin. Amount of machine memory used on the host. Consumed memory includes Includes memory used by the Service Console, the VMkernel vSphere services, plus the total consumed metrics for all running virtual machines in MB.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold in percent. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold in percent. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-mem-swapused"></a> vmware-esx-soap-host-mem-swapused
-
-Check command object for the `check_vmware_esx` plugin. Amount of memory that is used by swap. Sum of memory swapped of all powered on VMs and vSphere services on the host in MB. In case of an error all VMs with their swap used will be displayed.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold in percent. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold in percent. No value defined as default.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-mem-overhead"></a> vmware-esx-soap-host-mem-overhead
-
-Check command object for the `check_vmware_esx` plugin. Additional mem used by VM Server in MB.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold in percent. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold in percent. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-mem-memctl"></a> vmware-esx-soap-host-mem-memctl
-
-Check command object for the `check_vmware_esx` plugin. The sum of all vmmemctl values in MB for all powered-on virtual machines, plus vSphere services on the host. If the balloon target value is greater than the balloon value, the VMkernel inflates the balloon, causing more virtual machine memory to be reclaimed. If the balloon target value is less than the balloon value, the VMkernel deflates the balloon, which allows the virtual machine to consume additional memory if needed (used by VM memory control driver). In case of an error all VMs with their vmmemctl values will be displayed.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold in percent. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold in percent. No value defined as default.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-net"></a> vmware-esx-soap-host-net
-
-Check command object for the `check_vmware_esx` plugin. Shows net info.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist NICs. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist expression as regexp.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-net-usage"></a> vmware-esx-soap-host-net-usage
-
-Check command object for the `check_vmware_esx` plugin. Overall network usage in KBps(Kilobytes per Second).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold in KBps(Kilobytes per Second). No value defined as default.
-vmware_crit             | **Optional.** The critical threshold in KBps(Kilobytes per Second). No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-net-receive"></a> vmware-esx-soap-host-net-receive
-
-Check command object for the `check_vmware_esx` plugin. Data receive in KBps(Kilobytes per Second).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold in KBps(Kilobytes per Second). No value defined as default.
-vmware_crit             | **Optional.** The critical threshold in KBps(Kilobytes per Second). No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-net-send"></a> vmware-esx-soap-host-net-send
-
-Check command object for the `check_vmware_esx` plugin. Data send in KBps(Kilobytes per Second).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold in KBps(Kilobytes per Second). No value defined as default.
-vmware_crit             | **Optional.** The critical threshold in KBps(Kilobytes per Second). No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-net-nic"></a> vmware-esx-soap-host-net-nic
-
-Check command object for the `check_vmware_esx` plugin. Check all active NICs.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist NICs. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist expression as regexp.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-volumes"></a> vmware-esx-soap-host-volumes
-
-Check command object for the `check_vmware_esx` plugin. Shows all datastore volumes info.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_subselect        | **Optional.** Volume name to be checked the free space.
-vmware_gigabyte         | **Optional.** Output in GB instead of MB.
-vmware_usedspace        | **Optional.** Output used space instead of free. Defaults to "false".
-vmware_alertonly        | **Optional.** List only alerting volumes. Defaults to "false".
-vmware_exclude          | **Optional.** Blacklist volumes name. No value defined as default.
-vmware_include          | **Optional.** Whitelist volumes name. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_warn             | **Optional.** The warning threshold for volumes. Defaults to "80%".
-vmware_crit             | **Optional.** The critical threshold for volumes. Defaults to "90%".
-vmware_spaceleft        | **Optional.** This has to be used in conjunction with thresholds as mentioned above.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-io"></a> vmware-esx-soap-host-io
-
-Check command object for the `check_vmware_esx` plugin. Shows all disk io info. Without subselect no thresholds can be given. All I/O values are aggregated from historical intervals over the past 24 hours with a 5 minute sample rate.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-io-aborted"></a> vmware-esx-soap-host-io-aborted
-
-Check command object for the `check_vmware_esx` plugin. Number of aborted SCSI commands.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-io-resets"></a> vmware-esx-soap-host-io-resets
-
-Check command object for the `check_vmware_esx` plugin. Number of SCSI bus resets.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-io-read"></a> vmware-esx-soap-host-io-read
-
-Check command object for the `check_vmware_esx` plugin. Average number of kilobytes read from the disk each second.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-io-read-latency"></a> vmware-esx-soap-host-io-read-latency
-
-Check command object for the `check_vmware_esx` plugin. Average amount of time (ms) to process a SCSI read command issued from the Guest OS to the virtual machine.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-io-write"></a> vmware-esx-soap-host-io-write
-
-Check command object for the `check_vmware_esx` plugin. Average number of kilobytes written to disk each second.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-io-write-latency"></a> vmware-esx-soap-host-io-write-latency
-
-Check command object for the `check_vmware_esx` plugin. Average amount of time (ms) taken to process a SCSI write command issued by the Guest OS to the virtual machine.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-io-usage"></a> vmware-esx-soap-host-io-usage
-
-Check command object for the `check_vmware_esx` plugin. Aggregated disk I/O rate. For hosts, this metric includes the rates for all virtual machines running on the host.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-io-kernel-latency"></a> vmware-esx-soap-host-io-kernel-latency
-
-Check command object for the `check_vmware_esx` plugin. Average amount of time (ms) spent by VMkernel processing each SCSI command.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-io-device-latency"></a> vmware-esx-soap-host-io-device-latency
-
-Check command object for the `check_vmware_esx` plugin. Average amount of time (ms) to complete a SCSI command from the physical device.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-io-queue-latency"></a> vmware-esx-soap-host-io-queue-latency
-
-Check command object for the `check_vmware_esx` plugin. Average amount of time (ms) spent in the VMkernel queue.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-io-total-latency"></a> vmware-esx-soap-host-io-total-latency
-
-Check command object for the `check_vmware_esx` plugin. Average amount of time (ms) taken during the collection interval to process a SCSI command issued by the guest OS to the virtual machine. The sum of kernelWriteLatency and deviceWriteLatency.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-media"></a> vmware-esx-soap-host-media
-
-Check command object for the `check_vmware_esx` plugin. List vm's with attached host mounted media like cd,dvd or floppy drives. This is important for monitoring because a virtual machine with a mount cd or dvd drive can not be moved to another host.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist VMs name. No value defined as default.
-vmware_include          | **Optional.** Whitelist VMs name. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-service"></a> vmware-esx-soap-host-service
-
-Check command object for the `check_vmware_esx` plugin. Shows host service info.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist services name. No value defined as default.
-vmware_include          | **Optional.** Whitelist services name. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-runtime"></a> vmware-esx-soap-host-runtime
-
-Check command object for the `check_vmware_esx` plugin. Shows runtime info: VMs, overall status, connection state, health, storagehealth, temperature and sensor are represented as one value and without thresholds.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-runtime-con"></a> vmware-esx-soap-host-runtime-con
-
-Check command object for the `check_vmware_esx` plugin. Shows connection state.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-runtime-listvms"></a> vmware-esx-soap-host-runtime-listvms
-
-Check command object for the `check_vmware_esx` plugin. List of VMware machines and their status.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist VMs name. No value defined as default.
-vmware_include          | **Optional.** Whitelist VMs name. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-runtime-status"></a> vmware-esx-soap-host-runtime-status
-
-Check command object for the `check_vmware_esx` plugin. Overall object status (gray/green/red/yellow).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-runtime-health"></a> vmware-esx-soap-host-runtime-health
-
-Check command object for the `check_vmware_esx` plugin. Checks cpu/storage/memory/sensor status.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist status name. No value defined as default.
-vmware_include          | **Optional.** Whitelist status name. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-runtime-health-listsensors"></a> vmware-esx-soap-host-runtime-health-listsensors
-
-Check command object for the `check_vmware_esx` plugin. List all available sensors(use for listing purpose only).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist status name. No value defined as default.
-vmware_include          | **Optional.** Whitelist status name. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-runtime-health-nostoragestatus"></a> vmware-esx-soap-host-runtime-health-nostoragestatus
-
-Check command object for the `check_vmware_esx` plugin. This is to avoid a double alarm if you use **vmware-esx-soap-host-runtime-health** and **vmware-esx-soap-host-runtime-storagehealth**.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist status name. No value defined as default.
-vmware_include          | **Optional.** Whitelist status name. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-runtime-storagehealth"></a> vmware-esx-soap-host-runtime-storagehealth
-
-Check command object for the `check_vmware_esx` plugin. Local storage status check.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist storage name. No value defined as default.
-vmware_include          | **Optional.** Whitelist storage name. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-runtime-temp"></a> vmware-esx-soap-host-runtime-temp
-
-Check command object for the `check_vmware_esx` plugin. Lists all temperature sensors.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist sensor name. No value defined as default.
-vmware_include          | **Optional.** Whitelist sensor name. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-runtime-issues"></a> vmware-esx-soap-host-runtime-issues
-
-Check command object for the `check_vmware_esx` plugin. Lists all configuration issues for the host.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist configuration issues. No value defined as default.
-vmware_include          | **Optional.** Whitelist configuration issues. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-storage"></a> vmware-esx-soap-host-storage
-
-Check command object for the `check_vmware_esx` plugin. Shows Host storage info.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist adapters, luns and paths. No value defined as default.
-vmware_include          | **Optional.** Whitelist adapters, luns and paths. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-storage-adapter"></a> vmware-esx-soap-host-storage-adapter
-
-Check command object for the `check_vmware_esx` plugin. List host bus adapters.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist adapters. No value defined as default.
-vmware_include          | **Optional.** Whitelist adapters. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-storage-lun"></a> vmware-esx-soap-host-storage-lun
-
-Check command object for the `check_vmware_esx` plugin. List SCSI logical units. The listing will include: LUN, canonical name of the disc, all of displayed name which is not part of the canonical name and status.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_exclude          | **Optional.** Blacklist luns. No value defined as default.
-vmware_include          | **Optional.** Whitelist luns. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-host-storage-path"></a> vmware-esx-soap-host-storage-path
-
-Check command object for the `check_vmware_esx` plugin. List multipaths and the associated paths.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_host             | **Required.** ESX or ESXi hostname.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_alertonly        | **Optional.** List only alerting units. Important here to avoid masses of data. Defaults to "false".
-vmware_exclude          | **Optional.** Blacklist paths. No value defined as default.
-vmware_include          | **Optional.** Whitelist paths. No value defined as default.
-vmware_isregexp         | **Optional.** Treat blacklist and whitelist expressions as regexp.
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-cpu"></a> vmware-esx-soap-vm-cpu
-
-Check command object for the `check_vmware_esx` plugin. Shows all CPU usage info.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-cpu-ready"></a> vmware-esx-soap-vm-cpu-ready
-
-Check command object for the `check_vmware_esx` plugin. Percentage of time that the virtual machine was ready, but could not get scheduled to run on the physical CPU.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-cpu-wait"></a> vmware-esx-soap-vm-cpu-wait
-
-Check command object for the `check_vmware_esx` plugin. CPU time spent in wait state. The wait total includes time spent the CPU idle, CPU swap wait, and CPU I/O wait states. High or growing wait time can be a hint I/O bottlenecks.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-cpu-usage"></a> vmware-esx-soap-vm-cpu-usage
-
-Check command object for the `check_vmware_esx` plugin. Amount of actively used virtual CPU, as a percentage of total available CPU. This is the host's view of the CPU usage, not the guest operating system view. It is the average CPU utilization over all available virtual CPUs in the virtual machine.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** Warning threshold in percent. Defaults to "80%".
-vmware_crit             | **Optional.** Critical threshold in percent. Defaults to "90%".
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-mem"></a> vmware-esx-soap-vm-mem
-
-Check command object for the `check_vmware_esx` plugin. Shows all memory info, except overall.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-mem-usage"></a> vmware-esx-soap-vm-mem-usage
-
-Check command object for the `check_vmware_esx` plugin. Average mem usage in percentage of configured virtual machine "physical" memory.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** Warning threshold in percent. Defaults to "80%".
-vmware_crit             | **Optional.** Critical threshold in percent. Defaults to "90%".
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-mem-consumed"></a> vmware-esx-soap-vm-mem-consumed
-
-Check command object for the `check_vmware_esx` plugin. Amount of guest physical memory in MB consumed by the virtual machine for guest memory. Consumed memory does not include overhead memory. It includes shared memory and memory that might be reserved, but not actually used. Use this metric for charge-back purposes.<br>
-**vm consumed memory = memory granted -- memory saved**
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-mem-memctl"></a> vmware-esx-soap-vm-mem-memctl
-
-Check command object for the `check_vmware_esx` plugin. Amount of guest physical memory that is currently reclaimed from the virtual machine through ballooning. This is the amount of guest physical memory that has been allocated and pinned by the balloon driver.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-net"></a> vmware-esx-soap-vm-net
-
-Check command object for the `check_vmware_esx` plugin. Shows net info.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-net-usage"></a> vmware-esx-soap-vm-net-usage
-
-Check command object for the `check_vmware_esx` plugin. Overall network usage in KBps(Kilobytes per Second).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-net-receive"></a> vmware-esx-soap-vm-net-receive
-
-Check command object for the `check_vmware_esx` plugin. Receive in KBps(Kilobytes per Second).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-net-send"></a> vmware-esx-soap-vm-net-send
-
-Check command object for the `check_vmware_esx` plugin. Send in KBps(Kilobytes per Second).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-io"></a> vmware-esx-soap-vm-io
-
-Check command object for the `check_vmware_esx` plugin. SShows all disk io info. Without subselect no thresholds can be given. All I/O values are aggregated from historical intervals over the past 24 hours with a 5 minute sample rate.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-io-read"></a> vmware-esx-soap-vm-io-read
-
-Check command object for the `check_vmware_esx` plugin. Average number of kilobytes read from the disk each second.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session - IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-io-write"></a> vmware-esx-soap-vm-io-write
-
-Check command object for the `check_vmware_esx` plugin. Average number of kilobytes written to disk each second.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-io-usage"></a> vmware-esx-soap-vm-io-usage
-
-Check command object for the `check_vmware_esx` plugin. Aggregated disk I/O rate.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-runtime"></a> vmware-esx-soap-vm-runtime
-
-Check command object for the `check_vmware_esx` plugin. Shows virtual machine runtime info.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-runtime-con"></a> vmware-esx-soap-vm-runtime-con
-
-Check command object for the `check_vmware_esx` plugin. Shows the connection state.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-runtime-powerstate"></a> vmware-esx-soap-vm-runtime-powerstate
-
-Check command object for the `check_vmware_esx` plugin. Shows virtual machine power state: poweredOn, poweredOff or suspended.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-runtime-status"></a> vmware-esx-soap-vm-runtime-status
-
-Check command object for the `check_vmware_esx` plugin. Overall object status (gray/green/red/yellow).
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-runtime-consoleconnections"></a> vmware-esx-soap-vm-runtime-consoleconnections
-
-Check command object for the `check_vmware_esx` plugin. Console connections to virtual machine.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_warn             | **Optional.** The warning threshold. No value defined as default.
-vmware_crit             | **Optional.** The critical threshold. No value defined as default.
-
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-runtime-gueststate"></a> vmware-esx-soap-vm-runtime-gueststate
-
-Check command object for the `check_vmware_esx` plugin. Guest OS status. Needs VMware Tools installed and running.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
-Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-
-#### <a id="plugin-contrib-vmware-esx-soap-vm-runtime-tools"></a> vmware-esx-soap-vm-runtime-tools
-
-Check command object for the `check_vmware_esx` plugin. Guest OS status. VMware tools  status.
-
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
-
 Name                    | Description
-------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_openvmtools	| **Optional** Prevent CRITICAL state for installed and running Open VM Tools.
+------------------------|----------------------------------------------------------------------------------
+squid_hostname		| **Optional.** The host's address. Defaults to "$address$" if the host's `address` attribute is set, "$address6$" otherwise.
+squid_data		| **Optional.** Data to fetch (default: Connections) available data: Connections Cache Resources Memory FileDescriptors.
+squid_port		| **Optional.** Port number (default: 3128).
+squid_user		| **Optional.** WWW user.
+squid_password		| **Optional.** WWW password.
+squid_warning		| **Optional.** Warning threshold. See http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT for the threshold format.
+squid_critical		| **Optional.** Critical threshold. See http://nagiosplug.sourceforge.net/developer-guidelines.html#THRESHOLDFORMAT for the threshold format.
+squid_client		| **Optional.** Path of squidclient (default: /usr/bin/squidclient).
+squid_timeout		| **Optional.** Seconds before plugin times out (default: 15).
 
 
-#### <a id="plugin-contrib-vmware-esx-soap-vm-runtime-issues"></a> vmware-esx-soap-vm-runtime-issues
+#### webinject <a id="plugin-contrib-command-webinject"></a>
 
-Check command object for the `check_vmware_esx` plugin. All issues for the virtual machine.
+The [check_webinject](https://labs.consol.de/de/nagios/check_webinject/index.html) plugin
+uses [WebInject](http://www.webinject.org/manual.html) to test web applications
+and web services in an automated fashion.
+It can be used to test individual system components that have HTTP interfaces
+(JSP, ASP, CGI, PHP, AJAX, Servlets, HTML Forms, XML/SOAP Web Services, REST, etc),
+and can be used as a test harness to create a suite of HTTP level automated functional,
+acceptance, and regression tests. A test harness allows you to run many test cases
+and collect/report your results. WebInject offers real-time results
+display and may also be used for monitoring system response times.
 
-Custom attributes passed as [command parameters](3-monitoring-basics.md#command-passing-parameters):
+Custom attributes passed as [command parameters](03-monitoring-basics.md#command-passing-parameters):
 
 Name                    | Description
 ------------------------|--------------
-vmware_datacenter       | **Optional.** Datacenter/vCenter hostname. Conflicts with **vmware_host**.
-vmware_host             | **Optional.** ESX or ESXi hostname. Conflicts with **vmware_datacenter**.
-vmware_vmname           | **Required.** Virtual machine name.
-vmware_sslport          | **Optional.** SSL port connection. Defaults to "443".
-vmware_ignoreunknown    | **Optional.** Sometimes 3 (unknown) is returned from a component. But the check itself is ok. With this option the plugin will return OK (0) instead of UNKNOWN (3). Defaults to "false".
-vmware_ignorewarning    | **Optional.** Sometimes 2 (warning) is returned from a component. But the check itself is ok (from an operator view). With this option the plugin will return OK (0) instead of WARNING (1). Defaults to "false".
-vmware_timeout          | **Optional.** Seconds before plugin times out. Defaults to "90".
-vmware_trace            | **Optional.** Set verbosity level of vSphere API request/respond trace.
-vmware_sessionfile      | **Optional.** Session file name enhancement.
-vmware_sessionfiledir   | **Optional.** Path to store the **vmware_sessionfile** file. Defaults to "/var/spool/icinga2/tmp".
-vmware_nosession        | **Optional.** No auth session -- IT SHOULD BE USED FOR TESTING PURPOSES ONLY!. Defaults to "false".
-vmware_username         | **Optional.** The username to connect to Host or vCenter server. No value defined as default.
-vmware_password         | **Optional.** The username's password. No value defined as default.
-vmware_authfile         | **Optional.** Use auth file instead username/password to session connect. No effect if **vmware_username** and **vmware_password** are defined <br> **Autentication file content:** <br>  username=vmuser <br> password=p@ssw0rd
-vmware_multiline        | **Optional.** Multiline output in overview. This mean technically that a multiline output uses a HTML **\<br\>** for the GUI. No value defined as default.
-
+webinject_config_file   | **Optional.** There is a configuration file named 'config.xml' that is used to store configuration settings for your project. You can use this to specify which test case files to run and to set some constants and settings to be used by WebInject.
+webinject_output        | **Optional.** This option is followed by a directory name or a prefix to prepended to the output files. This is used to specify the location for writing output files (http.log, results.html, and results.xml). If a directory name is supplied (use either an absolute or relative path and make sure to add the trailing slash), all output files are written to this directory. If the trailing slash is omitted, it is assumed to a prefix and this will be prepended to the output files. You may also use a combination of a directory and prefix.
+webinject_no_output     | **Optional.** Suppresses all output to STDOUT except the results summary.
+webinject_timeout       | **Optional.** The value [given in seconds] will be compared to the global time elapsed to run all the tests. If the tests have all been successful, but have taken more time than the 'globaltimeout' value, a warning message is sent back to Icinga.
+webinject_report_type   | **Optional.** This setting is used to enable output formatting that is compatible for use with specific external programs. The available values you can set this to are: nagios, mrtg, external and standard.
+webinject_testcase_file | **Optional.** When you launch WebInject in console mode, you can optionally supply an argument for a testcase file to run. It will look for this file in the directory that webinject.pl resides in. If no filename is passed from the command line, it will look in config.xml for testcasefile declarations. If no files are specified, it will look for a default file named 'testcases.xml' in the current [webinject] directory. If none of these are found, the engine will stop and give you an error.
