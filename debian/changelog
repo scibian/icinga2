@@ -1,3 +1,10 @@
+icinga2 (2.10.3-2~bpo9+1sci9u1) scibian9; urgency=medium
+
+  * Backport to scibian9
+  * Scibianization
+
+ -- Rémi Palancher <remi-externe.palancher@edf.fr>  Tue, 21 Jul 2020 11:45:32 +0200
+
 icinga2 (2.10.3-2~bpo9+1) stretch-backports; urgency=medium
 
   * Rebuild for stretch-backports.
