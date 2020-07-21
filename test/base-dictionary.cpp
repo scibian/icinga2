@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -20,9 +20,7 @@
 #include "base/dictionary.hpp"
 #include "base/objectlock.hpp"
 #include "base/json.hpp"
-#include <boost/test/unit_test.hpp>
-#include <boost/foreach.hpp>
-#include <boost/tuple/tuple.hpp>
+#include <BoostTestTargetConfig.h>
 
 using namespace icinga;
 
@@ -32,6 +30,28 @@ BOOST_AUTO_TEST_CASE(construct)
 {
 	Dictionary::Ptr dictionary = new Dictionary();
 	BOOST_CHECK(dictionary);
+}
+
+BOOST_AUTO_TEST_CASE(initializer1)
+{
+	DictionaryData dict;
+
+	dict.emplace_back("test1", "Gin-o-clock");
+
+	Dictionary::Ptr dictionary = new Dictionary(std::move(dict));
+
+	Value test1;
+	test1 = dictionary->Get("test1");
+	BOOST_CHECK(test1 == "Gin-o-clock");
+}
+
+BOOST_AUTO_TEST_CASE(initializer2)
+{
+	Dictionary::Ptr dictionary = new Dictionary({ {"test1", "Gin-for-the-win"} });
+
+	Value test1;
+	test1 = dictionary->Get("test1");
+	BOOST_CHECK(test1 == "Gin-for-the-win");
 }
 
 BOOST_AUTO_TEST_CASE(get1)
@@ -82,7 +102,7 @@ BOOST_AUTO_TEST_CASE(foreach)
 
 	bool seen_test1 = false, seen_test2 = false;
 
-	BOOST_FOREACH(const Dictionary::Pair& kv, dictionary) {
+	for (const Dictionary::Pair& kv : dictionary) {
 		BOOST_CHECK(kv.first == "test1" || kv.first == "test2");
 
 		if (kv.first == "test1") {
@@ -135,7 +155,7 @@ BOOST_AUTO_TEST_CASE(remove)
 	{
 		ObjectLock olock(dictionary);
 
-		Dictionary::Iterator it = dictionary->Begin();
+		auto it = dictionary->Begin();
 		dictionary->Remove(it);
 	}
 

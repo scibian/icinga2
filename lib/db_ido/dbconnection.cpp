@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -18,7 +18,7 @@
  ******************************************************************************/
 
 #include "db_ido/dbconnection.hpp"
-#include "db_ido/dbconnection.tcpp"
+#include "db_ido/dbconnection-ti.cpp"
 #include "db_ido/dbvalue.hpp"
 #include "icinga/icingaapplication.hpp"
 #include "icinga/host.hpp"
@@ -29,7 +29,6 @@
 #include "base/utility.hpp"
 #include "base/logger.hpp"
 #include "base/exception.hpp"
-#include <boost/foreach.hpp>
 
 using namespace icinga;
 
@@ -38,30 +37,17 @@ REGISTER_TYPE(DbConnection);
 Timer::Ptr DbConnection::m_ProgramStatusTimer;
 boost::once_flag DbConnection::m_OnceFlag = BOOST_ONCE_INIT;
 
-DbConnection::DbConnection(void)
-	: m_QueryStats(15 * 60), m_PendingQueries(0), m_PendingQueriesTimestamp(0),
-	  m_IDCacheValid(false), m_ActiveChangedHandler(false)
-{ }
-
-void DbConnection::OnConfigLoaded(void)
+void DbConnection::OnConfigLoaded()
 {
 	ConfigObject::OnConfigLoaded();
 
 	Value categories = GetCategories();
 
-	//TODO: Remove 'cat1 | cat2' notation in 2.6
-	if (categories.IsNumber()) {
-		SetCategoryFilter(categories);
-		Log(LogWarning, "DbConnection")
-		    << "Specifying flags using '|' for 'categories' for object '" << GetName()
-		    << "' of type '" << GetReflectionType()->GetName() << "'"
-		    << " is deprecated. This functionality will be removed in 2.6.0. Please use an array.";
-	} else
-		SetCategoryFilter(FilterArrayToInt(categories, DbQuery::GetCategoryFilterMap(), DbCatEverything));
+	SetCategoryFilter(FilterArrayToInt(categories, DbQuery::GetCategoryFilterMap(), DbCatEverything));
 
 	if (!GetEnableHa()) {
 		Log(LogDebug, "DbConnection")
-		    << "HA functionality disabled. Won't pause IDO connection: " << GetName();
+			<< "HA functionality disabled. Won't pause IDO connection: " << GetName();
 
 		SetHAMode(HARunEverywhere);
 	}
@@ -73,73 +59,48 @@ void DbConnection::Start(bool runtimeCreated)
 {
 	ObjectImpl<DbConnection>::Start(runtimeCreated);
 
-	DbObject::OnQuery.connect(boost::bind(&DbConnection::ExecuteQuery, this, _1));
-	DbObject::OnMultipleQueries.connect(boost::bind(&DbConnection::ExecuteMultipleQueries, this, _1));
+	Log(LogInformation, "DbConnection")
+		<< "'" << GetName() << "' started.";
+
+	DbObject::OnQuery.connect(std::bind(&DbConnection::ExecuteQuery, this, _1));
+	DbObject::OnMultipleQueries.connect(std::bind(&DbConnection::ExecuteMultipleQueries, this, _1));
 }
 
-void DbConnection::EnableActiveChangedHandler(void)
+void DbConnection::Stop(bool runtimeRemoved)
+{
+	Log(LogInformation, "DbConnection")
+		<< "'" << GetName() << "' stopped.";
+
+	ObjectImpl<DbConnection>::Stop(runtimeRemoved);
+}
+
+void DbConnection::EnableActiveChangedHandler()
 {
 	if (!m_ActiveChangedHandler) {
-		ConfigObject::OnActiveChanged.connect(boost::bind(&DbConnection::UpdateObject, this, _1));
+		ConfigObject::OnActiveChanged.connect(std::bind(&DbConnection::UpdateObject, this, _1));
 		m_ActiveChangedHandler = true;
 	}
 }
 
-void DbConnection::StatsLoggerTimerHandler(void)
-{
-	if (!GetConnected())
-		return;
-
-	int pending = GetPendingQueryCount();
-
-	double now = Utility::GetTime();
-	double gradient = (pending - m_PendingQueries) / (now - m_PendingQueriesTimestamp);
-	double timeToZero = -pending / gradient;
-
-	String timeInfo;
-
-	if (pending > GetQueryCount(5)) {
-		timeInfo = " empty in ";
-		if (timeToZero < 0)
-			timeInfo += "infinite time, your database isn't able to keep up";
-		else
-			timeInfo += Utility::FormatDuration(timeToZero);
-	}
-
-	m_PendingQueries = pending;
-	m_PendingQueriesTimestamp = now;
-
-	Log(LogInformation, GetReflectionType()->GetName())
-	    << "Query queue items: " << pending
-	    << ", query rate: " << std::setw(2) << GetQueryCount(60) / 60.0 << "/s"
-	    << " (" << GetQueryCount(60) << "/min " << GetQueryCount(5 * 60) << "/5min " << GetQueryCount(15 * 60) << "/15min);"
-	    << timeInfo;
-}
-
-void DbConnection::Resume(void)
+void DbConnection::Resume()
 {
 	ConfigObject::Resume();
 
 	Log(LogInformation, "DbConnection")
-	    << "Resuming IDO connection: " << GetName();
+		<< "Resuming IDO connection: " << GetName();
 
 	m_CleanUpTimer = new Timer();
 	m_CleanUpTimer->SetInterval(60);
-	m_CleanUpTimer->OnTimerExpired.connect(boost::bind(&DbConnection::CleanUpHandler, this));
+	m_CleanUpTimer->OnTimerExpired.connect(std::bind(&DbConnection::CleanUpHandler, this));
 	m_CleanUpTimer->Start();
-
-	m_StatsLoggerTimer = new Timer();
-	m_StatsLoggerTimer->SetInterval(15);
-	m_StatsLoggerTimer->OnTimerExpired.connect(boost::bind(&DbConnection::StatsLoggerTimerHandler, this));
-	m_StatsLoggerTimer->Start();
 }
 
-void DbConnection::Pause(void)
+void DbConnection::Pause()
 {
 	ConfigObject::Pause();
 
 	Log(LogInformation, "DbConnection")
-	     << "Pausing IDO connection: " << GetName();
+		<< "Pausing IDO connection: " << GetName();
 
 	m_CleanUpTimer.reset();
 
@@ -148,12 +109,14 @@ void DbConnection::Pause(void)
 	query1.IdColumn = "programstatus_id";
 	query1.Type = DbQueryUpdate;
 	query1.Category = DbCatProgramStatus;
-	query1.WhereCriteria = new Dictionary();
-	query1.WhereCriteria->Set("instance_id", 0);  /* DbConnection class fills in real ID */
+	query1.WhereCriteria = new Dictionary({
+		{ "instance_id", 0 }  /* DbConnection class fills in real ID */
+	});
 
-	query1.Fields = new Dictionary();
-	query1.Fields->Set("instance_id", 0); /* DbConnection class fills in real ID */
-	query1.Fields->Set("program_end_time", DbValue::FromTimestamp(Utility::GetTime()));
+	query1.Fields = new Dictionary({
+		{ "instance_id", 0 }, /* DbConnection class fills in real ID */
+		{ "program_end_time", DbValue::FromTimestamp(Utility::GetTime()) }
+	});
 
 	query1.Priority = PriorityHigh;
 
@@ -162,11 +125,11 @@ void DbConnection::Pause(void)
 	NewTransaction();
 }
 
-void DbConnection::InitializeDbTimer(void)
+void DbConnection::InitializeDbTimer()
 {
 	m_ProgramStatusTimer = new Timer();
 	m_ProgramStatusTimer->SetInterval(10);
-	m_ProgramStatusTimer->OnTimerExpired.connect(boost::bind(&DbConnection::UpdateProgramStatus));
+	m_ProgramStatusTimer->OnTimerExpired.connect(std::bind(&DbConnection::UpdateProgramStatus));
 	m_ProgramStatusTimer->Start();
 }
 
@@ -176,17 +139,18 @@ void DbConnection::InsertRuntimeVariable(const String& key, const Value& value)
 	query.Table = "runtimevariables";
 	query.Type = DbQueryInsert;
 	query.Category = DbCatProgramStatus;
-	query.Fields = new Dictionary();
-	query.Fields->Set("instance_id", 0); /* DbConnection class fills in real ID */
-	query.Fields->Set("varname", key);
-	query.Fields->Set("varvalue", value);
+	query.Fields = new Dictionary({
+		{ "instance_id", 0 }, /* DbConnection class fills in real ID */
+		{ "varname", key },
+		{ "varvalue", value }
+	});
 	DbObject::OnQuery(query);
 }
 
-void DbConnection::UpdateProgramStatus(void)
+void DbConnection::UpdateProgramStatus()
 {
 	Log(LogNotice, "DbConnection")
-	     << "Updating programstatus table.";
+		<< "Updating programstatus table.";
 
 	std::vector<DbQuery> queries;
 
@@ -196,33 +160,36 @@ void DbConnection::UpdateProgramStatus(void)
 	query1.Type = DbQueryInsert | DbQueryUpdate;
 	query1.Category = DbCatProgramStatus;
 
-	query1.Fields = new Dictionary();
-	query1.Fields->Set("instance_id", 0); /* DbConnection class fills in real ID */
-	query1.Fields->Set("program_version", Application::GetAppVersion());
-	query1.Fields->Set("status_update_time", DbValue::FromTimestamp(Utility::GetTime()));
-	query1.Fields->Set("program_start_time", DbValue::FromTimestamp(Application::GetStartTime()));
-	query1.Fields->Set("is_currently_running", 1);
-	query1.Fields->Set("endpoint_name", IcingaApplication::GetInstance()->GetNodeName());
-	query1.Fields->Set("process_id", Utility::GetPid());
-	query1.Fields->Set("daemon_mode", 1);
-	query1.Fields->Set("last_command_check", DbValue::FromTimestamp(Utility::GetTime()));
-	query1.Fields->Set("notifications_enabled", (IcingaApplication::GetInstance()->GetEnableNotifications() ? 1 : 0));
-	query1.Fields->Set("active_host_checks_enabled", (IcingaApplication::GetInstance()->GetEnableHostChecks() ? 1 : 0));
-	query1.Fields->Set("passive_host_checks_enabled", 1);
-	query1.Fields->Set("active_service_checks_enabled", (IcingaApplication::GetInstance()->GetEnableServiceChecks() ? 1 : 0));
-	query1.Fields->Set("passive_service_checks_enabled", 1);
-	query1.Fields->Set("event_handlers_enabled", (IcingaApplication::GetInstance()->GetEnableEventHandlers() ? 1 : 0));
-	query1.Fields->Set("flap_detection_enabled", (IcingaApplication::GetInstance()->GetEnableFlapping() ? 1 : 0));
-	query1.Fields->Set("process_performance_data", (IcingaApplication::GetInstance()->GetEnablePerfdata() ? 1 : 0));
-	query1.WhereCriteria = new Dictionary();
-	query1.WhereCriteria->Set("instance_id", 0);  /* DbConnection class fills in real ID */
+	query1.Fields = new Dictionary({
+		{ "instance_id", 0 }, /* DbConnection class fills in real ID */
+		{ "program_version", Application::GetAppVersion() },
+		{ "status_update_time", DbValue::FromTimestamp(Utility::GetTime()) },
+		{ "program_start_time", DbValue::FromTimestamp(Application::GetStartTime()) },
+		{ "is_currently_running", 1 },
+		{ "endpoint_name", IcingaApplication::GetInstance()->GetNodeName() },
+		{ "process_id", Utility::GetPid() },
+		{ "daemon_mode", 1 },
+		{ "last_command_check", DbValue::FromTimestamp(Utility::GetTime()) },
+		{ "notifications_enabled", (IcingaApplication::GetInstance()->GetEnableNotifications() ? 1 : 0) },
+		{ "active_host_checks_enabled", (IcingaApplication::GetInstance()->GetEnableHostChecks() ? 1 : 0) },
+		{ "passive_host_checks_enabled", 1 },
+		{ "active_service_checks_enabled", (IcingaApplication::GetInstance()->GetEnableServiceChecks() ? 1 : 0) },
+		{ "passive_service_checks_enabled", 1 },
+		{ "event_handlers_enabled", (IcingaApplication::GetInstance()->GetEnableEventHandlers() ? 1 : 0) },
+		{ "flap_detection_enabled", (IcingaApplication::GetInstance()->GetEnableFlapping() ? 1 : 0) },
+		{ "process_performance_data", (IcingaApplication::GetInstance()->GetEnablePerfdata() ? 1 : 0) }
+	});
+
+	query1.WhereCriteria = new Dictionary({
+		{ "instance_id", 0 }  /* DbConnection class fills in real ID */
+	});
 
 	query1.Priority = PriorityHigh;
-	queries.push_back(query1);
+	queries.emplace_back(std::move(query1));
 
 	DbQuery query2;
 	query2.Type = DbQueryNewTransaction;
-	queries.push_back(query2);
+	queries.emplace_back(std::move(query2));
 
 	DbObject::OnMultipleQueries(queries);
 
@@ -230,8 +197,9 @@ void DbConnection::UpdateProgramStatus(void)
 	query3.Table = "runtimevariables";
 	query3.Type = DbQueryDelete;
 	query3.Category = DbCatProgramStatus;
-	query3.WhereCriteria = new Dictionary();
-	query3.WhereCriteria->Set("instance_id", 0);  /* DbConnection class fills in real ID */
+	query3.WhereCriteria = new Dictionary({
+		{ "instance_id", 0 } /* DbConnection class fills in real ID */
+	});
 	DbObject::OnQuery(query3);
 
 	InsertRuntimeVariable("total_services", ConfigType::Get<Service>()->GetObjectCount());
@@ -240,9 +208,9 @@ void DbConnection::UpdateProgramStatus(void)
 	InsertRuntimeVariable("total_scheduled_hosts", ConfigType::Get<Host>()->GetObjectCount());
 }
 
-void DbConnection::CleanUpHandler(void)
+void DbConnection::CleanUpHandler()
 {
-	long now = static_cast<long>(Utility::GetTime());
+	auto now = static_cast<long>(Utility::GetTime());
 
 	struct {
 		String name;
@@ -255,7 +223,7 @@ void DbConnection::CleanUpHandler(void)
 		{ "downtimehistory", "entry_time" },
 		{ "eventhandlers", "start_time" },
 		{ "externalcommands", "entry_time" },
-		{ "flappinghistory" "event_time" },
+		{ "flappinghistory", "event_time" },
 		{ "hostchecks", "start_time" },
 		{ "logentries", "logentry_time" },
 		{ "notifications", "start_time" },
@@ -265,17 +233,17 @@ void DbConnection::CleanUpHandler(void)
 		{ "systemcommands", "start_time" }
 	};
 
-	for (size_t i = 0; i < sizeof(tables) / sizeof(tables[0]); i++) {
-		double max_age = GetCleanup()->Get(tables[i].name + "_age");
+	for (auto& table : tables) {
+		double max_age = GetCleanup()->Get(table.name + "_age");
 
 		if (max_age == 0)
 			continue;
 
-		CleanUpExecuteQuery(tables[i].name, tables[i].time_column, now - max_age);
+		CleanUpExecuteQuery(table.name, table.time_column, now - max_age);
 		Log(LogNotice, "DbConnection")
-		    << "Cleanup (" << tables[i].name << "): " << max_age
-		    << " now: " << now
-		    << " old: " << now - max_age;
+			<< "Cleanup (" << table.name << "): " << max_age
+			<< " now: " << now
+			<< " old: " << now - max_age;
 	}
 
 }
@@ -311,9 +279,7 @@ String DbConnection::GetConfigHash(const DbType::Ptr& type, const DbReference& o
 	if (!objid.IsValid())
 		return String();
 
-	std::map<std::pair<DbType::Ptr, DbReference>, String>::const_iterator it;
-
-	it = m_ConfigHashes.find(std::make_pair(type, objid));
+	auto it = m_ConfigHashes.find(std::make_pair(type, objid));
 
 	if (it == m_ConfigHashes.end())
 		return String();
@@ -331,12 +297,10 @@ void DbConnection::SetObjectID(const DbObject::Ptr& dbobj, const DbReference& db
 
 DbReference DbConnection::GetObjectID(const DbObject::Ptr& dbobj) const
 {
-	std::map<DbObject::Ptr, DbReference>::const_iterator it;
-
-	it = m_ObjectIDs.find(dbobj);
+	auto it = m_ObjectIDs.find(dbobj);
 
 	if (it == m_ObjectIDs.end())
-		return DbReference();
+		return {};
 
 	return it->second;
 }
@@ -365,11 +329,9 @@ DbReference DbConnection::GetInsertID(const DbObject::Ptr& dbobj) const
 DbReference DbConnection::GetInsertID(const DbType::Ptr& type, const DbReference& objid) const
 {
 	if (!objid.IsValid())
-		return DbReference();
+		return {};
 
-	std::map<std::pair<DbType::Ptr, DbReference>, DbReference>::const_iterator it;
-
-	it = m_InsertIDs.find(std::make_pair(type, objid));
+	auto it = m_InsertIDs.find(std::make_pair(type, objid));
 
 	if (it == m_InsertIDs.end())
 		return DbReference();
@@ -390,7 +352,7 @@ bool DbConnection::GetObjectActive(const DbObject::Ptr& dbobj) const
 	return (m_ActiveObjects.find(dbobj) != m_ActiveObjects.end());
 }
 
-void DbConnection::ClearIDCache(void)
+void DbConnection::ClearIDCache()
 {
 	SetIDCacheValid(false);
 
@@ -465,36 +427,49 @@ void DbConnection::UpdateObject(const ConfigObject::Ptr& object)
 	}
 }
 
-void DbConnection::UpdateAllObjects(void)
+void DbConnection::UpdateAllObjects()
 {
-	BOOST_FOREACH(const Type::Ptr& type, Type::GetAllTypes()) {
-		ConfigType *dtype = dynamic_cast<ConfigType *>(type.get());
+	for (const Type::Ptr& type : Type::GetAllTypes()) {
+		auto *dtype = dynamic_cast<ConfigType *>(type.get());
 
 		if (!dtype)
 			continue;
 
-		BOOST_FOREACH(const ConfigObject::Ptr& object, dtype->GetObjects()) {
+		for (const ConfigObject::Ptr& object : dtype->GetObjects()) {
 			UpdateObject(object);
 		}
 	}
 }
 
-void DbConnection::PrepareDatabase(void)
+void DbConnection::PrepareDatabase()
 {
-	BOOST_FOREACH(const DbType::Ptr& type, DbType::GetAllTypes()) {
+	for (const DbType::Ptr& type : DbType::GetAllTypes()) {
 		FillIDCache(type);
 	}
 }
 
-void DbConnection::ValidateFailoverTimeout(double value, const ValidationUtils& utils)
+void DbConnection::ValidateFailoverTimeout(const Lazy<double>& lvalue, const ValidationUtils& utils)
 {
-	ObjectImpl<DbConnection>::ValidateFailoverTimeout(value, utils);
+	ObjectImpl<DbConnection>::ValidateFailoverTimeout(lvalue, utils);
 
-	if (value < 60)
-		BOOST_THROW_EXCEPTION(ValidationError(this, boost::assign::list_of("failover_timeout"), "Failover timeout minimum is 60s."));
+	if (lvalue() < 60)
+		BOOST_THROW_EXCEPTION(ValidationError(this, { "failover_timeout" }, "Failover timeout minimum is 60s."));
 }
 
-void DbConnection::IncreaseQueryCount(void)
+void DbConnection::ValidateCategories(const Lazy<Array::Ptr>& lvalue, const ValidationUtils& utils)
+{
+	ObjectImpl<DbConnection>::ValidateCategories(lvalue, utils);
+
+	int filter = FilterArrayToInt(lvalue(), DbQuery::GetCategoryFilterMap(), 0);
+
+	if (filter != DbCatEverything && (filter & ~(DbCatInvalid | DbCatEverything | DbCatConfig | DbCatState |
+		DbCatAcknowledgement | DbCatComment | DbCatDowntime | DbCatEventHandler | DbCatExternalCommand |
+		DbCatFlapping | DbCatLog | DbCatNotification | DbCatProgramStatus | DbCatRetention |
+		DbCatStateHistory)) != 0)
+		BOOST_THROW_EXCEPTION(ValidationError(this, { "categories" }, "categories filter is invalid."));
+}
+
+void DbConnection::IncreaseQueryCount()
 {
 	double now = Utility::GetTime();
 
@@ -502,13 +477,13 @@ void DbConnection::IncreaseQueryCount(void)
 	m_QueryStats.InsertValue(now, 1);
 }
 
-int DbConnection::GetQueryCount(RingBuffer::SizeType span) const
+int DbConnection::GetQueryCount(RingBuffer::SizeType span)
 {
 	boost::mutex::scoped_lock lock(m_StatsMutex);
-	return m_QueryStats.GetValues(span);
+	return m_QueryStats.UpdateAndGetValues(Utility::GetTime(), span);
 }
 
-bool DbConnection::IsIDCacheValid(void) const
+bool DbConnection::IsIDCacheValid() const
 {
 	return m_IDCacheValid;
 }
@@ -518,7 +493,7 @@ void DbConnection::SetIDCacheValid(bool valid)
 	m_IDCacheValid = valid;
 }
 
-int DbConnection::GetSessionToken(void)
+int DbConnection::GetSessionToken()
 {
 	return Application::GetStartTime();
 }

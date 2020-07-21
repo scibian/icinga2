@@ -1,7 +1,7 @@
 %{
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -135,6 +135,7 @@ class				{ return T_CLASS; }
 namespace			{ return T_NAMESPACE; }
 code				{ return T_CODE; }
 load_after			{ return T_LOAD_AFTER; }
+activation_priority	{ return T_ACTIVATION_PRIORITY; }
 library				{ return T_LIBRARY; }
 abstract			{ yylval->num = TAAbstract; return T_CLASS_ATTRIBUTE; }
 vararg_constructor		{ yylval->num = TAVarArgConstructor; return T_CLASS_ATTRIBUTE; }
@@ -147,6 +148,10 @@ protected			{ yylval->num = FAGetProtected | FASetProtected; return T_FIELD_ATTR
 no_storage			{ yylval->num = FANoStorage; return T_FIELD_ATTRIBUTE; }
 no_user_modify			{ yylval->num = FANoUserModify; return T_FIELD_ATTRIBUTE; }
 no_user_view			{ yylval->num = FANoUserView; return T_FIELD_ATTRIBUTE; }
+deprecated			{ yylval->num = FADeprecated; return T_FIELD_ATTRIBUTE; }
+get_virtual			{ yylval->num = FAGetVirtual; return T_FIELD_ATTRIBUTE; }
+set_virtual			{ yylval->num = FASetVirtual; return T_FIELD_ATTRIBUTE; }
+virtual				{ yylval->num = FAGetVirtual | FASetVirtual; return T_FIELD_ATTRIBUTE; }
 navigation			{ return T_NAVIGATION; }
 validator			{ return T_VALIDATOR; }
 required			{ return T_REQUIRED; }
@@ -160,6 +165,7 @@ navigate			{ yylval->num = FTNavigate; return T_FIELD_ACCESSOR_TYPE; }
 \"[^\"]+\"			{ yylval->text = strdup(yytext + 1); yylval->text[strlen(yylval->text) - 1] = '\0'; return T_STRING; }
 \<[^ \>]*\>			{ yylval->text = strdup(yytext + 1); yylval->text[strlen(yylval->text) - 1] = '\0'; return T_ANGLE_STRING; }
 [a-zA-Z_][:a-zA-Z0-9\-_]*	{ yylval->text = strdup(yytext); return T_IDENTIFIER; }
+-?[0-9]+(\.[0-9]+)?		{ yylval->num = strtod(yytext, NULL); return T_NUMBER; }
 
 .				return yytext[0];
 

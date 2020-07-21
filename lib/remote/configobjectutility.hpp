@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -34,24 +34,26 @@ namespace icinga
  *
  * @ingroup remote
  */
-class I2_REMOTE_API ConfigObjectUtility
+class ConfigObjectUtility
 {
 
 public:
-	static String GetConfigDir(void);
+	static String GetConfigDir();
 	static String GetObjectConfigPath(const Type::Ptr& type, const String& fullName);
 
 	static String CreateObjectConfig(const Type::Ptr& type, const String& fullName,
-	     bool ignoreOnError, const Array::Ptr& templates, const Dictionary::Ptr& attrs);
+		bool ignoreOnError, const Array::Ptr& templates, const Dictionary::Ptr& attrs);
 
 	static bool CreateObject(const Type::Ptr& type, const String& fullName,
-	     const String& config, const Array::Ptr& errors);
+		const String& config, const Array::Ptr& errors, const Array::Ptr& diagnosticInformation);
 
-	static bool DeleteObject(const ConfigObject::Ptr& object, bool cascade, const Array::Ptr& errors);
+	static bool DeleteObject(const ConfigObject::Ptr& object, bool cascade, const Array::Ptr& errors,
+		const Array::Ptr& diagnosticInformation);
 
 private:
 	static String EscapeName(const String& name);
-	static bool DeleteObjectHelper(const ConfigObject::Ptr& object, bool cascade, const Array::Ptr& errors);
+	static bool DeleteObjectHelper(const ConfigObject::Ptr& object, bool cascade, const Array::Ptr& errors,
+		const Array::Ptr& diagnosticInformation);
 };
 
 }

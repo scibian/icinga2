@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -24,18 +24,16 @@
 #include "config/configitem.hpp"
 #include "base/configwriter.hpp"
 #include "base/exception.hpp"
-#include "base/serializer.hpp"
 #include "base/dependencygraph.hpp"
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
+#include <fstream>
 
 using namespace icinga;
 
-String ConfigObjectUtility::GetConfigDir(void)
+String ConfigObjectUtility::GetConfigDir()
 {
 	return ConfigPackageUtility::GetPackageDir() + "/_api/" +
-	    ConfigPackageUtility::GetActiveStage("_api");
+		ConfigPackageUtility::GetActiveStage("_api");
 }
 
 String ConfigObjectUtility::GetObjectConfigPath(const Type::Ptr& type, const String& fullName)
@@ -44,7 +42,7 @@ String ConfigObjectUtility::GetObjectConfigPath(const Type::Ptr& type, const Str
 	boost::algorithm::to_lower(typeDir);
 
 	return GetConfigDir() + "/conf.d/" + typeDir +
-	    "/" + EscapeName(fullName) + ".conf";
+		"/" + EscapeName(fullName) + ".conf";
 }
 
 String ConfigObjectUtility::EscapeName(const String& name)
@@ -53,9 +51,9 @@ String ConfigObjectUtility::EscapeName(const String& name)
 }
 
 String ConfigObjectUtility::CreateObjectConfig(const Type::Ptr& type, const String& fullName,
-    bool ignoreOnError, const Array::Ptr& templates, const Dictionary::Ptr& attrs)
+	bool ignoreOnError, const Array::Ptr& templates, const Dictionary::Ptr& attrs)
 {
-	NameComposer *nc = dynamic_cast<NameComposer *>(type.get());
+	auto *nc = dynamic_cast<NameComposer *>(type.get());
 	Dictionary::Ptr nameParts;
 	String name;
 
@@ -71,7 +69,7 @@ String ConfigObjectUtility::CreateObjectConfig(const Type::Ptr& type, const Stri
 		attrs->CopyTo(allAttrs);
 
 		ObjectLock olock(attrs);
-		BOOST_FOREACH(const Dictionary::Pair& kv, attrs) {
+		for (const Dictionary::Pair& kv : attrs) {
 			int fid = type->GetFieldId(kv.first.SubStr(0, kv.first.FindFirstOf(".")));
 
 			if (fid < 0)
@@ -100,51 +98,61 @@ String ConfigObjectUtility::CreateObjectConfig(const Type::Ptr& type, const Stri
 }
 
 bool ConfigObjectUtility::CreateObject(const Type::Ptr& type, const String& fullName,
-    const String& config, const Array::Ptr& errors)
+	const String& config, const Array::Ptr& errors, const Array::Ptr& diagnosticInformation)
 {
-	if (!ConfigPackageUtility::PackageExists("_api")) {
-		ConfigPackageUtility::CreatePackage("_api");
+	{
+		boost::mutex::scoped_lock lock(ConfigPackageUtility::GetStaticMutex());
+		if (!ConfigPackageUtility::PackageExists("_api")) {
+			ConfigPackageUtility::CreatePackage("_api");
 
-		String stage = ConfigPackageUtility::CreateStage("_api");
-		ConfigPackageUtility::ActivateStage("_api", stage);
+			String stage = ConfigPackageUtility::CreateStage("_api");
+			ConfigPackageUtility::ActivateStage("_api", stage);
+		}
+	}
+
+	ConfigItem::Ptr item = ConfigItem::GetByTypeAndName(type, fullName);
+
+	if (item) {
+		errors->Add("Object '" + fullName + "' already exists.");
+		return false;
 	}
 
 	String path = GetObjectConfigPath(type, fullName);
 	Utility::MkDirP(Utility::DirName(path), 0700);
 
-	if (Utility::PathExists(path)) {
-		errors->Add("Configuration file '" + path + "' already exists.");
-		return false;
-	}
-
 	std::ofstream fp(path.CStr(), std::ofstream::out | std::ostream::trunc);
 	fp << config;
 	fp.close();
 
-	Expression *expr = ConfigCompiler::CompileFile(path, String(), "_api");
+	std::unique_ptr<Expression> expr = ConfigCompiler::CompileFile(path, String(), "_api");
 
 	try {
 		ActivationScope ascope;
 
-		ScriptFrame frame;
+		ScriptFrame frame(true);
 		expr->Evaluate(frame);
-		delete expr;
-		expr = NULL;
+		expr.reset();
 
 		WorkQueue upq;
+		upq.SetName("ConfigObjectUtility::CreateObject");
+
 		std::vector<ConfigItem::Ptr> newItems;
 
-		if (!ConfigItem::CommitItems(ascope.GetContext(), upq, newItems) || !ConfigItem::ActivateItems(upq, newItems, true)) {
+		/* Disable logging for object creation, but do so ourselves later on. */
+		if (!ConfigItem::CommitItems(ascope.GetContext(), upq, newItems, true) || !ConfigItem::ActivateItems(upq, newItems, true, true)) {
 			if (errors) {
-				if (unlink(path.CStr()) < 0) {
+				if (unlink(path.CStr()) < 0 && errno != ENOENT) {
 					BOOST_THROW_EXCEPTION(posix_error()
-					    << boost::errinfo_api_function("unlink")
-					    << boost::errinfo_errno(errno)
-					    << boost::errinfo_file_name(path));
+						<< boost::errinfo_api_function("unlink")
+						<< boost::errinfo_errno(errno)
+						<< boost::errinfo_file_name(path));
 				}
 
-				BOOST_FOREACH(const boost::exception_ptr& ex, upq.GetExceptions()) {
-					errors->Add(DiagnosticInformation(ex));
+				for (const boost::exception_ptr& ex : upq.GetExceptions()) {
+					errors->Add(DiagnosticInformation(ex, false));
+
+					if (diagnosticInformation)
+						diagnosticInformation->Add(DiagnosticInformation(ex));
 				}
 			}
 
@@ -152,18 +160,23 @@ bool ConfigObjectUtility::CreateObject(const Type::Ptr& type, const String& full
 		}
 
 		ApiListener::UpdateObjectAuthority();
-	} catch (const std::exception& ex) {
-		delete expr;
 
-		if (unlink(path.CStr()) < 0) {
+		Log(LogInformation, "ConfigObjectUtility")
+			<< "Created and activated object '" << fullName << "' of type '" << type->GetName() << "'.";
+
+	} catch (const std::exception& ex) {
+		if (unlink(path.CStr()) < 0 && errno != ENOENT) {
 			BOOST_THROW_EXCEPTION(posix_error()
-			    << boost::errinfo_api_function("unlink")
-			    << boost::errinfo_errno(errno)
-			    << boost::errinfo_file_name(path));
+				<< boost::errinfo_api_function("unlink")
+				<< boost::errinfo_errno(errno)
+				<< boost::errinfo_file_name(path));
 		}
 
 		if (errors)
-			errors->Add(DiagnosticInformation(ex));
+			errors->Add(DiagnosticInformation(ex, false));
+
+		if (diagnosticInformation)
+			diagnosticInformation->Add(DiagnosticInformation(ex));
 
 		return false;
 	}
@@ -171,30 +184,35 @@ bool ConfigObjectUtility::CreateObject(const Type::Ptr& type, const String& full
 	return true;
 }
 
-bool ConfigObjectUtility::DeleteObjectHelper(const ConfigObject::Ptr& object, bool cascade, const Array::Ptr& errors)
+bool ConfigObjectUtility::DeleteObjectHelper(const ConfigObject::Ptr& object, bool cascade,
+	const Array::Ptr& errors, const Array::Ptr& diagnosticInformation)
 {
 	std::vector<Object::Ptr> parents = DependencyGraph::GetParents(object);
 
+	Type::Ptr type = object->GetReflectionType();
+
+	String name = object->GetName();
+
 	if (!parents.empty() && !cascade) {
-		if (errors)
-			errors->Add("Object cannot be deleted because other objects depend on it. "
-			    "Use cascading delete to delete it anyway.");
+		if (errors) {
+			errors->Add("Object '" + name + "' of type '" + type->GetName() +
+				"' cannot be deleted because other objects depend on it. "
+				"Use cascading delete to delete it anyway.");
+		}
 
 		return false;
 	}
 
-	BOOST_FOREACH(const Object::Ptr& pobj, parents) {
+	for (const Object::Ptr& pobj : parents) {
 		ConfigObject::Ptr parentObj = dynamic_pointer_cast<ConfigObject>(pobj);
 
 		if (!parentObj)
 			continue;
 
-		DeleteObjectHelper(parentObj, cascade, errors);
+		DeleteObjectHelper(parentObj, cascade, errors, diagnosticInformation);
 	}
 
-	Type::Ptr type = object->GetReflectionType();
-
-	ConfigItem::Ptr item = ConfigItem::GetByTypeAndName(type->GetName(), object->GetName());
+	ConfigItem::Ptr item = ConfigItem::GetByTypeAndName(type, name);
 
 	try {
 		/* mark this object for cluster delete event */
@@ -209,26 +227,29 @@ bool ConfigObjectUtility::DeleteObjectHelper(const ConfigObject::Ptr& object, bo
 
 	} catch (const std::exception& ex) {
 		if (errors)
-			errors->Add(DiagnosticInformation(ex));
+			errors->Add(DiagnosticInformation(ex, false));
+
+		if (diagnosticInformation)
+			diagnosticInformation->Add(DiagnosticInformation(ex));
 
 		return false;
 	}
 
-	String path = GetObjectConfigPath(object->GetReflectionType(), object->GetName());
+	String path = GetObjectConfigPath(object->GetReflectionType(), name);
 
 	if (Utility::PathExists(path)) {
-		if (unlink(path.CStr()) < 0) {
+		if (unlink(path.CStr()) < 0 && errno != ENOENT) {
 			BOOST_THROW_EXCEPTION(posix_error()
-			    << boost::errinfo_api_function("unlink")
-			    << boost::errinfo_errno(errno)
-			    << boost::errinfo_file_name(path));
+				<< boost::errinfo_api_function("unlink")
+				<< boost::errinfo_errno(errno)
+				<< boost::errinfo_file_name(path));
 		}
 	}
 
 	return true;
 }
 
-bool ConfigObjectUtility::DeleteObject(const ConfigObject::Ptr& object, bool cascade, const Array::Ptr& errors)
+bool ConfigObjectUtility::DeleteObject(const ConfigObject::Ptr& object, bool cascade, const Array::Ptr& errors, const Array::Ptr& diagnosticInformation)
 {
 	if (object->GetPackage() != "_api") {
 		if (errors)
@@ -237,6 +258,5 @@ bool ConfigObjectUtility::DeleteObject(const ConfigObject::Ptr& object, bool cas
 		return false;
 	}
 
-	return DeleteObjectHelper(object, cascade, errors);
+	return DeleteObjectHelper(object, cascade, errors, diagnosticInformation);
 }
-

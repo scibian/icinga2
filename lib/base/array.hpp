@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -30,12 +30,14 @@
 namespace icinga
 {
 
+typedef std::vector<Value> ArrayData;
+
 /**
  * An array of Value items.
  *
  * @ingroup base
  */
-class I2_BASE_API Array : public Object
+class Array final : public Object
 {
 public:
 	DECLARE_OBJECT(Array);
@@ -47,60 +49,35 @@ public:
 
 	typedef std::vector<Value>::size_type SizeType;
 
-	inline Array(void)
-	{ }
+	Array() = default;
+	Array(const ArrayData& other);
+	Array(ArrayData&& other);
+	Array(std::initializer_list<Value> init);
 
-	inline ~Array(void)
-	{ }
+	Value Get(SizeType index) const;
+	void Set(SizeType index, const Value& value, bool overrideFrozen = false);
+	void Set(SizeType index, Value&& value, bool overrideFrozen = false);
+	void Add(Value value, bool overrideFrozen = false);
 
-	Value Get(unsigned int index) const;
-	void Set(unsigned int index, const Value& value);
-	void Add(const Value& value);
+	Iterator Begin();
+	Iterator End();
 
-	/**
-	 * Returns an iterator to the beginning of the array.
-	 *
-	 * Note: Caller must hold the object lock while using the iterator.
-	 *
-	 * @returns An iterator.
-	 */
-	inline Iterator Begin(void)
-	{
-		ASSERT(OwnsLock());
-
-		return m_Data.begin();
-	}
-
-	/**
-	 * Returns an iterator to the end of the array.
-	 *
-	 * Note: Caller must hold the object lock while using the iterator.
-	 *
-	 * @returns An iterator.
-	 */
-	inline Iterator End(void)
-	{
-		ASSERT(OwnsLock());
-
-		return m_Data.end();
-	}
-
-	size_t GetLength(void) const;
+	size_t GetLength() const;
 	bool Contains(const Value& value) const;
 
-	void Insert(unsigned int index, const Value& value);
-	void Remove(unsigned int index);
-	void Remove(Iterator it);
+	void Insert(SizeType index, Value value, bool overrideFrozen = false);
+	void Remove(SizeType index, bool overrideFrozen = false);
+	void Remove(Iterator it, bool overrideFrozen = false);
 
-	void Resize(size_t new_size);
-	void Clear(void);
+	void Resize(SizeType newSize, bool overrideFrozen = false);
+	void Clear(bool overrideFrozen = false);
 
-	void Reserve(size_t new_size);
+	void Reserve(SizeType newSize, bool overrideFrozen = false);
 
 	void CopyTo(const Array::Ptr& dest) const;
-	Array::Ptr ShallowClone(void) const;
+	Array::Ptr ShallowClone() const;
 
-	static Object::Ptr GetPrototype(void);
+	static Object::Ptr GetPrototype();
 
 	template<typename T>
 	static Array::Ptr FromVector(const std::vector<T>& v)
@@ -112,7 +89,7 @@ public:
 	}
 
 	template<typename T>
-	std::set<T> ToSet(void)
+	std::set<T> ToSet()
 	{
 		ObjectLock olock(this);
 		return std::set<T>(Begin(), End());
@@ -127,48 +104,30 @@ public:
 		return result;
 	}
 
-	virtual Object::Ptr Clone(void) const override;
+	Object::Ptr Clone() const override;
 
-	Array::Ptr Reverse(void) const;
+	Array::Ptr Reverse() const;
 
-	void Sort(void);
+	void Sort(bool overrideFrozen = false);
 
-	virtual String ToString(void) const override;
+	String ToString() const override;
 
-	virtual Value GetFieldByName(const String& field, bool sandboxed, const DebugInfo& debugInfo) const override;
-	virtual void SetFieldByName(const String& field, const Value& value, const DebugInfo& debugInfo) override;
+	Array::Ptr Unique() const;
+	void Freeze();
+
+	Value GetFieldByName(const String& field, bool sandboxed, const DebugInfo& debugInfo) const override;
+	void SetFieldByName(const String& field, const Value& value, bool overrideFrozen, const DebugInfo& debugInfo) override;
 
 private:
 	std::vector<Value> m_Data; /**< The data for the array. */
+	bool m_Frozen{false};
 };
 
-inline Array::Iterator range_begin(Array::Ptr x)
-{
-	return x->Begin();
-}
-
-inline Array::Iterator range_end(Array::Ptr x)
-{
-	return x->End();
-}
+Array::Iterator begin(const Array::Ptr& x);
+Array::Iterator end(const Array::Ptr& x);
 
 }
 
-namespace boost
-{
-
-template<>
-struct range_mutable_iterator<icinga::Array::Ptr>
-{
-	typedef icinga::Array::Iterator type;
-};
-
-template<>
-struct range_const_iterator<icinga::Array::Ptr>
-{
-	typedef icinga::Array::Iterator type;
-};
-
-}
+extern template class std::vector<icinga::Value>;
 
 #endif /* ARRAY_H */

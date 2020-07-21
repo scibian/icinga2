@@ -1,14 +1,20 @@
-.vagrant
-.idea
-*.patch
+## Editors
+.idea/
 *.komodoproject
+.*.sw[op]
+*~
+
+## C++ and Tools
+*.patch
 *.playground
-.*.swp
-.*.swo
-build/
-build-debug/
-build-release/
-build32/
-build64/
+.vagrant
+tickets.pickle
+
+## Build artifacts
+build*/
 debug/
 release/
+cmake-build-debug
+/Testing/
+/install/
+/vendor/

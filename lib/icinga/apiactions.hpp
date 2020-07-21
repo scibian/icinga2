@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -30,7 +30,7 @@ namespace icinga
 /**
  * @ingroup icinga
  */
-class I2_ICINGA_API ApiActions
+class ApiActions
 {
 public:
 	static Dictionary::Ptr ProcessCheckResult(const ConfigObject::Ptr& object, const Dictionary::Ptr& params);
@@ -48,7 +48,7 @@ public:
 	static Dictionary::Ptr GenerateTicket(const ConfigObject::Ptr& object, const Dictionary::Ptr& params);
 
 private:
-	static Dictionary::Ptr CreateResult(int code, const String& status, const Dictionary::Ptr& additional = Dictionary::Ptr());
+	static Dictionary::Ptr CreateResult(int code, const String& status, const Dictionary::Ptr& additional = nullptr);
 };
 
 }

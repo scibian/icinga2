@@ -1,174 +1,371 @@
-# Release Workflow
+# Release Workflow <a id="release-workflow"></a>
 
-Print this document.
+#### Table of Content
+
+- [1. Preparations](#preparations)
+  - [1.1. Issues](#issues)
+  - [1.2. Backport Commits](#backport-commits)
+  - [1.3. Authors](#authors)
+- [2. Version](#version)
+- [3. Changelog](#changelog)
+- [4. Git Tag](#git-tag)
+- [5. Package Builds](#package-builds)
+  - [5.1. RPM Packages](#rpm-packages)
+  - [5.2. DEB Packages](#deb-packages)
+- [6. Build Server](#build-server)
+- [7. Release Tests](#release-tests)
+- [8. GitHub Release](#github-release)
+- [9. Chocolatey](#chocolatey)
+- [10. Post Release](#post-release)
+  - [10.1. Online Documentation](#online-documentation)
+  - [10.2. Announcement](#announcement)
+  - [10.3. Project Management](#project-management)
+
+## Preparations <a id="preparations"></a>
 
 Specify the release version.
 
-    VERSION=2.5.4
+```
+VERSION=2.10.2
+```
 
-## Issues
+Add your signing key to your Git configuration file, if not already there.
 
-Check the following issue filters:
+```
+vim $HOME/.gitconfig
 
-* [Pending backports](https://dev.icinga.org/projects/i2/issues?query_id=41)
-* [Invalid target version](https://dev.icinga.org/projects/i2/issues?query_id=55)
+[user]
+        email = michael.friedrich@icinga.com
+        name = Michael Friedrich
+        signingkey = D14A1F16
+```
 
-## Backport Commits
+### Issues <a id="issues"></a>
 
-    $ git checkout master
-    $ ./pick.py -V $VERSION
+Check issues at https://github.com/Icinga/icinga2
 
-The script creates a new branch 'auto-merged-<VERSION>' which is based on the
-current support branch. It then merges all commits from the 'master' branch which
-reference a ticket for the version that was specified.
+### Backport Commits <a id="backport-commits"></a>
 
-If there are any merge commits you will need to manually fix them and continue the
-rebase until no commits are left:
+For minor versions you need to manually backports any and all commits from the
+master branch which should be part of this release.
 
-    $ git rebase --continue
-
-After finishing the rebase the branch needs to be merged into the support branch:
-
-    $ git checkout support/2.5
-    $ git merge --ff-only auto-merged-2.5.3
-
-## Authors
+### Authors <a id="authors"></a>
 
 Update the [.mailmap](.mailmap) and [AUTHORS](AUTHORS) files:
 
-    $ git checkout master
-    $ git log --use-mailmap | grep ^Author: | cut -f2- -d' ' | sort | uniq > AUTHORS
+```
+git checkout master
+git log --use-mailmap | grep '^Author:' | cut -f2- -d' ' | sort | uniq > AUTHORS
+```
 
-## Version
+## Version <a id="version"></a>
 
-Update the version number in the following files:
+Update the version:
 
-* [icinga2.spec]: Version: (.*)
-* [icinga2.nuspec]: <version>(.*)</version>
-* [tools/chocolateyInstall.ps1]: Icinga2-v(.*)-{x86,x86_64}.msi
+```
+sed -i "s/Version: .*/Version: $VERSION/g" VERSION
+```
 
-Example:
+## Changelog <a id="changelog"></a>
 
-    gsed -i "s/Version: .*/Version: $VERSION/g" icinga2.spec
-    gsed -i "s/<version>.*<\/version>/<version>$VERSION<\/version>/g" icinga2.nuspec
-    gsed -i "s/Icinga2-v.*-/Icinga2-v$VERSION-/g" tools/chocolateyInstall.ps1
+Update the [CHANGELOG.md](CHANGELOG.md) file.
 
-## Changelog
+### Requirements
 
-Update the [ChangeLog](ChangeLog), [doc/1-about.md](doc/1-about.md) files using
-the changelog.py script. Also generate HTML for the wordpress release announcement.
+Export these environment variables:
 
-Changelog:
+```
+export ICINGA_GITHUB_AUTH_USERNAME='user'
+export ICINGA_GITHUB_AUTH_TOKEN='token'
+export ICINGA_GITHUB_PROJECT='icinga/icinga2'
+```
 
-    $ ./changelog.py -V $VERSION
+### Generation
 
-Docs:
+**Close the version on [GitHub](https://github.com/Icinga/icinga2/milestones).**
 
-    $ ./changelog.py -V $VERSION -l
+Run the script which updates the [CHANGELOG.md](CHANGELOG.md) file.
 
-Wordpress:
+```
+./changelog.py
+git diff
+```
 
-    $ ./changelog.py -V $VERSION -H -l
+## Git Tag  <a id="git-tag"></a>
 
-## Git Tag
+> **Major Releases**: Commit these changes to the `master` branch.
+>
+> **Minor Releases**: Commit changes to the `support` branch.
 
-Commit these changes to the "master" branch:
+```
+git commit -v -a -m "Release version $VERSION"
+```
 
-    $ git commit -v -a -m "Release version $VERSION"
+Create a signed tag (tags/v<VERSION>) on the `master` branch (for major
+releases) or the `support` branch (for minor releases).
 
-For minor releases: Cherry-pick this commit into the "support" branch.
+```
+git tag -s -m "Version $VERSION" v$VERSION
+```
 
-Create a signed tag (tags/v<VERSION>) on the "master" branch (for major
-releases) or the "support" branch (for minor releases).
+Push the tag:
 
-GB:
+```
+git push --tags
+```
 
-    $ git tag -u EE8E0720 -m "Version $VERSION" v$VERSION
+**For major releases:** Create a new `support` branch:
 
-MF:
+```
+git checkout master
+git push
 
-    $ git tag -u D14A1F16 -m "Version $VERSION" v$VERSION
+git checkout -b support/2.11
+git push -u origin support/2.11
+```
 
-Push the tag.
-
-    $ git push --tags
-
-For major releases: Create a new "support" branch:
-
-    $ git checkout master
-    $ git checkout -b support/2.5
-    $ git push -u origin support/2.5
-
-For minor releases: Push the support branch, cherry-pick the release commit
+**For minor releases:** Push the support branch, cherry-pick the release commit
 into master and merge the support branch:
 
-    $ git push -u origin support/2.5
-    $ git checkout master
-    $ git cherry-pick support/2.5
-    $ git merge --strategy=ours support/2.5
-    $ git push origin master
+```
+git push -u origin support/2.10
+git checkout master
+git cherry-pick support/2.10
+git merge --strategy=ours support/2.10
+git push origin master
+```
 
-# External Dependencies
+## Package Builds  <a id="package-builds"></a>
 
-## Build Server
+### RPM Packages  <a id="rpm-packages"></a>
 
-* Update Git tags for the release jobs.
+```
+git clone git@github.com:icinga/rpm-icinga2.git && cd rpm-icinga2
+```
+
+#### Branch Workflow
+
+**Major releases** are branched off `master`.
+
+```
+git checkout master && git pull
+```
+
+**Bugfix releases** are created in the `release` branch and later merged to master.
+
+```
+git checkout release && git pull
+```
+
+#### Release Commit
+
+Set the `Version`, `Revision` and `changelog` inside the spec file.
+
+```
+sed -i "s/Version: .*/Version: $VERSION/g" icinga2.spec
+
+vim icinga2.spec
+
+%changelog
+* Tue Jul 17 2018 Michael Friedrich <michael.friedrich@icinga.com> 2.9.0-1
+- Update to 2.9.0
+```
+
+```
+git commit -av -m "Release 2.9.0-1"
+git push
+```
+
+**Note for major releases**: Update release branch to latest.
+
+```
+git checkout release && git pull && git merge master && git push
+```
+
+**Note for minor releases**: Cherry-pick the release commit into master.
+
+```
+git checkout master && git pull && git cherry-pick release && git push
+```
+
+
+### DEB Packages  <a id="deb-packages"></a>
+
+```
+git clone git@github.com:icinga/deb-icinga2.git && cd deb-icinga2
+```
+
+#### Branch Workflow
+
+**Major releases** are branched off `master`.
+
+```
+git checkout master && git pull
+```
+
+**Bugfix releases** are created in the `release` branch and later merged to master.
+
+```
+git checkout release && git pull
+```
+
+#### Release Commit
+
+Set the `Version`, `Revision` and `changelog` inside the spec file.
+
+```
+./dch 2.9.0-1 "Update to 2.9.0"
+```
+
+```
+git commit -av -m "Release 2.9.0-1"
+git push
+```
+
+```
+git commit -av -m "Release 2.9.0-1"
+```
+
+**Note for major releases**: Update release branch to latest.
+
+```
+git checkout release && git pull && git merge master && git push
+```
+
+**Note for minor releases**: Cherry-pick the release commit into master.
+
+```
+git checkout master && git pull && git cherry-pick release && git push
+```
+
+#### DEB with dch on macOS
+
+```
+docker run -v `pwd`:/mnt/packaging -ti ubuntu:xenial bash
+
+apt-get update && apt-get install git ubuntu-dev-tools vim -y
+cd /mnt/packaging
+
+git config --global user.name "Michael Friedrich"
+git config --global user.email "michael.friedrich@icinga.com"
+
+./dch 2.10.0-1 "Update to 2.10.0"
+```
+
+
+## Build Server <a id="build-server"></a>
+
+* Verify package build changes for this version.
+* Test the snapshot packages for all distributions beforehand.
 * Build the newly created Git tag for Debian/RHEL/SuSE.
-* Build the newly created Git tag for Windows.
+  * Wait until all jobs have passed and then publish them one by one with `allow_release`
+* Build the newly created Git tag for Windows: `refs/tags/v2.10.0` as source and `v2.10.0` as package name.
 
-## Release Tests
+## Release Tests  <a id="release-tests"></a>
 
 * Test DB IDO with MySQL and PostgreSQL.
 * Provision the vagrant boxes and test the release packages.
-* Test the [setup wizard](http://packages.icinga.org/windows/) inside a Windows VM.
-
+* Test the [setup wizard](https://packages.icinga.com/windows/) inside a Windows VM.
 * Start a new docker container and install/run icinga2.
 
-Example for CentOS7:
+### CentOS
 
-    $ docker run -ti centos:latest bash
+```
+docker run -ti centos:latest bash
 
-    # yum -y install http://packages.icinga.org/epel/7/release/noarch/icinga-rpm-release-7-1.el7.centos.noarch.rpm
-    # yum -y install icinga2
-    # icinga2 daemon -C
+yum -y install https://packages.icinga.com/epel/icinga-rpm-release-7-latest.noarch.rpm
+yum -y install icinga2
+icinga2 daemon -C
+```
 
-    # systemctl start icinga2
-    # tail -f /var/log/icinga2/icinga2.log
+### Debian
 
-## GitHub Release
+```
+docker run -ti debian:stretch bash
 
-Create a new release for the newly created Git tag.
-https://github.com/Icinga/icinga2/releases
+apt-get update && apt-get install -y wget curl gnupg apt-transport-https
 
-## Chocolatey
+DIST=$(awk -F"[)(]+" '/VERSION=/ {print $2}' /etc/os-release); \
+ echo "deb http://packages.icinga.com/debian icinga-${DIST} main" > \
+ /etc/apt/sources.list.d/${DIST}-icinga.list
+ echo "deb-src http://packages.icinga.com/debian icinga-${DIST} main" >> \
+ /etc/apt/sources.list.d/${DIST}-icinga.list
+
+curl https://packages.icinga.com/icinga.key | apt-key add -
+apt-get -y install icinga2
+icinga2 daemon
+```
+
+## GitHub Release  <a id="github-release"></a>
+
+Create a new release for the newly created Git tag: https://github.com/Icinga/icinga2/releases
+
+## Chocolatey  <a id="chocolatey"></a>
 
 Navigate to the git repository on your Windows box which
 already has chocolatey installed. Pull/checkout the release.
 
-Create the nupkg package:
+Create the nupkg package (or use the one generated on https://packages.icinga.com/windows):
 
-    cpack
+```
+cpack
+```
 
-Install the created icinga2 package locally:
+Fetch the API key from https://chocolatey.org/account and use the `choco push`
+command line.
 
-    choco install icinga2 -version 2.5.4 -fdv "%cd%" -source "'%cd%;https://chocolatey.org/api/v2/'"
+```
+choco apikey --key xxx --source https://push.chocolatey.org/
 
-Upload the package to [chocolatey](https://chocolatey.org/packages/upload).
+choco push Icinga2-v2.10.0.nupkg --source https://push.chocolatey.org/
+```
 
-## Online Documentation
 
-SSH into the web box, navigate into `icinga2-latest/module/icinga2`
-and pull the current support branch.
+## Post Release  <a id="post-release"></a>
 
-## Announcement
+### Online Documentation  <a id="online-documentation"></a>
 
-* Create a new blog post on www.icinga.org/blog
-* Send announcement mail to icinga-announce@lists.icinga.org
-* Social media: [Twitter](https://twitter.com/icinga), [Facebook](https://www.facebook.com/icinga), [G+](http://plus.google.com/+icinga), [Xing](https://www.xing.com/communities/groups/icinga-da4b-1060043), [LinkedIn](https://www.linkedin.com/groups/Icinga-1921830/about)
+Navigate to `puppet-customer/icinga.git` and do the following steps:
+
+#### Testing
+
+```
+git checkout testing && git pull
+vim files/var/www/docs/config/icinga2-latest.yml
+
+git commit -av -m "icinga-web1: Update docs for Icinga 2"
+
+git push
+```
+
+SSH into icinga-web1 and do a manual Puppet dry run with the testing environment.
+
+```
+puppet agent -t --environment testing --noop
+```
+
+Once succeeded, continue with production deployment.
+
+#### Production
+
+```
+git checkout master && git pull
+git merge testing
+git push
+```
+
+SSH into icinga-web1 and do a manual Puppet run from the production environment (default).
+
+```
+puppet agent -t
+```
+
+### Announcement  <a id="announcement"></a>
+
+* Create a new blog post on icinga.com/blog
+* Social media: [Twitter](https://twitter.com/icinga), [Facebook](https://www.facebook.com/icinga), [Xing](https://www.xing.com/communities/groups/icinga-da4b-1060043), [LinkedIn](https://www.linkedin.com/groups/Icinga-1921830/about)
 * Update IRC channel topic
 
-# After the release
+### Project Management  <a id="project-management"></a>
 
-* Add new minor version
-* Close the released version
-* Update Redmine filters for the next major/minor version
+* Add new minor version on [GitHub](https://github.com/Icinga/icinga2/milestones).

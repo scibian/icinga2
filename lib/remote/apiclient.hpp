@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -28,100 +28,31 @@
 namespace icinga
 {
 
-struct ApiFieldAttributes
-{
-public:
-	bool Config;
-	bool Navigation;
-	bool NoUserModify;
-	bool NouserView;
-	bool Required;
-	bool State;
-};
-
-class ApiType;
-
-struct ApiField
-{
-public:
-	String Name;
-	int ID;
-	int ArrayRank;
-	ApiFieldAttributes FieldAttributes;
-	String TypeName;
-	intrusive_ptr<ApiType> Type;
-};
-
-class I2_REMOTE_API ApiType : public Object
-{
-public:
-	DECLARE_PTR_TYPEDEFS(ApiType);
-
-	String Name;
-	String PluralName;
-	String BaseName;
-	ApiType::Ptr Base;
-	bool Abstract;
-	std::map<String, ApiField> Fields;
-	std::vector<String> PrototypeKeys;
-};
-
-struct ApiObjectReference
-{
-public:
-	String Name;
-	String Type;
-};
-
-struct I2_REMOTE_API ApiObject : public Object
-{
-public:
-	DECLARE_PTR_TYPEDEFS(ApiObject);
-
-	String Name;
-	String Type;
-	std::map<String, Value> Attrs;
-	std::vector<ApiObjectReference> UsedBy;
-};
-
-class I2_REMOTE_API ApiClient : public Object
+class ApiClient : public Object
 {
 public:
 	DECLARE_PTR_TYPEDEFS(ApiClient);
 
 	ApiClient(const String& host, const String& port,
-	    const String& user, const String& password);
+		String user, String password);
 
-	typedef boost::function<void(boost::exception_ptr, const std::vector<ApiType::Ptr>&)> TypesCompletionCallback;
-	void GetTypes(const TypesCompletionCallback& callback) const;
-
-	typedef boost::function<void(boost::exception_ptr, const std::vector<ApiObject::Ptr>&)> ObjectsCompletionCallback;
-	void GetObjects(const String& pluralType, const ObjectsCompletionCallback& callback,
-	    const std::vector<String>& names = std::vector<String>(),
-	    const std::vector<String>& attrs = std::vector<String>(),
-	    const std::vector<String>& joins = std::vector<String>(), bool all_joins = false) const;
-
-	typedef boost::function<void(boost::exception_ptr, const Value&)> ExecuteScriptCompletionCallback;
+	typedef std::function<void(boost::exception_ptr, const Value&)> ExecuteScriptCompletionCallback;
 	void ExecuteScript(const String& session, const String& command, bool sandboxed,
-	    const ExecuteScriptCompletionCallback& callback) const;
-	
-	typedef boost::function<void(boost::exception_ptr, const Array::Ptr&)> AutocompleteScriptCompletionCallback;
+		const ExecuteScriptCompletionCallback& callback) const;
+
+	typedef std::function<void(boost::exception_ptr, const Array::Ptr&)> AutocompleteScriptCompletionCallback;
 	void AutocompleteScript(const String& session, const String& command, bool sandboxed,
-	    const AutocompleteScriptCompletionCallback& callback) const;
+		const AutocompleteScriptCompletionCallback& callback) const;
 
 private:
 	HttpClientConnection::Ptr m_Connection;
 	String m_User;
 	String m_Password;
 
-	static void TypesHttpCompletionCallback(HttpRequest& request,
-	    HttpResponse& response, const TypesCompletionCallback& callback);
-	static void ObjectsHttpCompletionCallback(HttpRequest& request,
-	    HttpResponse& response, const ObjectsCompletionCallback& callback);
 	static void ExecuteScriptHttpCompletionCallback(HttpRequest& request,
-	    HttpResponse& response, const ExecuteScriptCompletionCallback& callback);
+		HttpResponse& response, const ExecuteScriptCompletionCallback& callback);
 	static void AutocompleteScriptHttpCompletionCallback(HttpRequest& request,
-	    HttpResponse& response, const AutocompleteScriptCompletionCallback& callback);
+		HttpResponse& response, const AutocompleteScriptCompletionCallback& callback);
 };
 
 }

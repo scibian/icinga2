@@ -1,6 +1,6 @@
 /******************************************************************************
  * Icinga 2                                                                   *
- * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ * Copyright (C) 2012-2018 Icinga Development Team (https://icinga.com/)      *
  *                                                                            *
  * This program is free software; you can redistribute it and/or              *
  * modify it under the terms of the GNU General Public License                *
@@ -35,7 +35,6 @@
 #include "config.h"
 #include <boost/program_options.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <boost/foreach.hpp>
 #include <iostream>
 #include <fstream>
 
@@ -53,14 +52,28 @@ static void SigHupHandler(int)
 }
 #endif /* _WIN32 */
 
-static bool Daemonize(void)
+/*
+ * Daemonize().  On error, this function logs by itself and exits (i.e. does not return).
+ *
+ * Implementation note: We're only supposed to call exit() in one of the forked processes.
+ * The other process calls _exit().  This prevents issues with exit handlers like atexit().
+ */
+static void Daemonize() noexcept
 {
 #ifndef _WIN32
-	Application::UninitializeBase();
+	try {
+		Application::UninitializeBase();
+	} catch (const std::exception& ex) {
+		Log(LogCritical, "cli")
+			<< "Failed to stop thread pool before daemonizing, unexpected error: " << DiagnosticInformation(ex);
+		exit(EXIT_FAILURE);
+	}
 
 	pid_t pid = fork();
 	if (pid == -1) {
-		return false;
+		Log(LogCritical, "cli")
+			<< "fork() failed with error code " << errno << ", \"" << Utility::FormatErrorNumber(errno) << "\"";
+		exit(EXIT_FAILURE);
 	}
 
 	if (pid) {
@@ -73,7 +86,7 @@ static bool Daemonize(void)
 		do {
 			Utility::Sleep(0.1);
 
-			readpid = Application::ReadPidFile(Application::GetPidPath());
+			readpid = Application::ReadPidFile(Configuration::PidPath);
 			ret = waitpid(pid, &status, WNOHANG);
 		} while (readpid != pid && ret == 0);
 
@@ -82,20 +95,35 @@ static bool Daemonize(void)
 			_exit(EXIT_FAILURE);
 		} else if (ret == -1) {
 			Log(LogCritical, "cli")
-			    << "waitpid() failed with error code " << errno << ", \"" << Utility::FormatErrorNumber(errno) << "\"";
+				<< "waitpid() failed with error code " << errno << ", \"" << Utility::FormatErrorNumber(errno) << "\"";
 			_exit(EXIT_FAILURE);
 		}
 
 		_exit(EXIT_SUCCESS);
 	}
 
-	Application::InitializeBase();
-#endif /* _WIN32 */
+	Log(LogDebug, "Daemonize()")
+		<< "Child process with PID " << Utility::GetPid() << " continues; re-initializing base.";
 
-	return true;
+	// Detach from controlling terminal
+	pid_t sid = setsid();
+	if (sid == -1) {
+		Log(LogCritical, "cli")
+			<< "setsid() failed with error code " << errno << ", \"" << Utility::FormatErrorNumber(errno) << "\"";
+		exit(EXIT_FAILURE);
+	}
+
+	try {
+		Application::InitializeBase();
+	} catch (const std::exception& ex) {
+		Log(LogCritical, "cli")
+			<< "Failed to re-initialize thread pool after daemonizing: " << DiagnosticInformation(ex);
+		exit(EXIT_FAILURE);
+	}
+#endif /* _WIN32 */
 }
 
-static bool SetDaemonIO(const String& stderrFile)
+static void CloseStdIO(const String& stderrFile)
 {
 #ifndef _WIN32
 	int fdnull = open("/dev/null", O_RDWR);
@@ -127,69 +155,30 @@ static bool SetDaemonIO(const String& stderrFile)
 		if (fderr > 2)
 			close(fderr);
 	}
-
-	pid_t sid = setsid();
-	if (sid == -1) {
-		return false;
-	}
 #endif
-
-	return true;
 }
 
-/**
- * Terminate another process and wait till it has ended
- *
- * @params target PID of the process to end
- */
-static void TerminateAndWaitForEnd(pid_t target)
-{
-#ifndef _WIN32
-	// allow 30 seconds timeout
-	double timeout = Utility::GetTime() + 30;
-
-	int ret = kill(target, SIGTERM);
-
-	while (Utility::GetTime() < timeout && (ret == 0 || errno != ESRCH)) {
-		Utility::Sleep(0.1);
-		ret = kill(target, 0);
-	}
-
-	// timeout and the process still seems to live: update pid and kill it
-	if (ret == 0 || errno != ESRCH) {
-		String pidFile = Application::GetPidPath();
-		std::ofstream fp(pidFile.CStr());
-		fp << Utility::GetPid();
-		fp.close();
-
-		kill(target, SIGKILL);
-	}
-
-#else
-	// TODO: implement this for Win32
-#endif /* _WIN32 */
-}
-
-String DaemonCommand::GetDescription(void) const
+String DaemonCommand::GetDescription() const
 {
 	return "Starts Icinga 2.";
 }
 
-String DaemonCommand::GetShortDescription(void) const
+String DaemonCommand::GetShortDescription() const
 {
 	return "starts Icinga 2";
 }
 
 void DaemonCommand::InitParameters(boost::program_options::options_description& visibleDesc,
-    boost::program_options::options_description& hiddenDesc) const
+	boost::program_options::options_description& hiddenDesc) const
 {
 	visibleDesc.add_options()
 		("config,c", po::value<std::vector<std::string> >(), "parse a configuration file")
 		("no-config,z", "start without a configuration file")
 		("validate,C", "exit after validating the configuration")
-		("errorlog,e", po::value<std::string>(), "log fatal errors to the specified log file (only works in combination with --daemonize)")
+		("errorlog,e", po::value<std::string>(), "log fatal errors to the specified log file (only works in combination with --daemonize or --close-stdio)")
 #ifndef _WIN32
 		("daemonize,d", "detach from the controlling terminal")
+		("close-stdio", "do not log to stdout (or stderr) after startup")
 #endif /* _WIN32 */
 	;
 
@@ -214,36 +203,38 @@ std::vector<String> DaemonCommand::GetArgumentSuggestions(const String& argument
  */
 int DaemonCommand::Run(const po::variables_map& vm, const std::vector<std::string>& ap) const
 {
-	if (!vm.count("validate"))
-		Logger::DisableTimestamp(false);
+	Logger::EnableTimestamp();
 
 	Log(LogInformation, "cli")
-	    << "Icinga application loader (version: " << Application::GetAppVersion()
+		<< "Icinga application loader (version: " << Application::GetAppVersion()
 #ifdef I2_DEBUG
-	    << "; debug"
+		<< "; debug"
 #endif /* I2_DEBUG */
-	    << ")";
+		<< ")";
 
 	if (!vm.count("validate") && !vm.count("reload-internal")) {
-		pid_t runningpid = Application::ReadPidFile(Application::GetPidPath());
+		pid_t runningpid = Application::ReadPidFile(Configuration::PidPath);
 		if (runningpid > 0) {
 			Log(LogCritical, "cli")
-			    << "Another instance of Icinga already running with PID " << runningpid;
+				<< "Another instance of Icinga already running with PID " << runningpid;
 			return EXIT_FAILURE;
 		}
 	}
 
 	std::vector<std::string> configs;
 	if (vm.count("config") > 0)
-		configs = vm["config"].as < std::vector<std::string> >() ;
-	else if (!vm.count("no-config"))
-		configs.push_back(Application::GetSysconfDir() + "/icinga2/icinga2.conf");
+		configs = vm["config"].as<std::vector<std::string> >();
+	else if (!vm.count("no-config")) {
+		/* The implicit string assignment is needed for Windows builds. */
+		String configDir = Configuration::ConfigDir;
+		configs.push_back(configDir + "/icinga2.conf");
+	}
 
 	Log(LogInformation, "cli", "Loading configuration file(s).");
 
 	std::vector<ConfigItem::Ptr> newItems;
 
-	if (!DaemonUtility::LoadConfigFiles(configs, newItems, Application::GetObjectsPath(), Application::GetVarsPath()))
+	if (!DaemonUtility::LoadConfigFiles(configs, newItems, Configuration::ObjectsPath, Configuration::VarsPath))
 		return EXIT_FAILURE;
 
 	if (vm.count("validate")) {
@@ -251,52 +242,66 @@ int DaemonCommand::Run(const po::variables_map& vm, const std::vector<std::strin
 		return EXIT_SUCCESS;
 	}
 
+#ifndef _WIN32
 	if (vm.count("reload-internal")) {
-		int parentpid = vm["reload-internal"].as<int>();
-		Log(LogInformation, "cli")
-		    << "Terminating previous instance of Icinga (PID " << parentpid << ")";
-		TerminateAndWaitForEnd(parentpid);
-		Log(LogInformation, "cli", "Previous instance has ended, taking over now.");
+		/* We went through validation and now ask the old process kindly to die */
+		Log(LogInformation, "cli", "Requesting to take over.");
+		int rc = kill(vm["reload-internal"].as<int>(), SIGUSR2);
+		if (rc) {
+			Log(LogCritical, "cli")
+				<< "Failed to send signal to \"" << vm["reload-internal"].as<int>() <<  "\" with " << strerror(errno);
+			return EXIT_FAILURE;
+		}
+
+		double start = Utility::GetTime();
+		while (kill(vm["reload-internal"].as<int>(), SIGCHLD) == 0)
+			Utility::Sleep(0.2);
+
+		Log(LogNotice, "cli")
+			<< "Waited for " << Utility::FormatDuration(Utility::GetTime() - start) << " on old process to exit.";
 	}
+#endif /* _WIN32 */
 
 	if (vm.count("daemonize")) {
 		if (!vm.count("reload-internal")) {
 			// no additional fork neccessary on reload
-			try {
-				Daemonize();
-			} catch (std::exception&) {
-				Log(LogCritical, "cli", "Daemonize failed. Exiting.");
-				return EXIT_FAILURE;
-			}
+
+			// this subroutine either succeeds, or logs an error
+			// and terminates the process (does not return).
+			Daemonize();
 		}
 	}
 
 	/* restore the previous program state */
 	try {
-		ConfigObject::RestoreObjects(Application::GetStatePath());
+		ConfigObject::RestoreObjects(Configuration::StatePath);
 	} catch (const std::exception& ex) {
 		Log(LogCritical, "cli")
-		    << "Failed to restore state file: " << DiagnosticInformation(ex);
+			<< "Failed to restore state file: " << DiagnosticInformation(ex);
 		return EXIT_FAILURE;
 	}
 
 	{
-		WorkQueue upq(25000, Application::GetConcurrency());
+		WorkQueue upq(25000, Configuration::Concurrency);
 		upq.SetName("DaemonCommand::Run");
 
 		// activate config only after daemonization: it starts threads and that is not compatible with fork()
-		if (!ConfigItem::ActivateItems(upq, newItems)) {
+		if (!ConfigItem::ActivateItems(upq, newItems, false, false, true)) {
 			Log(LogCritical, "cli", "Error activating configuration.");
 			return EXIT_FAILURE;
 		}
 	}
 
-	if (vm.count("daemonize")) {
+	if (vm.count("daemonize") || vm.count("close-stdio")) {
+		// After disabling the console log, any further errors will go to the configured log only.
+		// Let's try to make this clear and say good bye.
+		Log(LogInformation, "cli", "Closing console log.");
+
 		String errorLog;
 		if (vm.count("errorlog"))
 			errorLog = vm["errorlog"].as<std::string>();
 
-		SetDaemonIO(errorLog);
+		CloseStdIO(errorLog);
 		Logger::DisableConsoleLog();
 	}
 
@@ -307,7 +312,7 @@ int DaemonCommand::Run(const po::variables_map& vm, const std::vector<std::strin
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = &SigHupHandler;
-	sigaction(SIGHUP, &sa, NULL);
+	sigaction(SIGHUP, &sa, nullptr);
 #endif /* _WIN32 */
 
 	ApiListener::UpdateObjectAuthority();
