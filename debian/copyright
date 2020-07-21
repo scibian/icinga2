@@ -58,6 +58,7 @@ Files: debian/*
 Copyright: 2012-2014, Alexander Wirt <formorer@debian.org>
            2013-2014, Markus Frosch <lazyfrosch@debian.org>
                 2014, Icinga Development Team (https://icinga.com)
+                2020, Scibian Project <legal@scibian.org>
 License: GPL-2+
 
 License: BSD-3-clause

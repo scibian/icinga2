@@ -1,5 +1,5 @@
 Source: icinga2
-Maintainer: Debian Nagios Maintainer Group <pkg-nagios-devel@lists.alioth.debian.org>
+Maintainer: Scibian Project <packaging@scibian.org>
 Uploaders: Markus Frosch <lazyfrosch@debian.org>,
            Jan Wagner <waja@cyconet.org>,
            Alexander Wirt <formorer@debian.org>,
@@ -29,8 +29,8 @@ Build-Depends: bash-completion,
                make (>= 3.81),
                po-debconf
 Standards-Version: 4.3.0
-Vcs-Browser: https://salsa.debian.org/nagios-team/pkg-icinga2
-Vcs-Git: https://salsa.debian.org/nagios-team/pkg-icinga2.git -b stretch-backports
+Vcs-Browser: https://github.com/scibian/icinga2
+Vcs-Git: https://github.com/scibian/icinga2.git
 Homepage: https://icinga.com
 
 Package: icinga2
